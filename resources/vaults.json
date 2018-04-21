@@ -2,7 +2,13 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-      "vaults": {
+      "vault": {
+        "type": "object",
+        "metadata": {
+          "description": "Array of objects containing vault name and properties."
+        }
+      },
+      "secrets": {
         "type": "array",
         "metadata": {
           "description": "Array of objects containing vault name and properties."
@@ -23,8 +29,8 @@
     "resources": [
       {
         "type": "Microsoft.KeyVault/vaults",
-        "apiVersion": "[variables('databases').apiVersion]",
-        "name": "[concat(parameters('sqlName'), '/', parameters('databases')[copyIndex()].name]",
+        "apiVersion": "[variables('vaults').apiVersion]",
+        "name": "[concat(parameters('vault').name, uniqueString(subscription().subscriptionId))]",
         "location": "[resourceGroup().location]",
         "properties": {
           "sku": {
@@ -38,22 +44,36 @@
           "copy": [
             {
               "name": "accessPolicies",
-              "count": "[length(parameters('vaults')[copyIndex('vaults')].properties.accessPolicies)]",
+              "count": "[length(parameters('vault').properties.accessPolicies)]",
               "input": {
-                "objectId": "[if(greater(length(parameters('vaults')[copyIndex('vaults')].properties.accessPolicies[copyIndex('accessPolicies')].objectId), 0), parameters('vaults')[copyIndex('vaults')].properties.accessPolicies[copyIndex('accessPolicies')].objectId, parameters('userObjectId'))]",
+                "objectId": "[if(greater(length(parameters('vault').properties.accessPolicies[copyIndex('accessPolicies')].objectId), 0), parameters('vault').properties.accessPolicies[copyIndex('accessPolicies')].objectId, parameters('userObjectId'))]",
                 "tenantId": "[subscription().tenantId]",
-                "permissions": "[parameters('vaults')[copyIndex('vaults')].properties.accessPolicies[copyIndex('accessPolicies')].permissions]"
+                "permissions": "[parameters('vault').properties.accessPolicies[copyIndex('accessPolicies')].permissions]"
               }
             }
           ]
         },
-        "copy": {
-          "name": "databases",
-          "count": "[length(parameters('databases'))]"
-        }
+        "resources": [
+          {
+              "type": "secrets",
+              "apiVersion": "[variables('vaults').apiVersion]",
+              "name": "[parameters('secrets')[0].name]",
+              "location": "[resourceGroup().location]",
+              "dependsOn": [
+                  "[resourceId('Microsoft.KeyVault/vaults', concat(parameters('vault').name, uniqueString(subscription().subscriptionId)))]"
+              ],
+              "properties": {
+                  "value": "[parameters('secrets')[0].value]"
+              }
+          }
+        ]
       }
     ],
     "outputs": {
+      "vaultUri": {
+        "type": "string",
+        "value": "[reference(concat(parameters('vault').name, uniqueString(subscription().subscriptionId)), variables('vaults').apiVersion).outputs.vaultUri]"
+      }
     }
   }
   

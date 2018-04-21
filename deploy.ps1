@@ -3,6 +3,7 @@
 Param(
     [string] [Parameter(Mandatory=$true)] $ResourceGroupLocation,
     [string] $ResourceGroupName = 'storage',
+	[array] $LinkedResourceGroups = @('network', 'machines', 'web', 'workspaces', 'sql', 'vaults'),
     [switch] $UploadArtifacts,
     [string] $TemplateFile = '.\resources\storageAccounts.json',
     [string] $TemplateParametersFile = '.\params\storageAccounts.parameters.json',
@@ -27,8 +28,29 @@ $OptionalParameters = New-Object -TypeName Hashtable
 $TemplateFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $TemplateFile))
 $TemplateParametersFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $TemplateParametersFile))
 
+$userObjectId = 'userObjectId'
+if ((Get-Content $TemplateParametersFile -Raw | ConvertFrom-Json).parameters.PSObject.Properties.name -match $userObjectId) {
+	$OptionalParameters[$userObjectId] = (Get-AzureRmADUser -UserPrincipalName (Get-AzureRmContext).Account).Id
+}
+
+@(
+	@{ tokenName = '_resourcesLocationSasToken'; container = 'resources' },
+	@{ tokenName = '_paramsLocationSasToken'; container = 'params' }
+) | % {
+	if ((Get-Content $TemplateParametersFile -Raw | ConvertFrom-Json).parameters.PSObject.Properties.name -match $_.tokenName) {
+		if ($OptionalParameters[$_.tokenName] -eq $null) {
+			$OptionalParameters[$_.tokenName] = ConvertTo-SecureString -AsPlainText -Force `
+				(New-AzureStorageContainerSASToken -Container $_.container -Context (Get-AzureRmStorageAccount -ResourceGroupName storage | ? StorageAccountName -like 'storage*').Context -Permission r -ExpiryTime (Get-Date).AddHours(4))
+		}
+	}
+}
+
 # Create or update the resource group using the specified template file and template parameters file
 New-AzureRmResourceGroup -Name $ResourceGroupName -Location $ResourceGroupLocation -Verbose -Force
+
+$LinkedResourceGroups | % { 
+	New-AzureRmResourceGroup -Name $_ -Location $ResourceGroupLocation -Verbose -Force
+}
 
 if ($ValidateOnly) {
 	$ErrorMessages = Format-ValidationOutput (Test-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName `
@@ -43,7 +65,8 @@ if ($ValidateOnly) {
 	}
 }
 else {
-	New-AzureRmResourceGroupDeployment -Name ((Get-ChildItem $TemplateFile).BaseName + '-' + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')) `
+	#((Get-ChildItem $TemplateFile).BaseName + '-' + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')) `
+	New-AzureRmResourceGroupDeployment -Name (Get-ChildItem $TemplateFile).BaseName `
 										-ResourceGroupName $ResourceGroupName `
 										-TemplateFile $TemplateFile `
 										-TemplateParameterFile $TemplateParametersFile `

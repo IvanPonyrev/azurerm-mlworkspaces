@@ -33,9 +33,15 @@
       }
     ],
     "outputs": {
-      "storageAccounts": {
+      "apiVersion": {
+        "type": "string",
+        "value": "[variables('storageAccounts').apiVersion]"
+      },
+      "blobEndpoints": {
         "type": "array",
-        "value": []
+        "value": [
+          "[reference(concat(parameters('storageAccounts')[0].name, variables('storageAccounts').suffix), variables('storageAccounts').apiVersion).primaryEndpoints.blob]"
+        ]
       }
     }
 }

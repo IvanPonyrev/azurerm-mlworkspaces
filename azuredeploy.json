@@ -2,6 +2,9 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "_resourcesLocationSasToken": {
+            "type": "securestring"
+        },
         "userObjectId": {
             "type": "string"
         }
@@ -9,9 +12,6 @@
     "variables": {
       "deployments": {
         "apiVersion": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
-      },
-      "storage": {
-        "artifactsLocation": "[reference(resourceId(resourceGroup().name, 'Microsoft.Storage/storageAccounts', concat('storage', uniqueString(subscription().subscriptionId))).PrimaryEndpoints.Blob]"
       }
     },
     "resources": [
@@ -23,32 +23,38 @@
           "properties": {
             "mode": "Incremental",
             "templateLink": {
-              "uri": "[concat(variables('artifactsLocation'), 'resources/vaults.json')]"
+              "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoints.value[0], 'resources/vaults.json', parameters('_resourcesLocationSasToken'))]"
             },
             "parameters": {
-                "vaults": {
+                "vault": {
+                    "value": {
+                        "name": "vault",
+                        "properties": {
+                            "accessPolicies": [
+                                {
+                                    "objectId": "",
+                                    "tenantId": "",
+                                    "permissions": {
+                                        "keys": [
+                                        "all"
+                                        ],
+                                        "secrets": [
+                                        "all"
+                                        ],
+                                        "certificates": [
+                                        "all"
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                "secrets": {
                     "value": [
                         {
-                          "name": "vault",
-                          "properties": {
-                            "accessPolicies": [
-                              {
-                                "objectId": "",
-                                "tenantId": "",
-                                "permissions": {
-                                  "keys": [
-                                    "all"
-                                  ],
-                                  "secrets": [
-                                    "all"
-                                  ],
-                                  "certificates": [
-                                    "all"
-                                  ]
-                                }
-                              }
-                            ]
-                          }
+                            "name": "_resourcesLocationSasToken",
+                            "value": "[parameters('_resourcesLocationSasToken')]"
                         }
                     ]
                 },
@@ -63,10 +69,10 @@
         }
     ],
     "outputs": {
-        "apiVersion": {
+      "apiVersion": {
         "type": "string",
         "value": "[variables('deployments').apiVersion]"
-        }
+      }
     }
 }
   
