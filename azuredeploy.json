@@ -108,27 +108,6 @@
               "detailLevel": "requestContent, responseContent"
             }
           }   
-        },
-        {
-          "type": "Microsoft.Resources/deployments",
-          "apiVersion": "[variables('deployments').apiVersion]",
-          "name": "subnets",
-          "resourceGroup": "network",
-          "dependsOn": [
-              "[resourceId('network', 'Microsoft.Resources/deployments', 'networkSecurityGroups')]"
-          ],
-          "properties": {
-            "mode": "Incremental",
-            "templateLink": {
-              "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoints.value[0], 'resources/subnets.json', parameters('_resourcesLocationSasToken'))]"
-            },
-            "parametersLink": {
-              "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoints.value[0], 'params/subnets.parameters.json', parameters('_paramsLocationSasToken'))]"
-            },
-            "debugSetting": {
-              "detailLevel": "requestContent, responseContent"
-            }
-          }   
         }
     ],
     "outputs": {
