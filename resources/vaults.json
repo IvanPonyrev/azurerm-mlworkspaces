@@ -1,0 +1,59 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "vaults": {
+        "type": "array",
+        "metadata": {
+          "description": "Array of objects containing vault name and properties."
+        }
+      },
+      "userObjectId": {
+        "type": "string",
+        "metadata": {
+          "description": "The object id of user deploying these resources."
+        }
+      }
+    },
+    "variables": {
+      "vaults": {
+        "apiVersion": "[providers('Microsoft.KeyVault', 'vaults').apiVersions[0]]"
+      }
+    },
+    "resources": [
+      {
+        "type": "Microsoft.KeyVault/vaults",
+        "apiVersion": "[variables('databases').apiVersion]",
+        "name": "[concat(parameters('sqlName'), '/', parameters('databases')[copyIndex()].name]",
+        "location": "[resourceGroup().location]",
+        "properties": {
+          "sku": {
+            "family": "A",
+            "name": "standard"
+          },
+          "tenantId": "[subscription().tenantId]",
+          "enabledForDeployment": true,
+          "enabledForDiskEncryption": true,
+          "enabledForTemplateDeployment": true,
+          "copy": [
+            {
+              "name": "accessPolicies",
+              "count": "[length(parameters('vaults')[copyIndex('vaults')].properties.accessPolicies)]",
+              "input": {
+                "objectId": "[if(greater(length(parameters('vaults')[copyIndex('vaults')].properties.accessPolicies[copyIndex('accessPolicies')].objectId), 0), parameters('vaults')[copyIndex('vaults')].properties.accessPolicies[copyIndex('accessPolicies')].objectId, parameters('userObjectId'))]",
+                "tenantId": "[subscription().tenantId]",
+                "permissions": "[parameters('vaults')[copyIndex('vaults')].properties.accessPolicies[copyIndex('accessPolicies')].permissions]"
+              }
+            }
+          ]
+        },
+        "copy": {
+          "name": "databases",
+          "count": "[length(parameters('databases'))]"
+        }
+      }
+    ],
+    "outputs": {
+    }
+  }
+  

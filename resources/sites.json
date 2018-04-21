@@ -1,0 +1,32 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "sites": {
+      "type": "array",
+      "metadata": {
+        "description": "Array of objects containing site name and properties."
+      }
+    }
+  },
+  "variables": {
+    "sites": {
+      "apiVersion": "[providers('Microsoft.Web', 'sites').apiVersions[0]]"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "[variables('sites').apiVersion]",
+      "name": "[parameters('sites')[copyIndex()].name]",
+      "location": "[resourceGroup().location]",
+      "properties": "[parameters('sites')[copyIndex()].properties]",
+      "copy": {
+        "name": "sites",
+        "count": "[length(parameters('sites'))]"
+      }
+    }
+  ],
+  "outputs": {
+  }
+}

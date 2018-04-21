@@ -1,0 +1,33 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "serverfarms": {
+      "type": "array",
+      "metadata": {
+        "description": "Array of objects containing serverfarms name, properties, and sku."
+      }
+    }
+  },
+  "variables": {
+    "serverfarms": {
+      "apiVersion": "[providers('Microsoft.Web', 'serverfarms').apiVersions[0]]"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "[variables('serverfarms').apiVersion]",
+      "name": "[parameters('serverfarms')[copyIndex()].name]",
+      "location": "[resourceGroup().location]",
+      "properties": "[parameters('serverfarms')[copyIndex()].properties]",
+      "sku": "[parameters('serverfarms')[copyIndex()].sku]",
+      "copy": {
+        "name": "serverfarms",
+        "count": "[length(parameters('serverfarms'))]"
+      }
+    }
+  ],
+  "outputs": {
+  }
+}
