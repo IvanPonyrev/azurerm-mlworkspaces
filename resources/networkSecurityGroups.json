@@ -28,11 +28,11 @@
     }
   ],
   "outputs": {
-    "networkSecurityGroups": {
+    "groups": {
       "type": "array",
       "value": [
-        "[reference(resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups')[0].name), variables('virtualNetworks').apiVersion, 'Full')]",
-        "[reference(resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups')[1].name), variables('virtualNetworks').apiVersion, 'Full')]"
+        "[parameters('networkSecurityGroups')[0].name]",
+        "[parameters('networkSecurityGroups')[1].name]]"
       ]
     }
   }

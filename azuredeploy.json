@@ -112,10 +112,31 @@
         {
           "type": "Microsoft.Resources/deployments",
           "apiVersion": "[variables('deployments').apiVersion]",
-          "name": "subnets",
+          "name": "networkSecurityGroupRules",
           "resourceGroup": "network",
           "dependsOn": [
               "[resourceId('network', 'Microsoft.Resources/deployments', 'networkSecurityGroups')]"
+          ],
+          "properties": {
+            "mode": "Incremental",
+            "templateLink": {
+              "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoints.value[0], 'resources/rules.json', parameters('_resourcesLocationSasToken'))]"
+            },
+            "parametersLink": {
+              "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoints.value[0], 'params/rules.parameters.json', parameters('_paramsLocationSasToken'))]"
+            },
+            "debugSetting": {
+              "detailLevel": "requestContent, responseContent"
+            }
+          }   
+        },
+        {
+          "type": "Microsoft.Resources/deployments",
+          "apiVersion": "[variables('deployments').apiVersion]",
+          "name": "subnets",
+          "resourceGroup": "network",
+          "dependsOn": [
+              "[resourceId('network', 'Microsoft.Resources/deployments', 'networkSecurityGroupRules')]"
           ],
           "properties": {
             "mode": "Incremental",
