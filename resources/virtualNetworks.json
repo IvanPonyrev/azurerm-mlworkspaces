@@ -1,0 +1,32 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "virtualNetworks": {
+      "type": "array",
+      "metadata": {
+        "description": "Array of virtual network objects matching appropriate schema."
+      }
+    }
+  },
+  "variables": {
+    "virtualNetworks": {
+      "apiVersion": "[providers('Microsoft.Network', 'virtualNetworks').apiVersions[0]]"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "[variables('virtualNetworks').apiVersion]",
+      "name": "[parameters('virtualNetworks')[copyIndex()].name]",
+      "location": "[resourceGroup().location]",
+      "properties": "[parameters('virtualNetworks')[copyIndex()].properties]",
+      "copy": {
+        "name": "virtualNetworks",
+        "count": "[length(parameters('virtualNetworks'))]"
+      }
+    }
+  ],
+  "outputs": {
+  }
+}

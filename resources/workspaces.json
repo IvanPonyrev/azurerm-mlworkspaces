@@ -1,0 +1,38 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "workspaces": {
+        "type": "array",
+        "metadata": {
+          "description": "Array of objects containing workspace name and properties."
+        }
+      }
+    },
+    "variables": {
+      "workspaces": {
+        "apiVersion": "[providers('Microsoft.MachineLearning', 'workspaces').apiVersions[0]]"
+      }
+    },
+    "resources": [
+      {
+        "type": "Microsoft.MachineLearning/workspaces",
+        "apiVersion": "[variables('workspaces').apiVersion]",
+        "name": "[parameters('workspaces')[copyIndex()].name]",
+        "location": "[resourceGroup().location]",
+        "kind": "[parameters('workspaces')[copyIndex()].kind]",
+        "properties": "[parameters('workspaces')[copyIndex()].properties]",
+        "copy": {
+          "name": "workspaces",
+          "count": "[length(parameters('workspaces'))]"
+        }
+      }
+    ],
+    "outputs": {
+      "workspaces": {
+        "type": "array",
+        "value": []
+      }
+    }
+}
+  

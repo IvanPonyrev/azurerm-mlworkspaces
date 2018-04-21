@@ -1,0 +1,41 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "commitmentPlans": {
+        "type": "array",
+        "metadata": {
+          "description": "Array of objects containing workspace name and properties."
+        }
+      }
+    },
+    "variables": {
+      "commitmentPlans": {
+        "apiVersion": "[providers('Microsoft.MachineLearning', 'commitmentPlans').apiVersions[0]]"
+      }
+    },
+    "resources": [
+      {
+        "type": "Microsoft.MachineLearning/commitmentPlans",
+        "apiVersion": "[variables('commitmentPlans').apiVersion]",
+        "name": "[parameters('commitmentPlans')[copyIndex()].name]",
+        "location": "[resourceGroup().location]",
+        "sku": {
+          "capacity": "[parameters('commitmentPlans')[copyIndex()].sku.capacity]",
+          "name": "[parameters('commitmentPlans')[copyIndex()].sku.name]",
+          "tier": "[parameters('commitmentPlans')[copyIndex()].sku.tier]"
+        },
+        "copy": {
+          "name": "commitmentPlans",
+          "count": "[length(parameters('commitmentPlans'))]"
+        }
+      }
+    ],
+    "outputs": {
+      "workspaces": {
+        "type": "array",
+        "value": []
+      }
+    }
+}
+  

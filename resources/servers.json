@@ -1,0 +1,48 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "servers": {
+        "type": "array",
+        "metadata": {
+          "description": "Array of objects containing server name and properties."
+        }
+      },
+      "administratorLogin": {
+          "type": "securestring",
+          "metadata": {
+            "description": "Sql administrator login."
+          }
+      },
+      "administratorLoginPassword": {
+          "type": "securestring",
+          "metadata": {
+            "description": "Sql administrator login password."
+          }
+      }
+    },
+    "variables": {
+      "servers": {
+        "apiVersion": "[providers('Microsoft.Sql', 'servers').apiVersions[0]]"
+      }
+    },
+    "resources": [
+      {
+        "type": "Microsoft.Sql/servers",
+        "apiVersion": "[variables('servers').apiVersion]",
+        "name": "[parameters('servers')[copyIndex()].name]",
+        "location": "[resourceGroup().location]",
+        "properties": {
+            "administratorLogin": "[parameters('administratorLogin')]",
+            "administratorLoginPassword": "[parameters('administratorLoginPassword')]"
+        },
+        "copy": {
+          "name": "servers",
+          "count": "[length(parameters('servers'))]"
+        }
+      }
+    ],
+    "outputs": {
+    }
+  }
+  

@@ -1,0 +1,48 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "storageAccounts": {
+        "type": "array",
+        "metadata": {
+          "description": "Array of objects containing storageAccount name, sku, kind, and properties."
+        }
+      }
+    },
+    "variables": {
+      "storageAccounts": {
+        "apiVersion": "[providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]]",
+        "suffix": "[uniqueString(subscription().displayName)]"
+      }
+    },
+    "resources": [
+      {
+        "type": "Microsoft.Storage/storageAccounts",
+        "apiVersion": "[variables('storageAccounts').apiVersion]",
+        "name": "[concat(parameters('storageAccounts')[copyIndex()].name, variables('storageAccounts').suffix)]",
+        "location": "[resourceGroup().location]",
+        "sku": {
+          "name": "[parameters('storageAccounts')[copyIndex()].sku.name]"
+        },
+        "kind": "[parameters('storageAccounts')[copyIndex()].kind]",
+        "properties": "[parameters('storageAccounts')[copyIndex()].properties]",
+        "copy": {
+          "name": "storageAccounts",
+          "count": "[length(parameters('storageAccounts'))]"
+        }
+      }
+    ],
+    "outputs": {
+      "apiVersion": {
+        "type": "string",
+        "value": "[variables('storageAccounts').apiVersion]"
+      },
+      "blobEndpoints": {
+        "type": "array",
+        "value": [
+          "[reference(concat(parameters('storageAccounts')[0].name, variables('storageAccounts').suffix), variables('storageAccounts').apiVersion).primaryEndpoints.blob]"
+        ]
+      }
+    }
+}
+  
