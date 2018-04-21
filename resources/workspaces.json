@@ -20,7 +20,6 @@
         "apiVersion": "[variables('workspaces').apiVersion]",
         "name": "[parameters('workspaces')[copyIndex()].name]",
         "location": "[resourceGroup().location]",
-        "kind": "[parameters('workspaces')[copyIndex()].kind]",
         "properties": "[parameters('workspaces')[copyIndex()].properties]",
         "copy": {
           "name": "workspaces",

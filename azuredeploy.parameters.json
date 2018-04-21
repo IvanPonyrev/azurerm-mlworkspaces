@@ -5,6 +5,9 @@
         "_resourcesLocationSasToken": {
             "value": null
         },
+        "_paramsLocationSasToken": {
+            "value": null
+        },
         "userObjectId": {
             "value": ""
         }

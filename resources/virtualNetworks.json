@@ -28,5 +28,13 @@
     }
   ],
   "outputs": {
+    "virtualNetwork": {
+      "type": "object",
+      "value": "[reference(parameters('virtualNetworks')[0].name, variables('virtualNetworks').apiVersion, 'Full')]"
+    },
+    "virtualNetworkName": {
+      "type": "string",
+      "value": "[parameters('virtualNetworks')[0].name]"
+    }
   }
 }
