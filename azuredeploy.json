@@ -66,6 +66,71 @@
               "detailLevel": "requestContent, responseContent"
             }
           }   
+        },        
+        {
+          "type": "Microsoft.Resources/deployments",
+          "apiVersion": "[variables('deployments').apiVersion]",
+          "name": "networkSecurityGroups",
+          "resourceGroup": "network",
+          "properties": {
+            "mode": "Incremental",
+            "templateLink": {
+              "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoints.value[0], 'resources/networkSecurityGroups.json', parameters('_resourcesLocationSasToken'))]"
+            },
+            "parameters": {
+                "networkSecurityGroups": {
+                    "value": [
+                        {
+                            "name": "Frontend",
+                            "properties": {
+                            }
+                        },
+                        {
+                            "name": "Backend",
+                            "properties": {
+                            }
+                        }
+                    ]
+                }
+            },
+            "debugSetting": {
+              "detailLevel": "requestContent, responseContent"
+            }
+          }   
+        },        
+        {
+          "type": "Microsoft.Resources/deployments",
+          "apiVersion": "[variables('deployments').apiVersion]",
+          "name": "network",
+          "resourceGroup": "network",
+          "dependsOn": [
+              "[resourceId('network', 'Microsoft.Resources/deployments', 'networkSecurityGroups')]"
+          ],
+          "properties": {
+            "mode": "Incremental",
+            "templateLink": {
+              "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoints.value[0], 'resources/virtualNetworks.json', parameters('_resourcesLocationSasToken'))]"
+            },
+            "parameters": {
+                "virtualNetworks": {
+                    "value": [
+                        {
+                            "name": "network",
+                            "properties": {
+                                "addressSpace": {
+                                "addressPrefixes": [
+                                    "10.10.0.0/16"
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            "debugSetting": {
+              "detailLevel": "requestContent, responseContent"
+            }
+          }   
         }
     ],
     "outputs": {

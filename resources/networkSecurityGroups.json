@@ -1,0 +1,32 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "networkSecurityGroups": {
+      "type": "array",
+      "metadata": {
+        "description": "An array of network security group objects matching schema."
+      }
+    }
+  },
+  "variables": {
+    "virtualNetworks": {
+      "apiVersion": "[providers('Microsoft.Network', 'virtualNetworks').apiVersions[0]]"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "[variables('virtualNetworks').apiVersion]",
+      "name": "[parameters('networkSecurityGroups')[copyIndex()].name]",
+      "location": "[resourceGroup().location]",
+      "properties": "[parameters('networkSecurityGroups')[copyIndex()].properties]",
+      "copy": {
+        "name": "networkSecurityGroups",
+        "count": "[length(parameters('networkSecurityGroups'))]"
+      }
+    }
+  ],
+  "outputs": {
+  }
+}

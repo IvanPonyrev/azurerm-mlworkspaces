@@ -52,27 +52,13 @@
               }
             }
           ]
-        },
-        "resources": [
-          {
-              "type": "secrets",
-              "apiVersion": "[variables('vaults').apiVersion]",
-              "name": "[parameters('secrets')[0].name]",
-              "location": "[resourceGroup().location]",
-              "dependsOn": [
-                  "[resourceId('Microsoft.KeyVault/vaults', concat(parameters('vault').name, uniqueString(subscription().subscriptionId)))]"
-              ],
-              "properties": {
-                  "value": "[parameters('secrets')[0].value]"
-              }
-          }
-        ]
+        }
       }
     ],
     "outputs": {
       "vaultUri": {
         "type": "string",
-        "value": "[reference(concat(parameters('vault').name, uniqueString(subscription().subscriptionId)), variables('vaults').apiVersion).outputs.vaultUri]"
+        "value": "[reference(concat(parameters('vault').name, uniqueString(subscription().subscriptionId)), variables('vaults').apiVersion).vaultUri]"
       }
     }
   }

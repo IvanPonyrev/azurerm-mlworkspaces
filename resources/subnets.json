@@ -1,0 +1,43 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "virtualNetwork": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the virtual network to which subnets will be deployed."
+      }
+    },
+    "subnets": {
+      "type": "array",
+      "metadata": {
+        "description": "Array of subnet objects matching appropriate schema."
+      }
+    }
+  },
+  "variables": {
+    "virtualNetworks": {
+      "apiVersion": "[providers('Microsoft.Network', 'virtualNetworks').apiVersions[0]]"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/virtualNetworks/subnets",
+      "apiVersion": "[variables('virtualNetworks').apiVersion]",
+      "name": "[concat(parameters('virtualNetwork'), '/', parameters('subnets')[copyIndex()].name)]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "addressPrefix": "[parameters('subnets')[copyIndex()].properties.addressPrefix]",
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('subnets')[copyIndex()].properties.networkSecurityGroup.name)]"
+        }
+      },
+      "copy": {
+        "name": "subnets",
+        "count": "[length(parameters('subnets'))]"
+      }
+    }
+  ],
+  "outputs": {
+  }
+}
