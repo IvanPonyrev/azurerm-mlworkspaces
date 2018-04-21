@@ -2,19 +2,71 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "userObjectId": {
+            "type": "string"
+        }
     },
     "variables": {
       "deployments": {
         "apiVersion": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
+      },
+      "storage": {
+        "artifactsLocation": "[reference(resourceId(resourceGroup().name, 'Microsoft.Storage/storageAccounts', concat('storage', uniqueString(subscription().subscriptionId))).PrimaryEndpoints.Blob]"
       }
     },
     "resources": [
+        {
+          "type": "Microsoft.Resources/deployments",
+          "apiVersion": "[variables('deployments').apiVersion]",
+          "name": "vaults",
+          "resourceGroup": "vaults",
+          "properties": {
+            "mode": "Incremental",
+            "templateLink": {
+              "uri": "[concat(variables('artifactsLocation'), 'resources/vaults.json')]"
+            },
+            "parameters": {
+                "vaults": {
+                    "value": [
+                        {
+                          "name": "vault",
+                          "properties": {
+                            "accessPolicies": [
+                              {
+                                "objectId": "",
+                                "tenantId": "",
+                                "permissions": {
+                                  "keys": [
+                                    "all"
+                                  ],
+                                  "secrets": [
+                                    "all"
+                                  ],
+                                  "certificates": [
+                                    "all"
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        }
+                    ]
+                },
+                "userObjectId": {
+                    "value": "[parameters('userObjectId')]"
+                }
+            },
+            "debugSetting": {
+              "detailLevel": "requestContent, responseContent"
+            }
+          }   
+        }
     ],
     "outputs": {
-      "apiVersion": {
+        "apiVersion": {
         "type": "string",
         "value": "[variables('deployments').apiVersion]"
-      }
+        }
     }
 }
   

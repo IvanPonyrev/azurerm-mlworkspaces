@@ -5,7 +5,7 @@ Param(
     [string] $ResourceGroupName = 'storage',
     [switch] $UploadArtifacts,
     [string] $TemplateFile = '.\resources\storageAccounts.json',
-    [string] $TemplateParametersFile = 'azuredeploy.parameters.json',
+    [string] $TemplateParametersFile = '.\params\storageAccounts.parameters.json',
     [string] $ArtifactStagingDirectory = '.',
     [switch] $ValidateOnly
 )
@@ -26,7 +26,6 @@ function Format-ValidationOutput {
 $OptionalParameters = New-Object -TypeName Hashtable
 $TemplateFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $TemplateFile))
 $TemplateParametersFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $TemplateParametersFile))
-
 
 # Create or update the resource group using the specified template file and template parameters file
 New-AzureRmResourceGroup -Name $ResourceGroupName -Location $ResourceGroupLocation -Verbose -Force
@@ -67,24 +66,26 @@ if ($UploadArtifacts) {
     }
 
 	$JsonParameters.storageAccounts.value | % {
-		$StorageAccountName = $_.name
+		$storageAccountName = $_.name
 
+		Write-Verbose -Message "STORAGE ACCOUNT: $storageAccountName"
 		# Create a storage account name if none was provided
-		if ($StorageAccountName -eq '') {
-			$StorageAccountName = 'stage' + ((Get-AzureRmContext).Subscription.SubscriptionId).Replace('-', '').substring(0, 19)
+		if ($storageAccountName -eq '') {
+			$storageAccountName = 'stage' + ((Get-AzureRmContext).Subscription.SubscriptionId).Replace('-', '').substring(0, 19)
 		}
 
-		$StorageAccount = (Get-AzureRmStorageAccount | Where-Object{$_.StorageAccountName -like "$StorageAccountName*" })
+		$storageAccount = Get-AzureRmStorageAccount | ?  StorageAccountName -like "$storageAccountName*" | select -First 1
 
-        Get-ChildItem "$ArtifactStagingDirectory" -Recurse -Directory | % {
-    		$storageContainer = New-AzureStorageContainer -Name "$($_.BaseName)" -Context $StorageAccount.Context -ErrorAction SilentlyContinue
-            
-            Get-ChildItem '.\*.json' -Recurse -File | % {
-                Set-AzureStorageBlobContent -File $_.FullName -Blob $_.Name -Container $storageContainer.Name 
+        Get-ChildItem $ArtifactStagingDirectory -Recurse -Directory | % {
+    		$storageContainer = New-AzureStorageContainer -Name "$($_.BaseName)" -Context $storageAccount.Context -ErrorAction SilentlyContinue
+
+			if ($storageContainer -eq $null) {
+				$storageContainer = Get-AzureStorageContainer -Name "$($_.BaseName)" -Context $storageAccount.Context
+			}
+
+            Get-ChildItem "$($_.FullName)\*.json" -File | % {
+                Set-AzureStorageBlobContent -File "$($_.FullName)" -Blob $_.Name -Container $storageContainer.Name  -Context $storageAccount.Context -Force
             }
         }
-		Get-ChildItem ($ArtifactStagingDirectory + "\$StorageContainerName\generalized\*.json") -Recurse -File | % {
-			Set-AzureStorageBlobContent -File $_.FullName -Blob $_.Name -Container $StorageContainerName -Context $StorageAccount.Context -Force
-		}
 	}
 }
