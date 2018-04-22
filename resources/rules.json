@@ -2,7 +2,13 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "securityRules": {
+    "group": {
+      "type": "string",
+      "metadata": {
+        "description": "The network security group name to which rules will be applied."
+      }
+    },
+    "rules": {
       "type": "array",
       "metadata": {
         "description": "An array of network security rules objects matching schema."
@@ -18,25 +24,29 @@
     {
       "type": "Microsoft.Network/networkSecurityGroups/securityRules",
       "apiVersion": "[variables('networkSecurityGroups').apiVersion]",
-      "name": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'networkSecurityGroups'), providers('Microsoft.Resources', 'deployments').apiVersions[0]).outputs.groups.value[0], '/', parameters('securityRules')[0].name)]",
+      "name": "[concat(parameters('group'), '/', parameters('rules')[0].name)]",
       "location": "[resourceGroup().location]",
-      "properties": "[parameters('securityRules')[0].properties]"
+      "properties": "[parameters('rules')[0].properties]"
     },
     {
       "type": "Microsoft.Network/networkSecurityGroups/securityRules",
       "apiVersion": "[variables('networkSecurityGroups').apiVersion]",
-      "name": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'networkSecurityGroups'), providers('Microsoft.Resources', 'deployments').apiVersions[0]).outputs.groups.value[0], '/', parameters('securityRules')[copyIndex(1)].name)]",
+      "name": "[concat(parameters('group'), '/', parameters('rules')[copyIndex(1)].name)]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/networkSecurityGroups/securityRules', parameters('securityRules')[copyIndex()].networkSecurityGroup, parameters('securityRules')[copyIndex()].name)]"
+        "[resourceId('Microsoft.Network/networkSecurityGroups/securityRules', parameters('rules')[copyIndex()].networkSecurityGroup, parameters('rules')[copyIndex()].name)]"
       ],
-      "properties": "[parameters('securityRules')[copyIndex(1)].properties]",
+      "properties": "[parameters('rules')[copyIndex(1)].properties]",
       "copy": {
-        "name": "securityRules",
-        "count": "[sub(length(parameters('securityRules')), 1)]"
+        "name": "rules",
+        "count": "[sub(length(parameters('rules')), 1)]"
       }
     }
   ],
   "outputs": {
+    "finalDependency": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/networkSecurityGroups/securityRules', parameters('rules')[sub(length(parameters('rules'), 1)].name)]"
+    }
   }
 }

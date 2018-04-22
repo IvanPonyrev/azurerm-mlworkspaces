@@ -32,7 +32,7 @@
       "type": "array",
       "value": [
         "[parameters('networkSecurityGroups')[0].name]",
-        "[parameters('networkSecurityGroups')[1].name]]"
+        "[parameters('networkSecurityGroups')[1].name]"
       ]
     }
   }
