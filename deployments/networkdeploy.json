@@ -1,0 +1,106 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "_resourcesLocationSasToken": {
+            "type": "securestring"
+        },
+        "_paramsLocationSasToken": {
+            "type": "securestring"
+        },
+        "blobEndpoint": {
+            "type": "string"
+        }
+    },
+    "variables": {
+      "deployments": {
+        "apiVersion": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
+      }
+    },
+    "resources": [        
+        {
+          "type": "Microsoft.Resources/deployments",
+          "apiVersion": "[variables('deployments').apiVersion]",
+          "name": "networkSecurityGroups",
+          "properties": {
+            "mode": "Incremental",
+            "templateLink": {
+              "uri": "[concat(parameters('blobEndpoint'), 'resources/networkSecurityGroups.json', parameters('_resourcesLocationSasToken'))]"
+            },
+            "parametersLink": {
+              "uri": "[concat(parameters('blobEndpoint'), 'params/networkSecurityGroups.parameters.json', parameters('_paramsLocationSasToken'))]"
+            },
+            "debugSetting": {
+              "detailLevel": "requestContent, responseContent"
+            }
+          }   
+        },
+        {
+          "type": "Microsoft.Resources/deployments",
+          "apiVersion": "[variables('deployments').apiVersion]",
+          "name": "network",
+          "dependsOn": [
+              "[resourceId('Microsoft.Resources/deployments', 'networkSecurityGroups')]"
+          ],
+          "properties": {
+            "mode": "Incremental",
+            "templateLink": {
+              "uri": "[concat(parameters('blobEndpoint'), 'resources/virtualNetworks.json', parameters('_resourcesLocationSasToken'))]"
+            },
+            "parametersLink": {
+              "uri": "[concat(parameters('blobEndpoint'), 'params/virtualNetworks.parameters.json', parameters('_paramsLocationSasToken'))]"
+            },
+            "debugSetting": {
+              "detailLevel": "requestContent, responseContent"
+            }
+          }   
+        },
+        {
+          "type": "Microsoft.Resources/deployments",
+          "apiVersion": "[variables('deployments').apiVersion]",
+          "name": "networkSecurityGroupRules",
+          "dependsOn": [
+              "[resourceId('Microsoft.Resources/deployments', 'networkSecurityGroups')]"
+          ],
+          "properties": {
+            "mode": "Incremental",
+            "templateLink": {
+              "uri": "[concat(parameters('blobEndpoint'), 'resources/rules.json', parameters('_resourcesLocationSasToken'))]"
+            },
+            "parametersLink": {
+              "uri": "[concat(parameters('blobEndpoint'), 'params/rules.parameters.json', parameters('_paramsLocationSasToken'))]"
+            },
+            "debugSetting": {
+              "detailLevel": "requestContent, responseContent"
+            }
+          }   
+        },
+        {
+          "type": "Microsoft.Resources/deployments",
+          "apiVersion": "[variables('deployments').apiVersion]",
+          "name": "subnets",
+          "dependsOn": [
+              "[resourceId('Microsoft.Resources/deployments', 'networkSecurityGroupRules')]"
+          ],
+          "properties": {
+            "mode": "Incremental",
+            "templateLink": {
+              "uri": "[concat(parameters('blobEndpoint'), 'resources/subnets.json', parameters('_resourcesLocationSasToken'))]"
+            },
+            "parametersLink": {
+              "uri": "[concat(parameters('blobEndpoint'), 'params/subnets.parameters.json', parameters('_paramsLocationSasToken'))]"
+            },
+            "debugSetting": {
+              "detailLevel": "requestContent, responseContent"
+            }
+          }   
+        }
+    ],
+    "outputs": {
+      "apiVersion": {
+        "type": "string",
+        "value": "[variables('deployments').apiVersion]"
+      }
+    }
+}
+  
