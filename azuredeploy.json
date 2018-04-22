@@ -2,6 +2,9 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "_deploymentsLocationSasToken": {
+            "type": "securestring"
+        },
         "_resourcesLocationSasToken": {
             "type": "securestring"
         },
@@ -73,36 +76,23 @@
         {
           "type": "Microsoft.Resources/deployments",
           "apiVersion": "[variables('deployments').apiVersion]",
-          "name": "networkSecurityGroups",
+          "name": "networkDeployment",
           "resourceGroup": "network",
           "properties": {
             "mode": "Incremental",
             "templateLink": {
-              "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoints.value[0], 'resources/networkSecurityGroups.json', parameters('_resourcesLocationSasToken'))]"
+              "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoints.value[0], 'deployments/networkdeploy.json', parameters('_deploymentsLocationSasToken'))]"
             },
-            "parametersLink": {
-              "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoints.value[0], 'params/networkSecurityGroups.parameters.json', parameters('_paramsLocationSasToken'))]"
-            },
-            "debugSetting": {
-              "detailLevel": "requestContent, responseContent"
-            }
-          }   
-        },
-        {
-          "type": "Microsoft.Resources/deployments",
-          "apiVersion": "[variables('deployments').apiVersion]",
-          "name": "network",
-          "resourceGroup": "network",
-          "dependsOn": [
-              "[resourceId('network', 'Microsoft.Resources/deployments', 'networkSecurityGroups')]"
-          ],
-          "properties": {
-            "mode": "Incremental",
-            "templateLink": {
-              "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoints.value[0], 'resources/virtualNetworks.json', parameters('_resourcesLocationSasToken'))]"
-            },
-            "parametersLink": {
-              "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoints.value[0], 'params/virtualNetworks.parameters.json', parameters('_paramsLocationSasToken'))]"
+            "parameters": {
+              "_resourcesLocationSasToken": {
+                  "value": "[parameters('_resourcesLocationSasToken')]"
+              },
+              "_paramsLocationSasToken": {
+                  "value": "[parameters('_paramsLocationSasToken')]"
+              },
+              "blobEndpoint": {
+                  "value": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoints.value[0]]"
+              }
             },
             "debugSetting": {
               "detailLevel": "requestContent, responseContent"
