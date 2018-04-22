@@ -33,14 +33,12 @@ if ((Get-Content $TemplateParametersFile -Raw | ConvertFrom-Json).parameters.PSO
 	$OptionalParameters[$userObjectId] = (Get-AzureRmADUser -UserPrincipalName (Get-AzureRmContext).Account).Id
 }
 
-@(
-	@{ tokenName = '_resourcesLocationSasToken'; container = 'resources' },
-	@{ tokenName = '_paramsLocationSasToken'; container = 'params' }
-) | % {
-	if ((Get-Content $TemplateParametersFile -Raw | ConvertFrom-Json).parameters.PSObject.Properties.name -match $_.tokenName) {
-		if ($OptionalParameters[$_.tokenName] -eq $null) {
-			$OptionalParameters[$_.tokenName] = ConvertTo-SecureString -AsPlainText -Force `
-				(New-AzureStorageContainerSASToken -Container $_.container -Context (Get-AzureRmStorageAccount -ResourceGroupName storage | ? StorageAccountName -like 'storage*').Context -Permission r -ExpiryTime (Get-Date).AddHours(4))
+Get-ChildItem -Directory | % { 
+	$tokenName = "_$($_.Name)LocationSasToken"
+	if ((Get-Content $TemplateParametersFile -Raw | ConvertFrom-Json).parameters.PSObject.Properties.name -match "$tokenName") {
+		if ($OptionalParameters[$tokenName] -eq $null) {
+			$OptionalParameters[$tokenName] = ConvertTo-SecureString -AsPlainText -Force `
+				(New-AzureStorageContainerSASToken -Container "$($_.Name)" -Context (Get-AzureRmStorageAccount -ResourceGroupName storage | ? StorageAccountName -like 'storage*').Context -Permission r -ExpiryTime (Get-Date).AddHours(4))
 		}
 	}
 }

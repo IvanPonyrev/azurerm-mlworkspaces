@@ -8,6 +8,9 @@
         "_paramsLocationSasToken": {
             "type": "securestring"
         },
+        "_deploymentsLocationSasToken": {
+            "type": "securestring"
+        },
         "userObjectId": {
             "type": "string"
         }
