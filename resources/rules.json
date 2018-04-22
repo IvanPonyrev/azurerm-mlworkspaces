@@ -34,7 +34,7 @@
       "name": "[concat(parameters('group'), '/', parameters('rules')[copyIndex(1)].name)]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/networkSecurityGroups/securityRules', parameters('rules')[copyIndex()].networkSecurityGroup, parameters('rules')[copyIndex()].name)]"
+        "[resourceId('Microsoft.Network/networkSecurityGroups/securityRules', parameters('group'), parameters('rules')[copyIndex()].name)]"
       ],
       "properties": "[parameters('rules')[copyIndex(1)].properties]",
       "copy": {
@@ -46,7 +46,7 @@
   "outputs": {
     "finalDependency": {
       "type": "string",
-      "value": "[resourceId('Microsoft.Network/networkSecurityGroups/securityRules', parameters('rules')[sub(length(parameters('rules'), 1)].name)]"
+      "value": "[resourceId('Microsoft.Network/networkSecurityGroups/securityRules', parameters('group'), parameters('rules')[sub(length(parameters('rules')), 1)].name)]"
     }
   }
 }

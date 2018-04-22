@@ -58,7 +58,7 @@
         {
           "type": "Microsoft.Resources/deployments",
           "apiVersion": "[variables('deployments').apiVersion]",
-          "name": "networkSecurityGroupRules",
+          "name": "frontendRules",
           "dependsOn": [
               "[resourceId('Microsoft.Resources/deployments', 'networkSecurityGroups')]"
           ],
@@ -67,8 +67,66 @@
             "templateLink": {
               "uri": "[concat(parameters('blobEndpoint'), 'resources/rules.json', parameters('_resourcesLocationSasToken'))]"
             },
-            "parametersLink": {
-              "uri": "[concat(parameters('blobEndpoint'), 'params/rules.parameters.json', parameters('_paramsLocationSasToken'))]"
+            "parameters": {
+              "group": {
+                  "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networkSecurityGroups'), variables('deployments').apiVersion).outputs.groups.value[0]]"
+              },
+              "rules": {
+                  "value": [
+                      {
+                          "name": "Allow-Inbound-HTTP-Internet",
+                          "properties": {
+                            "direction": "Inbound",
+                            "access": "Allow",
+                            "priority": 100,
+                            "sourceAddressPrefix": "Internet",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*",
+                            "destinationPortRange": "80",
+                            "protocol": "Tcp"
+                          }
+                      },
+                      {
+                          "name": "Allow-Inbound-RDP-Internet",
+                          "properties": {
+                            "direction": "Inbound",
+                            "access": "Allow",
+                            "priority": 200,
+                            "sourceAddressPrefix": "Internet",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*",
+                            "destinationPortRange": "3389",
+                            "protocol": "Tcp"
+                          }
+                      },
+                      {
+                          "name": "Deny-Inbound-All",
+                          "properties": {
+                            "direction": "Inbound",
+                            "access": "Deny",
+                            "priority": 300,
+                            "sourceAddressPrefix": "Internet",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*",
+                            "destinationPortRange": "*",
+                            "protocol": "Tcp"
+                          }
+                      },
+                      {
+                          "name": "Deny-Internet-All",
+                          "properties": {
+                            "direction": "Outbound",
+                            "access": "Deny",
+                            "priority": 100,
+                            "sourceAddressPrefix": "*",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "Internet",
+                            "destinationPortRange": "*",
+                            "protocol": "*"
+                        }
+                      }
+                  ]
+              }
             },
             "debugSetting": {
               "detailLevel": "requestContent, responseContent"
@@ -78,17 +136,49 @@
         {
           "type": "Microsoft.Resources/deployments",
           "apiVersion": "[variables('deployments').apiVersion]",
-          "name": "subnets",
+          "name": "backendRules",
           "dependsOn": [
-              "[resourceId('Microsoft.Resources/deployments', 'networkSecurityGroupRules')]"
+              "[resourceId('Microsoft.Resources/deployments', 'networkSecurityGroups')]"
           ],
           "properties": {
             "mode": "Incremental",
             "templateLink": {
-              "uri": "[concat(parameters('blobEndpoint'), 'resources/subnets.json', parameters('_resourcesLocationSasToken'))]"
+              "uri": "[concat(parameters('blobEndpoint'), 'resources/rules.json', parameters('_resourcesLocationSasToken'))]"
             },
-            "parametersLink": {
-              "uri": "[concat(parameters('blobEndpoint'), 'params/subnets.parameters.json', parameters('_paramsLocationSasToken'))]"
+            "parameters": {
+              "group": {
+                "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networkSecurityGroups'), variables('deployments').apiVersion).outputs.groups.value[1]]"
+            },
+              "rules": {
+                  "value": [
+                    {
+                        "name": "Deny-Inbound-All",
+                        "properties": {
+                            "direction": "Inbound",
+                            "access": "Deny",
+                            "priority": 100,
+                            "sourceAddressPrefix": "Internet",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*",
+                            "destinationPortRange": "*",
+                            "protocol": "*"
+                    }
+                    },
+                    {
+                        "name": "Deny-Internet-All",
+                        "properties": {
+                            "direction": "Outbound",
+                            "access": "Deny",
+                            "priority": 100,
+                            "sourceAddressPrefix": "*",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "Internet",
+                            "destinationPortRange": "*",
+                            "protocol": "*"
+                        }
+                    }
+                  ]
+              }
             },
             "debugSetting": {
               "detailLevel": "requestContent, responseContent"
