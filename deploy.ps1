@@ -5,10 +5,12 @@ Param(
     [string] $ResourceGroupName = 'storage',
 	[array] $LinkedResourceGroups = @('network', 'machines', 'web', 'workspaces', 'sql', 'vaults'),
     [switch] $UploadArtifacts,
+	[string] $Mode = 'Complete',
     [string] $TemplateFile = '.\resources\storageAccounts.json',
     [string] $TemplateParametersFile = '.\params\storageAccounts.parameters.json',
     [string] $ArtifactStagingDirectory = '.',
-    [switch] $ValidateOnly
+    [switch] $ValidateOnly,
+	[switch] $UploadOnly
 )
 
 try {
@@ -66,6 +68,7 @@ else {
 	#((Get-ChildItem $TemplateFile).BaseName + '-' + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')) `
 	New-AzureRmResourceGroupDeployment -Name (Get-ChildItem $TemplateFile).BaseName `
 										-ResourceGroupName $ResourceGroupName `
+										-Mode $Mode `
 										-TemplateFile $TemplateFile `
 										-TemplateParameterFile $TemplateParametersFile `
 										@OptionalParameters `
@@ -89,7 +92,6 @@ if ($UploadArtifacts) {
 	$JsonParameters.storageAccounts.value | % {
 		$storageAccountName = $_.name
 
-		Write-Verbose -Message "STORAGE ACCOUNT: $storageAccountName"
 		# Create a storage account name if none was provided
 		if ($storageAccountName -eq '') {
 			$storageAccountName = 'stage' + ((Get-AzureRmContext).Subscription.SubscriptionId).Replace('-', '').substring(0, 19)
