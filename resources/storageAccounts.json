@@ -42,6 +42,10 @@
         "value": [
           "[reference(concat(parameters('storageAccounts')[0].name, variables('storageAccounts').suffix), variables('storageAccounts').apiVersion).primaryEndpoints.blob]"
         ]
+      },
+      "storageAccountId": {
+        "type": "string",
+        "value": "[resourceId('Microsoft.Storage/storageAccounts', concat(parameters('storageAccounts')[0].name, variables('storageAccounts').suffix))]"
       }
     }
 }
