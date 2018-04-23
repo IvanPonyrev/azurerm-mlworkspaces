@@ -26,12 +26,7 @@
       "apiVersion": "[variables('virtualNetworks').apiVersion]",
       "name": "[concat(parameters('virtualNetwork'), '/', parameters('subnets')[copyIndex()].name)]",
       "location": "[resourceGroup().location]",
-      "properties": {
-        "addressPrefix": "[parameters('subnets')[copyIndex()].properties.addressPrefix]",
-        "networkSecurityGroup": {
-          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('subnets')[copyIndex()].properties.networkSecurityGroup.name)]"
-        }
-      },
+      "properties": "[parameters('subnets')[copyIndex()].properties]",
       "copy": {
         "name": "subnets",
         "count": "[length(parameters('subnets'))]"
