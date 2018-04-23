@@ -69,7 +69,7 @@
             },
             "parameters": {
               "group": {
-                  "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networkSecurityGroups'), variables('deployments').apiVersion).outputs.groups.value[0]]"
+                  "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networkSecurityGroups'), variables('deployments').apiVersion).outputs.groups.value[0].name]"
               },
               "rules": {
                   "value": [
@@ -147,7 +147,7 @@
             },
             "parameters": {
               "group": {
-                "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networkSecurityGroups'), variables('deployments').apiVersion).outputs.groups.value[1]]"
+                "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networkSecurityGroups'), variables('deployments').apiVersion).outputs.groups.value[1].name]"
             },
               "rules": {
                   "value": [
@@ -179,6 +179,51 @@
                     }
                   ]
               }
+            },
+            "debugSetting": {
+              "detailLevel": "requestContent, responseContent"
+            }
+          }   
+        },
+        {
+          "type": "Microsoft.Resources/deployments",
+          "apiVersion": "[variables('deployments').apiVersion]",
+          "name": "subnets",
+          "dependsOn": [
+              "[resourceId('Microsoft.Resources/deployments', 'frontendRules')]",
+              "[resourceId('Microsoft.Resources/deployments', 'backendRules')]"
+          ],
+          "properties": {
+            "mode": "Incremental",
+            "templateLink": {
+              "uri": "[concat(parameters('blobEndpoint'), 'resources/subnets.json', parameters('_resourcesLocationSasToken'))]"
+            },
+            "parameters": {
+                "virtualNetwork": {
+                    "value": "[reference(resourceId('Microsoft.Resources/deployments', 'network'), variables('deployments').apiVersion).outputs.virtualNetworkName.value]"
+                },
+                "subnets": {
+                    "value": [
+                        {
+                            "name": "frontend",
+                            "properties": {
+                                "addressPrefix": "192.168.1.0/24",
+                                "networkSecurityGroup": {
+                                    "id": "[reference(resourceId('Microsoft.Resources/deployments', 'networkSecurityGroups'), variables('deployments').apiVersion).outputs.groups.value[0].id]"
+                                }
+                            }   
+                        },
+                        {
+                            "name": "backend",
+                            "properties": {
+                                "addressPrefix": "192.168.2.0/24",
+                                "networkSecurityGroup": {
+                                    "id": "[reference(resourceId('Microsoft.Resources/deployments', 'networkSecurityGroups'), variables('deployments').apiVersion).outputs.groups.value[1].id]"
+                                }
+                            }
+                        }
+                    ]
+                }
             },
             "debugSetting": {
               "detailLevel": "requestContent, responseContent"

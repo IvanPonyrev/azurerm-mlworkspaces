@@ -31,8 +31,16 @@
     "groups": {
       "type": "array",
       "value": [
-        "[parameters('networkSecurityGroups')[0].name]",
-        "[parameters('networkSecurityGroups')[1].name]"
+        {
+          "name": "[parameters('networkSecurityGroups')[0].name]",
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups')[0].name)]"
+        },
+        {
+          "name": "[parameters('networkSecurityGroups')[1].name]",
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups')[1].name)]"
+        }
+        
+        
       ]
     }
   }
