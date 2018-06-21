@@ -5,12 +5,11 @@ Param(
     [string] $ResourceGroupName = 'storage',
 	[array] $LinkedResourceGroups = @('network', 'machines', 'web', 'workspaces', 'sql', 'vaults'),
     [switch] $UploadArtifacts,
-	[string] $Mode = 'Complete',
+	[string] [ValidateSet("Complete", "Incremental")] $Mode = 'Complete',
     [string] $TemplateFile = '.\resources\storageAccounts.json',
     [string] $TemplateParametersFile = '.\params\storageAccounts.parameters.json',
     [string] $ArtifactStagingDirectory = '.',
-    [switch] $ValidateOnly,
-	[switch] $UploadOnly
+    [switch] $ValidateOnly
 )
 
 try {
@@ -30,26 +29,35 @@ $OptionalParameters = New-Object -TypeName Hashtable
 $TemplateFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $TemplateFile))
 $TemplateParametersFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $TemplateParametersFile))
 
-$userObjectId = 'userObjectId'
-if ((Get-Content $TemplateParametersFile -Raw | ConvertFrom-Json).parameters.PSObject.Properties.name -match $userObjectId) {
-	$OptionalParameters[$userObjectId] = (Get-AzureRmADUser -UserPrincipalName (Get-AzureRmContext).Account).Id
-}
-
-Get-ChildItem -Directory | % { 
-	$tokenName = "_$($_.Name)LocationSasToken"
-	if ((Get-Content $TemplateParametersFile -Raw | ConvertFrom-Json).parameters.PSObject.Properties.name -match "$tokenName") {
-		if ($OptionalParameters[$tokenName] -eq $null) {
-			$OptionalParameters[$tokenName] = ConvertTo-SecureString -AsPlainText -Force `
-				(New-AzureStorageContainerSASToken -Container "$($_.Name)" -Context (Get-AzureRmStorageAccount -ResourceGroupName storage | ? StorageAccountName -like 'storage*').Context -Permission r -ExpiryTime (Get-Date).AddHours(4))
-		}
-	}
-}
+# $userObjectId = 'userObjectId'
+# if ((Get-Content $TemplateParametersFile -Raw | ConvertFrom-Json).parameters.PSObject.Properties.name -match $userObjectId) {
+# 	$OptionalParameters[$userObjectId] = (Get-AzureRmADUser -UserPrincipalName (Get-AzureRmContext).Account).Id
+# }
 
 # Create or update the resource group using the specified template file and template parameters file
 New-AzureRmResourceGroup -Name $ResourceGroupName -Location $ResourceGroupLocation -Verbose -Force
 
 $LinkedResourceGroups | % { 
 	New-AzureRmResourceGroup -Name $_ -Location $ResourceGroupLocation -Verbose -Force
+}
+
+$params = Get-Content $TemplateParametersFile -Raw | ConvertFrom-Json
+
+$tokens = "_*LocationSasToken"
+if ($params.parameters.PSObject.Properties.name -match $tokens) {
+	$storageAccount = Get-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName | Select -First 1
+
+	$params.parameters.PSObject.Properties.name -match $tokens | % {
+		$OptionalParameters[$_] = @{
+			$true = ConvertTo-SecureString -AsPlainText -Force `
+				(New-AzureStorageContainerSASToken -Container "$([regex]::Matches($_, '(?<=_).+?(?=Location)').value)" `
+					-Context $storageAccount.Context `
+					-Permission r `
+					-ExpiryTime (Get-Date).AddHours(4) `
+					-Verbose);
+			$false = Get-AzureKeyVaultSecret -VaultName (Get-AzureRmKeyVault -ResourceGroupName $ResourceGroupName).VaultName -Name ([regex]::Matches($_, "[^_]+$").value)
+		}[ $OptionalParameters[$_] -eq $null ]
+	}
 }
 
 if ($ValidateOnly) {
@@ -89,26 +97,18 @@ if ($UploadArtifacts) {
         $JsonParameters = $JsonParameters.parameters
     }
 
-	$JsonParameters.storageAccounts.value | % {
-		$storageAccountName = $_.name
+	$storageAccount = Get-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName | select -First 1
 
-		# Create a storage account name if none was provided
-		if ($storageAccountName -eq '') {
-			$storageAccountName = 'stage' + ((Get-AzureRmContext).Subscription.SubscriptionId).Replace('-', '').substring(0, 19)
+	Get-ChildItem -Directory | % {
+		# Create or get containers.
+		$storageContainer = @{
+			$true = New-AzureStorageContainer -Name $_.BaseName -Context $storageAccount.Context -ErrorAction SilentlyContinue;
+			$false = Get-AzureStorageContainer -Name $_.BaseName -Context $storageAccount.Context;
+		}[ (Get-AzureStorageContainer -Name $_.BaseName -Context $storageAccount.Context) -eq $null ]
+
+		# Upload to blobs.
+		Get-ChildItem "$($_.FullName)\*.json" -File | % {
+			Set-AzureStorageBlobContent -File "$($_.FullName)" -Blob $_.Name -Container $storageContainer.Name  -Context $storageAccount.Context -Force
 		}
-
-		$storageAccount = Get-AzureRmStorageAccount | ?  StorageAccountName -like "$storageAccountName*" | select -First 1
-
-        Get-ChildItem $ArtifactStagingDirectory -Recurse -Directory | % {
-    		$storageContainer = New-AzureStorageContainer -Name "$($_.BaseName)" -Context $storageAccount.Context -ErrorAction SilentlyContinue
-
-			if ($storageContainer -eq $null) {
-				$storageContainer = Get-AzureStorageContainer -Name "$($_.BaseName)" -Context $storageAccount.Context
-			}
-
-            Get-ChildItem "$($_.FullName)\*.json" -File | % {
-                Set-AzureStorageBlobContent -File "$($_.FullName)" -Blob $_.Name -Container $storageContainer.Name  -Context $storageAccount.Context -Force
-            }
-        }
 	}
 }
