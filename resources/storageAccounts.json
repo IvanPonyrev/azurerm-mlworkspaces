@@ -2,34 +2,44 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-      "storageAccounts": {
-        "type": "array",
+      "name": {
+        "type": "string",
         "metadata": {
-          "description": "Array of objects containing storageAccount name, sku, kind, and properties."
+          "description": "The name of the resource."
+        },
+        "defaultValue": "storage"
+      },
+      "apiVersion": {
+        "type": "string",
+        "metadata": {
+          "description": "The desired apiVersion of this resource. Default is latest."
+        },
+        "defaultValue": "latest"
+      },
+      "storageAccount": {
+        "type": "object",
+        "metadata": {
+          "description": "A storageAccount object containing sku, kind, and properties."
         }
       }
     },
     "variables": {
       "storageAccounts": {
-        "apiVersion": "[providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]]",
-        "suffix": "[uniqueString(subscription().displayName)]"
+        "apiVersion": "[if(equals(parameters('apiVersion'), 'latest'), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0], parameters('apiVersion'))]",
+        "name": "[concat(parameters('name'), uniqueString(subscription().displayName))]"
       }
     },
     "resources": [
       {
         "type": "Microsoft.Storage/storageAccounts",
         "apiVersion": "[variables('storageAccounts').apiVersion]",
-        "name": "[concat(parameters('storageAccounts')[copyIndex()].name, variables('storageAccounts').suffix)]",
+        "name": "[variables('storageAccounts').name]",
         "location": "[resourceGroup().location]",
         "sku": {
-          "name": "[parameters('storageAccounts')[copyIndex()].sku.name]"
+          "name": "[parameters('storageAccount').sku.name]"
         },
-        "kind": "[parameters('storageAccounts')[copyIndex()].kind]",
-        "properties": "[parameters('storageAccounts')[copyIndex()].properties]",
-        "copy": {
-          "name": "storageAccounts",
-          "count": "[length(parameters('storageAccounts'))]"
-        }
+        "kind": "[parameters('storageAccount').kind]",
+        "properties": "[parameters('storageAccount').properties]"
       }
     ],
     "outputs": {
@@ -37,15 +47,15 @@
         "type": "string",
         "value": "[variables('storageAccounts').apiVersion]"
       },
-      "blobEndpoints": {
+      "blobEndpoint": {
         "type": "array",
         "value": [
-          "[reference(concat(parameters('storageAccounts')[0].name, variables('storageAccounts').suffix), variables('storageAccounts').apiVersion).primaryEndpoints.blob]"
+          "[reference(variables('storageAccounts').name, variables('storageAccounts').apiVersion).primaryEndpoints.blob]"
         ]
       },
-      "storageAccountId": {
+      "resourceId": {
         "type": "string",
-        "value": "[resourceId('Microsoft.Storage/storageAccounts', concat(parameters('storageAccounts')[0].name, variables('storageAccounts').suffix))]"
+        "value": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts').name)]"
       }
     }
 }
