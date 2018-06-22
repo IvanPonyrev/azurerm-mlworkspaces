@@ -29,43 +29,39 @@
           "properties": {
             "mode": "Incremental",
             "templateLink": {
-              "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoints.value[0], 'resources/vaults.json', parameters('_resourcesLocationSasToken'))]"
+              "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value[0], 'resources/vaults.json', parameters('_resourcesLocationSasToken'))]"
             },
             "parameters": {
-                "vault": {
+                "name": {
+                    "value": "[concat('vault', uniqueString(subscription().subscriptionId))]"
+                },
+                "sku": {
                     "value": {
-                        "name": "vault",
-                        "properties": {
-                            "accessPolicies": [
-                                {
-                                    "objectId": "",
-                                    "tenantId": "",
-                                    "permissions": {
-                                        "keys": [
-                                        "all"
-                                        ],
-                                        "secrets": [
-                                        "all"
-                                        ],
-                                        "certificates": [
-                                        "all"
-                                        ]
-                                    }
-                                }
-                            ]
-                        }
+                        "name": "Standard",
+                        "family": "A"
                     }
                 },
-                "secrets": {
+                "accessPolicies": {
                     "value": [
                         {
-                            "name": "_resourcesLocationSasToken",
-                            "value": "[parameters('_resourcesLocationSasToken')]"
+                            "tenantId": "[subscription().tenantId]",
+                            "objectId": "[parameters('userObjectId')]",
+                            "permissions": {
+                                "keys": [
+                                    "all"
+                                ],
+                                "secrets": [
+                                    "all"
+                                ],
+                                "certificates": [
+                                    "all"
+                                ],
+                                "storage": [
+                                    "all"
+                                ]
+                            }
                         }
                     ]
-                },
-                "userObjectId": {
-                    "value": "[parameters('userObjectId')]"
                 }
             },
             "debugSetting": {
@@ -81,7 +77,7 @@
           "properties": {
             "mode": "Incremental",
             "templateLink": {
-              "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoints.value[0], 'deployments/networkdeploy.json', parameters('_deploymentsLocationSasToken'))]"
+              "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value[0], 'deployments/networkdeploy.json', parameters('_deploymentsLocationSasToken'))]"
             },
             "parameters": {
               "_resourcesLocationSasToken": {
@@ -91,7 +87,7 @@
                   "value": "[parameters('_paramsLocationSasToken')]"
               },
               "blobEndpoint": {
-                  "value": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoints.value[0]]"
+                  "value": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value[0]]"
               }
             },
             "debugSetting": {

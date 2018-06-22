@@ -53,6 +53,10 @@
           "[reference(variables('storageAccounts').name, variables('storageAccounts').apiVersion).primaryEndpoints.blob]"
         ]
       },
+      "name": {
+        "type": "string",
+        "value": "[variables('storageAccounts').name]"
+      },
       "resourceId": {
         "type": "string",
         "value": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts').name)]"

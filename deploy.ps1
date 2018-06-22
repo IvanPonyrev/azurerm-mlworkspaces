@@ -29,11 +29,6 @@ $OptionalParameters = New-Object -TypeName Hashtable
 $TemplateFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $TemplateFile))
 $TemplateParametersFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $TemplateParametersFile))
 
-# $userObjectId = 'userObjectId'
-# if ((Get-Content $TemplateParametersFile -Raw | ConvertFrom-Json).parameters.PSObject.Properties.name -match $userObjectId) {
-# 	$OptionalParameters[$userObjectId] = (Get-AzureRmADUser -UserPrincipalName (Get-AzureRmContext).Account).Id
-# }
-
 # Create or update the resource group using the specified template file and template parameters file
 New-AzureRmResourceGroup -Name $ResourceGroupName -Location $ResourceGroupLocation -Verbose -Force
 
@@ -48,15 +43,17 @@ if ($params.parameters.PSObject.Properties.name -match $tokens) {
 	$storageAccount = Get-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName | Select -First 1
 
 	$params.parameters.PSObject.Properties.name -match $tokens | % {
-		$OptionalParameters[$_] = @{
-			$true = ConvertTo-SecureString -AsPlainText -Force `
+		$OptionalParameters[$_] = if ($OptionalParameters[$_] -eq $null) {
+			ConvertTo-SecureString -AsPlainText -Force `
 				(New-AzureStorageContainerSASToken -Container "$([regex]::Matches($_, '(?<=_).+?(?=Location)').value)" `
 					-Context $storageAccount.Context `
 					-Permission r `
 					-ExpiryTime (Get-Date).AddHours(4) `
 					-Verbose);
-			$false = Get-AzureKeyVaultSecret -VaultName (Get-AzureRmKeyVault -ResourceGroupName $ResourceGroupName).VaultName -Name ([regex]::Matches($_, "[^_]+$").value)
-		}[ $OptionalParameters[$_] -eq $null ]
+			} 
+			else {
+				Get-AzureKeyVaultSecret -VaultName (Get-AzureRmKeyVault -ResourceGroupName $ResourceGroupName).VaultName -Name ([regex]::Matches($_, "[^_]+$").value);
+			}
 	}
 }
 

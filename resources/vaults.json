@@ -2,41 +2,46 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-      "vault": {
-        "type": "object",
-        "metadata": {
-          "description": "Array of objects containing vault name and properties."
-        }
-      },
-      "secrets": {
-        "type": "array",
-        "metadata": {
-          "description": "Array of objects containing vault name and properties."
-        }
-      },
-      "userObjectId": {
+      "name": {
         "type": "string",
         "metadata": {
-          "description": "The object id of user deploying these resources."
+          "description": "The name of the resource."
+        },
+        "defaultValue": "vault"
+      },
+      "apiVersion": {
+        "type": "string",
+        "metadata": {
+          "description": "The desired apiVersion of this resource. Default is latest."
+        },
+        "defaultValue": "latest"
+      },
+      "sku": {
+        "type": "object",
+        "metadata": {
+          "description": "The sku family and name of this vault."
+        }
+      },
+      "accessPolicies": {
+        "type": "array",
+        "metadata": {
+          "description": "The access policies to be applied to this vault."
         }
       }
     },
     "variables": {
       "vaults": {
-        "apiVersion": "[providers('Microsoft.KeyVault', 'vaults').apiVersions[0]]"
+        "apiVersion": "[if(equals(parameters('apiVersion'), 'latest'), providers('Microsoft.KeyVault', 'vaults').apiVersions[0], parameters('apiVersion'))]",
       }
     },
     "resources": [
       {
         "type": "Microsoft.KeyVault/vaults",
         "apiVersion": "[variables('vaults').apiVersion]",
-        "name": "[concat(parameters('vault').name, uniqueString(subscription().subscriptionId))]",
+        "name": "[parameters('name')]",
         "location": "[resourceGroup().location]",
         "properties": {
-          "sku": {
-            "family": "A",
-            "name": "standard"
-          },
+          "sku": "[parameters('sku')]",
           "tenantId": "[subscription().tenantId]",
           "enabledForDeployment": true,
           "enabledForDiskEncryption": true,
@@ -44,11 +49,12 @@
           "copy": [
             {
               "name": "accessPolicies",
-              "count": "[length(parameters('vault').properties.accessPolicies)]",
-              "input": {
-                "objectId": "[if(greater(length(parameters('vault').properties.accessPolicies[copyIndex('accessPolicies')].objectId), 0), parameters('vault').properties.accessPolicies[copyIndex('accessPolicies')].objectId, parameters('userObjectId'))]",
-                "tenantId": "[subscription().tenantId]",
-                "permissions": "[parameters('vault').properties.accessPolicies[copyIndex('accessPolicies')].permissions]"
+              "count": "[length(parameters('accessPolicies'))]",
+              "input": 
+              {
+                  "tenantId": "[parameters('accessPolicies')[copyIndex('accessPolicies')].tenantId]",
+                  "objectId": "[parameters('accessPolicies')[copyIndex('accessPolicies')].objectId]",
+                  "permissions": "[parameters('accessPolicies')[copyIndex('accessPolicies')].permissions]"
               }
             }
           ]
@@ -56,9 +62,17 @@
       }
     ],
     "outputs": {
+      "name": {
+        "type": "string",
+        "value": "[parameters('name')]"
+      },
+      "resourceId": {
+        "type": "string",
+        "value": "[resourceId('Microsoft.KeyVault/vaults', parameters('name'))]"
+      },
       "vaultUri": {
         "type": "string",
-        "value": "[reference(concat(parameters('vault').name, uniqueString(subscription().subscriptionId)), variables('vaults').apiVersion).vaultUri]"
+        "value": "[reference(parameters('name'), variables('vaults').apiVersion).vaultUri]"
       }
     }
   }

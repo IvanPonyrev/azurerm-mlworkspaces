@@ -2,51 +2,55 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "name": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of this resource."
+      }
+    },
+    "apiVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "The desired apiVersion of this resource. Default is latest."
+      },
+      "defaultValue": "latest"
+    },
     "group": {
       "type": "string",
       "metadata": {
         "description": "The network security group name to which rules will be applied."
       }
     },
-    "rules": {
-      "type": "array",
+    "properties": {
+      "type": "object",
       "metadata": {
-        "description": "An array of network security rules objects matching schema."
+        "description": "The properties of this rule."
       }
     }
   },
   "variables": {
-    "networkSecurityGroups": {
-      "apiVersion": "[providers('Microsoft.Network', 'networkSecurityGroups').apiVersions[0]]"
+    "rules": {
+      "apiVersion": "[if(equals(parameters('apiVersion'), 'latest'), providers('Microsoft.Network', 'networkSecurityGroups').apiVersions[0], parameters('apiVersion'))]",
+      "name": "[concat(parameters('group'), '/', parameters('name'))]"
     }
   },
   "resources": [
     {
       "type": "Microsoft.Network/networkSecurityGroups/securityRules",
-      "apiVersion": "[variables('networkSecurityGroups').apiVersion]",
-      "name": "[concat(parameters('group'), '/', parameters('rules')[0].name)]",
+      "apiVersion": "[variables('rules').apiVersion]",
+      "name": "[variables('rules').name]",
       "location": "[resourceGroup().location]",
-      "properties": "[parameters('rules')[0].properties]"
-    },
-    {
-      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
-      "apiVersion": "[variables('networkSecurityGroups').apiVersion]",
-      "name": "[concat(parameters('group'), '/', parameters('rules')[copyIndex(1)].name)]",
-      "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/networkSecurityGroups/securityRules', parameters('group'), parameters('rules')[copyIndex()].name)]"
-      ],
-      "properties": "[parameters('rules')[copyIndex(1)].properties]",
-      "copy": {
-        "name": "rules",
-        "count": "[sub(length(parameters('rules')), 1)]"
-      }
+      "properties": "[parameters('properties')]"
     }
   ],
   "outputs": {
-    "finalDependency": {
+    "name": {
       "type": "string",
-      "value": "[resourceId('Microsoft.Network/networkSecurityGroups/securityRules', parameters('group'), parameters('rules')[sub(length(parameters('rules')), 1)].name)]"
+      "value": "[variables('rules').name]"
+    },
+    "resourceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/networkSecurityGroups/securityRules', parameters('group'), parameters('name'))]"
     }
   }
 }
