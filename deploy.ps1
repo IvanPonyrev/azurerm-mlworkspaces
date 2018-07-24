@@ -50,9 +50,6 @@ if ($params.parameters.PSObject.Properties.name -match $tokens) {
 					-Permission r `
 					-ExpiryTime (Get-Date).AddHours(4) `
 					-Verbose);
-			} 
-			else {
-				Get-AzureKeyVaultSecret -VaultName (Get-AzureRmKeyVault -ResourceGroupName $ResourceGroupName).VaultName -Name ([regex]::Matches($_, "[^_]+$").value);
 			}
 	}
 }

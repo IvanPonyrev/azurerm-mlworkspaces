@@ -3,13 +3,16 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "_deploymentsLocationSasToken": {
-            "type": "securestring"
+            "type": "securestring",
+            "defaultValue": null
         },
         "_resourcesLocationSasToken": {
-            "type": "securestring"
+            "type": "securestring",
+            "defaultValue": null
         },
         "_paramsLocationSasToken": {
-            "type": "securestring"
+            "type": "securestring",
+            "defaultValue": null
         },
         "userObjectId": {
             "type": "string"
