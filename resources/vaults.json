@@ -16,22 +16,52 @@
         },
         "defaultValue": "latest"
       },
-      "sku": {
-        "type": "object",
+      "location": {
+        "type": "string", 
         "metadata": {
-          "description": "The sku family and name of this vault."
-        }
+          "description": "Sets the location of the resource."
+        },
+        "defaultValue": ""
+      },
+      "sku": {
+        "type": "string",
+        "metadata": {
+          "description": "SKU name to specify whether the vault is standard or premium."
+        },
+        "allowedValues": [ "standard", "premium" ]
       },
       "accessPolicies": {
         "type": "array",
         "metadata": {
           "description": "The access policies to be applied to this vault."
         }
+      },
+      "enabledForDeployment": {
+        "type": "bool",
+        "metadata": {
+          "description": "Property to specify whether Azure Virtual Machines are permitted to retrieve certificates stored as secrets from the key vault."
+        },
+        "defaultValue": true
+      },
+      "enabledForDiskEncryption": {
+        "type": "array",
+        "metadata": {
+          "description": "Property to specify whether Azure Disk Encryption is permitted to retrieve secrets from the vault and unwrap keys."
+        },
+        "defaultValue": true
+      },
+      "enabledForTemplateDeployment": {
+        "type": "array",
+        "metadata": {
+          "description": "Property to specify whether Azure Resource Manager is permitted to retrieve secrets from the key vault."
+        },
+        "defaultValue": true
       }
     },
     "variables": {
       "vaults": {
         "apiVersion": "[if(equals(parameters('apiVersion'), 'latest'), providers('Microsoft.KeyVault', 'vaults').apiVersions[0], parameters('apiVersion'))]",
+        "location": "[if(empty(parameters('location')), resourceGroup().location, parameters('location'))]"
       }
     },
     "resources": [
@@ -43,21 +73,10 @@
         "properties": {
           "sku": "[parameters('sku')]",
           "tenantId": "[subscription().tenantId]",
-          "enabledForDeployment": true,
-          "enabledForDiskEncryption": true,
-          "enabledForTemplateDeployment": true,
-          "copy": [
-            {
-              "name": "accessPolicies",
-              "count": "[length(parameters('accessPolicies'))]",
-              "input": 
-              {
-                  "tenantId": "[parameters('accessPolicies')[copyIndex('accessPolicies')].tenantId]",
-                  "objectId": "[parameters('accessPolicies')[copyIndex('accessPolicies')].objectId]",
-                  "permissions": "[parameters('accessPolicies')[copyIndex('accessPolicies')].permissions]"
-              }
-            }
-          ]
+          "enabledForDeployment": "[parameters('enabledForDeployment')]",
+          "enabledForDiskEncryption": "[parameters('enabledForDiskEncryption')]",
+          "enabledForTemplateDeployment": "[parameters('enabledForTemplateDeployment')]",
+          "accessPolicies": "[parameters('accessPolicies')]"
         }
       }
     ],
@@ -72,7 +91,7 @@
       },
       "vaultUri": {
         "type": "string",
-        "value": "[reference(parameters('name'), variables('vaults').apiVersion).vaultUri]"
+        "value": "[reference(resourceId('Microsoft.KeyVault/vaults', parameters('name')), variables('vaults').apiVersion).vaultUri]"
       }
     }
   }
