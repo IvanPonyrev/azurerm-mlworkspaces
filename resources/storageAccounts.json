@@ -35,7 +35,8 @@
         "type": "object",
         "metadata": {
           "description": "Sets a list of key value pairs describing the resource."
-        }
+        },
+        "defaultValue": { }
       },
       "sku": {
         "type": "string",
@@ -106,6 +107,7 @@
         "apiVersion": "[variables('storageAccounts').apiVersion]",
         "name": "[variables('storageAccounts').name]",
         "location": "[variables('storageAccounts').location]",
+        "tags": "[parameters('tags')]",
         "sku": {
           "name": "[parameters('sku')]"
         },
@@ -145,9 +147,23 @@
         "type": "string",
         "value": "[reference(variables('storageAccounts').name, variables('storageAccounts').apiVersion).primaryEndpoints.blob]"
       },
-      "storageAccount": {
-        "type": "object",
-        "value": "[reference(variables('storageAccounts').name, variables('storageAccounts').apiVersion)]"
+      "tableEndpoint": {
+        "type": "string",
+        "value": "[reference(variables('storageAccounts').name, variables('storageAccounts').apiVersion).primaryEndpoints.table]"
+      },
+      "key1": {
+        "type": "secureObject",
+        "value": {
+          "name": "storagePrimaryKey",
+          "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts').name), variables('storageAccounts').apiVersion).keys[0].value]"
+        }
+      },
+      "key2": {
+        "type": "secureObject",
+        "value": {
+          "name": "storageSecondaryKey",
+          "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts').name), variables('storageAccounts').apiVersion).keys[1].value]"
+        }
       }
     }
 }

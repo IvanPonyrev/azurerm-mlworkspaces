@@ -15,7 +15,7 @@
             "defaultValue": null
         },
         "userObjectId": {
-            "type": "string"
+            "type": "securestring"
         }
     },
     "variables": {
@@ -32,17 +32,11 @@
           "properties": {
             "mode": "Incremental",
             "templateLink": {
-              "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value[0], 'resources/vaults.json', parameters('_resourcesLocationSasToken'))]"
+              "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/vaults.json', parameters('_resourcesLocationSasToken'))]"
             },
             "parameters": {
                 "name": {
                     "value": "[concat('vault', uniqueString(subscription().subscriptionId))]"
-                },
-                "sku": {
-                    "value": {
-                        "name": "Standard",
-                        "family": "A"
-                    }
                 },
                 "accessPolicies": {
                     "value": [
@@ -66,32 +60,6 @@
                         }
                     ]
                 }
-            },
-            "debugSetting": {
-              "detailLevel": "requestContent, responseContent"
-            }
-          }   
-        },        
-        {
-          "type": "Microsoft.Resources/deployments",
-          "apiVersion": "[variables('deployments').apiVersion]",
-          "name": "networkDeployment",
-          "resourceGroup": "network",
-          "properties": {
-            "mode": "Incremental",
-            "templateLink": {
-              "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value[0], 'deployments/networkdeploy.json', parameters('_deploymentsLocationSasToken'))]"
-            },
-            "parameters": {
-              "_resourcesLocationSasToken": {
-                  "value": "[parameters('_resourcesLocationSasToken')]"
-              },
-              "_paramsLocationSasToken": {
-                  "value": "[parameters('_paramsLocationSasToken')]"
-              },
-              "blobEndpoint": {
-                  "value": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value[0]]"
-              }
             },
             "debugSetting": {
               "detailLevel": "requestContent, responseContent"

@@ -2,9 +2,10 @@
 
 Param(
     [string] [Parameter(Mandatory=$true)] $ResourceGroupLocation,
-    [string] $ResourceGroupName = 'storage',
+    [string] $ResourceGroupName = 'management',
 	[array] $LinkedResourceGroups = @('network', 'machines', 'web', 'workspaces', 'sql', 'vaults'),
     [switch] $UploadArtifacts,
+    [switch] $UpdateStorage,
 	[string] [ValidateSet("Complete", "Incremental")] $Mode = 'Complete',
     [string] $TemplateFile,
     [string] $TemplateParametersFile,
@@ -35,32 +36,13 @@ $LinkedResourceGroups | % {
 	New-AzureRmResourceGroup -Name $_ -Location $ResourceGroupLocation -Verbose -Force
 }
 
-# $params = Get-Content $TemplateParametersFile -Raw | ConvertFrom-Json
-
-# $tokens = "_*LocationSasToken"
-# if ($params.parameters.PSObject.Properties.name -match $tokens) {
-# 	$storageAccount = Get-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName | Select -First 1
-
-# 	$params.parameters.PSObject.Properties.name -match $tokens | % {
-# 		$OptionalParameters[$_] = if ($OptionalParameters[$_] -eq $null) {
-# 			ConvertTo-SecureString -AsPlainText -Force `
-# 				(New-AzureStorageContainerSASToken -Container "$([regex]::Matches($_, '(?<=_).+?(?=Location)').value)" `
-# 					-Context $storageAccount.Context `
-# 					-Permission r `
-# 					-ExpiryTime (Get-Date).AddHours(4) `
-# 					-Verbose);
-# 			}
-# 	}
-# }
-
 if ($UploadArtifacts) {
-    # Parse the parameter file and update the values of artifacts location and artifacts location SAS token if they are present
-    $JsonParameters = Get-Content $TemplateFile -Raw | ConvertFrom-Json | Select-Object parameters
 
-	$storageAccount = Get-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName | Select-Object -First 1
-	if ($null -eq $storageAccount) {
-		$storageAccount = (New-AzureRmResourceGroupDeployment -Name "storage" -ResourceGroupName $ResourceGroupName -TemplateFile ".\resources\storageAccounts.json").Outputs.storageAccount.value
+	# Update storage if flagged.
+	if ($UpdateStorage) {
+		New-AzureRmResourceGroupDeployment -Name "storageAccounts" -ResourceGroupName $ResourceGroupName -TemplateFile ".\resources\storageAccounts.json"
 	}
+	$storageAccount = Get-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName | Select-Object -First 1
 
 	Get-ChildItem -Directory | % {
 		# Create or get containers.
@@ -73,6 +55,24 @@ if ($UploadArtifacts) {
 		Get-ChildItem "$($_.FullName)\*.json" -File | % {
 			Set-AzureStorageBlobContent -File "$($_.FullName)" -Blob $_.Name -Container $storageContainer.Name  -Context $storageAccount.Context -Force
 		}
+	}
+}
+
+$params = Get-Content $TemplateParametersFile -Raw | ConvertFrom-Json
+
+$tokens = "_*LocationSasToken"
+if ($params.parameters.PSObject.Properties.name -match $tokens) {
+	$storageAccount = Get-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName | Select -First 1
+
+	$params.parameters.PSObject.Properties.name -match $tokens | % {
+		$OptionalParameters[$_] = if ($OptionalParameters[$_] -eq $null) {
+			ConvertTo-SecureString -AsPlainText -Force `
+				(New-AzureStorageContainerSASToken -Container "$([regex]::Matches($_, '(?<=_).+?(?=Location)').value)" `
+					-Context $storageAccount.Context `
+					-Permission r `
+					-ExpiryTime (Get-Date).AddHours(4) `
+					-Verbose);
+			}
 	}
 }
 

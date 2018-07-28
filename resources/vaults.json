@@ -28,7 +28,8 @@
         "metadata": {
           "description": "SKU name to specify whether the vault is standard or premium."
         },
-        "allowedValues": [ "standard", "premium" ]
+        "allowedValues": [ "Standard", "Premium" ],
+        "defaultValue": "Standard"
       },
       "accessPolicies": {
         "type": "array",
@@ -44,14 +45,14 @@
         "defaultValue": true
       },
       "enabledForDiskEncryption": {
-        "type": "array",
+        "type": "bool",
         "metadata": {
           "description": "Property to specify whether Azure Disk Encryption is permitted to retrieve secrets from the vault and unwrap keys."
         },
         "defaultValue": true
       },
       "enabledForTemplateDeployment": {
-        "type": "array",
+        "type": "bool",
         "metadata": {
           "description": "Property to specify whether Azure Resource Manager is permitted to retrieve secrets from the key vault."
         },
@@ -71,7 +72,10 @@
         "name": "[parameters('name')]",
         "location": "[resourceGroup().location]",
         "properties": {
-          "sku": "[parameters('sku')]",
+          "sku": {
+            "name": "[parameters('sku')]",
+            "family": "A"
+          },
           "tenantId": "[subscription().tenantId]",
           "enabledForDeployment": "[parameters('enabledForDeployment')]",
           "enabledForDiskEncryption": "[parameters('enabledForDiskEncryption')]",
