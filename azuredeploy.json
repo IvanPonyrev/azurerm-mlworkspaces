@@ -19,59 +19,58 @@
         }
     },
     "variables": {
-      "deployments": {
-        "apiVersion": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
-      }
+        "deployments": {
+            "apiVersion": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
+        }
     },
     "resources": [
         {
-          "type": "Microsoft.Resources/deployments",
-          "apiVersion": "[variables('deployments').apiVersion]",
-          "name": "vaults",
-          "resourceGroup": "vaults",
-          "properties": {
-            "mode": "Incremental",
-            "templateLink": {
-              "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/vaults.json', parameters('_resourcesLocationSasToken'))]"
-            },
-            "parameters": {
-                "name": {
-                    "value": "[concat('vault', uniqueString(subscription().subscriptionId))]"
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('deployments').apiVersion]",
+            "name": "vaults",
+            "resourceGroup": "vaults",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/vaults.json', parameters('_resourcesLocationSasToken'))]"
                 },
-                "accessPolicies": {
-                    "value": [
-                        {
-                            "tenantId": "[subscription().tenantId]",
-                            "objectId": "[parameters('userObjectId')]",
-                            "permissions": {
-                                "keys": [
-                                    "all"
-                                ],
-                                "secrets": [
-                                    "all"
-                                ],
-                                "certificates": [
-                                    "all"
-                                ],
-                                "storage": [
-                                    "all"
-                                ]
+                "parameters": {
+                    "name": {
+                        "value": "[concat('vault', uniqueString(subscription().subscriptionId))]"
+                    },
+                    "accessPolicies": {
+                        "value": [
+                            {
+                                "tenantId": "[subscription().tenantId]",
+                                "objectId": "[parameters('userObjectId')]",
+                                "permissions": {
+                                    "keys": [
+                                        "all"
+                                    ],
+                                    "secrets": [
+                                        "all"
+                                    ],
+                                    "certificates": [
+                                        "all"
+                                    ],
+                                    "storage": [
+                                        "all"
+                                    ]
+                                }
                             }
-                        }
-                    ]
+                        ]
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
                 }
-            },
-            "debugSetting": {
-              "detailLevel": "requestContent, responseContent"
             }
-          }   
         }
     ],
     "outputs": {
-      "apiVersion": {
-        "type": "string",
-        "value": "[variables('deployments').apiVersion]"
-      }
+        "apiVersion": {
+            "type": "string",
+            "value": "[variables('deployments').apiVersion]"
+        }
     }
 }
-  
