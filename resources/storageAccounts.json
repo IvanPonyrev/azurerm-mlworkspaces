@@ -88,6 +88,14 @@
           "description": "Indicates whether indirect CName validation is enabled. Default value is false. This should only be set on updates."
         },
         "defaultValue": false
+      },
+      "keySource": {
+        "type": "string",
+        "metadata": {
+          "description": "The encryption keySource (provider)."
+        },
+        "allowedValues": [ "Microsoft.Storage", "Microsoft.KeyVault" ],
+        "defaultValue": "Microsoft.Storage"
       }
     },
     "variables": {
@@ -122,7 +130,7 @@
                 "enabled": "[parameters('fileEncryption')]"
               }
             },
-            "keySource": "Microsoft.Storage"
+            "keySource": "[parameters('keySource')]"
           },
           "accessTier": "[parameters('accessTier')]",
           "supportsHttpsTrafficOnly": "[parameters('supportsHttpsTrafficOnly')]",

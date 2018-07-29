@@ -4,61 +4,78 @@
     "parameters": {
         "_deploymentsLocationSasToken": {
             "type": "securestring",
+            "metadata": {
+                "description": "Sas token to deployments container."
+            },
             "defaultValue": null
         },
         "_resourcesLocationSasToken": {
             "type": "securestring",
+            "metadata": {
+                "description": "Sas token to resources container."
+            },
             "defaultValue": null
         },
         "_paramsLocationSasToken": {
             "type": "securestring",
+            "metadata": {
+                "description": "Sas token to params container."
+            },
             "defaultValue": null
         },
-        "userObjectId": {
-            "type": "securestring"
+        "vaultAdminId": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The object id to which vault admin access policies will be applied."
+            }
+        },
+        "secrets": {
+            "type": "array",
+            "metadata": {
+                "description": "An array containing name value pairs."
+            },
+            "defaultValue": [ ]
         }
     },
     "variables": {
         "deployments": {
             "apiVersion": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
-        }
+        },
+        "secrets": [
+            {
+                "name": "resourcesLocationSasToken",
+                "value": "[parameters('_resourcesLocationSasToken')]"
+            },
+            {
+                "name": "paramsLocationSasToken",
+                "value": "[parameters('_paramsLocationSasToken')]"
+            },
+            {
+                "name": "deploymentsLocationSasToken",
+                "value": "[parameters('_deploymentsLocationSasToken')]"
+            }
+        ]
     },
     "resources": [
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('deployments').apiVersion]",
             "name": "vaults",
-            "resourceGroup": "vaults",
+            "resourceGroup": "management",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/vaults.json', parameters('_resourcesLocationSasToken'))]"
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'deployments/vault.json', parameters('_deploymentsLocationSasToken'))]"
                 },
                 "parameters": {
-                    "name": {
-                        "value": "[concat('vault', uniqueString(subscription().subscriptionId))]"
+                    "secrets": {
+                        "value": "[union(parameters('secrets'), variables('secrets'))]"
                     },
-                    "accessPolicies": {
-                        "value": [
-                            {
-                                "tenantId": "[subscription().tenantId]",
-                                "objectId": "[parameters('userObjectId')]",
-                                "permissions": {
-                                    "keys": [
-                                        "all"
-                                    ],
-                                    "secrets": [
-                                        "all"
-                                    ],
-                                    "certificates": [
-                                        "all"
-                                    ],
-                                    "storage": [
-                                        "all"
-                                    ]
-                                }
-                            }
-                        ]
+                    "_resourcesLocationSasToken": {
+                        "value": "[parameters('_resourcesLocationSasToken')]"
+                    },
+                    "vaultAdminId": {
+                        "value": "[parameters('vaultAdminId')]"
                     }
                 },
                 "debugSetting": {

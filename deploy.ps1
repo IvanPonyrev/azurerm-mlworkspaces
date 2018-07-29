@@ -3,12 +3,12 @@
 Param(
     [string] [Parameter(Mandatory=$true)] $ResourceGroupLocation,
     [string] $ResourceGroupName = 'management',
-	[array] $LinkedResourceGroups = @('network', 'machines', 'web', 'workspaces', 'sql', 'vaults'),
+	[array] $LinkedResourceGroups = @('network', 'machines', 'web', 'workspaces', 'sql'),
     [switch] $UploadArtifacts,
     [switch] $UpdateStorage,
 	[string] [ValidateSet("Complete", "Incremental")] $Mode = 'Complete',
-    [string] $TemplateFile,
-    [string] $TemplateParametersFile,
+    [string] $TemplateFile = ".\azuredeploy.json",
+    [string] $TemplateParametersFile = ".\azuredeploy.parameters.json",
     [switch] $ValidateOnly
 )
 
