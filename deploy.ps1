@@ -2,13 +2,13 @@
 
 Param(
     [string] [Parameter(Mandatory=$true)] $ResourceGroupLocation,
-    [string] $ResourceGroupName = 'storage',
-	[array] $LinkedResourceGroups = @('network', 'machines', 'web', 'workspaces', 'sql', 'vaults'),
+    [string] $ResourceGroupName = 'management',
+	[array] $LinkedResourceGroups = @('network', 'machines', 'web', 'workspaces', 'sql'),
     [switch] $UploadArtifacts,
+    [switch] $UpdateStorage,
 	[string] [ValidateSet("Complete", "Incremental")] $Mode = 'Complete',
-    [string] $TemplateFile = '.\resources\storageAccounts.json',
-    [string] $TemplateParametersFile = '.\params\storageAccounts.parameters.json',
-    [string] $ArtifactStagingDirectory = '.',
+    [string] $TemplateFile = ".\azuredeploy.json",
+    [string] $TemplateParametersFile = ".\azuredeploy.parameters.json",
     [switch] $ValidateOnly
 )
 
@@ -29,16 +29,33 @@ $OptionalParameters = New-Object -TypeName Hashtable
 $TemplateFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $TemplateFile))
 $TemplateParametersFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $TemplateParametersFile))
 
-# $userObjectId = 'userObjectId'
-# if ((Get-Content $TemplateParametersFile -Raw | ConvertFrom-Json).parameters.PSObject.Properties.name -match $userObjectId) {
-# 	$OptionalParameters[$userObjectId] = (Get-AzureRmADUser -UserPrincipalName (Get-AzureRmContext).Account).Id
-# }
-
 # Create or update the resource group using the specified template file and template parameters file
 New-AzureRmResourceGroup -Name $ResourceGroupName -Location $ResourceGroupLocation -Verbose -Force
 
 $LinkedResourceGroups | % { 
 	New-AzureRmResourceGroup -Name $_ -Location $ResourceGroupLocation -Verbose -Force
+}
+
+if ($UploadArtifacts) {
+
+	# Update storage if flagged.
+	if ($UpdateStorage) {
+		New-AzureRmResourceGroupDeployment -Name "storageAccounts" -ResourceGroupName $ResourceGroupName -TemplateFile ".\resources\storageAccounts.json"
+	}
+	$storageAccount = Get-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName | Select-Object -First 1
+
+	Get-ChildItem -Directory | % {
+		# Create or get containers.
+		$storageContainer = @{
+			$true = New-AzureStorageContainer -Name $_.BaseName -Context $storageAccount.Context -ErrorAction SilentlyContinue;
+			$false = Get-AzureStorageContainer -Name $_.BaseName -Context $storageAccount.Context;
+		}[ (Get-AzureStorageContainer -Name $_.BaseName -Context $storageAccount.Context) -eq $null ]
+
+		# Upload to blobs.
+		Get-ChildItem "$($_.FullName)\*.json" -File | % {
+			Set-AzureStorageBlobContent -File "$($_.FullName)" -Blob $_.Name -Container $storageContainer.Name  -Context $storageAccount.Context -Force
+		}
+	}
 }
 
 $params = Get-Content $TemplateParametersFile -Raw | ConvertFrom-Json
@@ -48,15 +65,14 @@ if ($params.parameters.PSObject.Properties.name -match $tokens) {
 	$storageAccount = Get-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName | Select -First 1
 
 	$params.parameters.PSObject.Properties.name -match $tokens | % {
-		$OptionalParameters[$_] = @{
-			$true = ConvertTo-SecureString -AsPlainText -Force `
+		$OptionalParameters[$_] = if ($OptionalParameters[$_] -eq $null) {
+			ConvertTo-SecureString -AsPlainText -Force `
 				(New-AzureStorageContainerSASToken -Container "$([regex]::Matches($_, '(?<=_).+?(?=Location)').value)" `
 					-Context $storageAccount.Context `
 					-Permission r `
 					-ExpiryTime (Get-Date).AddHours(4) `
 					-Verbose);
-			$false = Get-AzureKeyVaultSecret -VaultName (Get-AzureRmKeyVault -ResourceGroupName $ResourceGroupName).VaultName -Name ([regex]::Matches($_, "[^_]+$").value)
-		}[ $OptionalParameters[$_] -eq $null ]
+			}
 	}
 }
 
@@ -84,31 +100,5 @@ else {
 										-ErrorVariable ErrorMessages
 	if ($ErrorMessages) {
 		Write-Output '', 'Template deployment returned the following errors:', @(@($ErrorMessages) | ForEach-Object { $_.Exception.Message.TrimEnd("`r`n") })
-	}
-}
-
-if ($UploadArtifacts) {
-    # Convert relative paths to absolute paths if needed
-    $ArtifactStagingDirectory = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $ArtifactStagingDirectory))
-
-    # Parse the parameter file and update the values of artifacts location and artifacts location SAS token if they are present
-    $JsonParameters = Get-Content $TemplateParametersFile -Raw | ConvertFrom-Json
-    if (($JsonParameters | Get-Member -Type NoteProperty 'parameters') -ne $null) {
-        $JsonParameters = $JsonParameters.parameters
-    }
-
-	$storageAccount = Get-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName | select -First 1
-
-	Get-ChildItem -Directory | % {
-		# Create or get containers.
-		$storageContainer = @{
-			$true = New-AzureStorageContainer -Name $_.BaseName -Context $storageAccount.Context -ErrorAction SilentlyContinue;
-			$false = Get-AzureStorageContainer -Name $_.BaseName -Context $storageAccount.Context;
-		}[ (Get-AzureStorageContainer -Name $_.BaseName -Context $storageAccount.Context) -eq $null ]
-
-		# Upload to blobs.
-		Get-ChildItem "$($_.FullName)\*.json" -File | % {
-			Set-AzureStorageBlobContent -File "$($_.FullName)" -Blob $_.Name -Container $storageContainer.Name  -Context $storageAccount.Context -Force
-		}
 	}
 }

@@ -1,0 +1,129 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "_resourcesLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Sas token to resources container."
+            },
+            "defaultValue": null
+        },
+        "secrets": {
+            "type": "array",
+            "metadata": {
+                "description": "Secrets to deploy to the vault."
+            },
+            "defaultValue": [ ]
+        },
+        "vaultAdminId": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Vault administrator id."
+            }
+        },
+        "resourceGroup": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the resource group to which resources will be provisioned."
+            },
+            "defaultValue": "management"
+        }
+    },
+    "variables": {
+        "deployments": {
+            "apiVersion": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
+        },
+        "vaults": {
+            "name": "[concat('vault', uniqueString(subscription().subscriptionId))]"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('deployments').apiVersion]",
+            "name": "[variables('vaults').name]",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/vaults.json', parameters('_resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[variables('vaults').name]"
+                    },
+                    "accessPolicies": {
+                        "value": [
+                            {
+                                "tenantId": "[subscription().tenantId]",
+                                "objectId": "[parameters('vaultAdminId')]",
+                                "permissions": {
+                                    "keys": [
+                                        "all"
+                                    ],
+                                    "secrets": [
+                                        "all"
+                                    ],
+                                    "certificates": [
+                                        "all"
+                                    ],
+                                    "storage": [
+                                        "all"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('deployments').apiVersion]",
+            "name": "[parameters('secrets')[copyIndex()].name]",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/secrets.json', parameters('_resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[parameters('secrets')[copyIndex()].name]"
+                    },
+                    "vaultName": {
+                        "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('vaults').name), variables('deployments').apiVersion).outputs.name.value]"
+                    },
+                    "value": {
+                        "value": "[parameters('secrets')[copyIndex()].value]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            },
+            "copy": {
+                "name": "secrets",
+                "count": "[length(parameters('secrets'))]"
+            }
+        }
+    ],
+    "outputs": {
+        "apiVersion": {
+            "type": "string",
+            "value": "[variables('deployments').apiVersion]"
+        },
+        "vault": {
+            "type": "object",
+            "value": {
+                "name": "[reference(resourceId('Microsoft.Resources/deployments', variables('vaults').name), variables('deployments').apiVersion).outputs.name.value]",
+                "resourceId": "[reference(resourceId('Microsoft.Resources/deployments', variables('vaults').name), variables('deployments').apiVersion).outputs.resourceId.value]",
+                "vaultUri": "[reference(resourceId('Microsoft.Resources/deployments', variables('vaults').name), variables('deployments').apiVersion).outputs.vaultUri.value]"
+            }
+        }
+    }
+}

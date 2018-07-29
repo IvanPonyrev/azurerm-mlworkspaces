@@ -11,8 +11,8 @@
         "_paramsLocationSasToken": {
             "value": null
         },
-        "userObjectId": {
-            "value": ""
+        "vaultAdminId": {
+            "value": "97176e03-f68a-40fa-bc43-0344df72b61c"
         }
     }
 }

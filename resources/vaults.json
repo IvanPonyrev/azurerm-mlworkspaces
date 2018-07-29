@@ -2,63 +2,100 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-      "vault": {
-        "type": "object",
-        "metadata": {
-          "description": "Array of objects containing vault name and properties."
-        }
-      },
-      "secrets": {
-        "type": "array",
-        "metadata": {
-          "description": "Array of objects containing vault name and properties."
-        }
-      },
-      "userObjectId": {
+      "name": {
         "type": "string",
         "metadata": {
-          "description": "The object id of user deploying these resources."
+          "description": "The name of the resource."
+        },
+        "defaultValue": "vault"
+      },
+      "apiVersion": {
+        "type": "string",
+        "metadata": {
+          "description": "The desired apiVersion of this resource. Default is latest."
+        },
+        "defaultValue": "latest"
+      },
+      "location": {
+        "type": "string", 
+        "metadata": {
+          "description": "Sets the location of the resource."
+        },
+        "defaultValue": ""
+      },
+      "sku": {
+        "type": "string",
+        "metadata": {
+          "description": "SKU name to specify whether the vault is standard or premium."
+        },
+        "allowedValues": [ "Standard", "Premium" ],
+        "defaultValue": "Standard"
+      },
+      "accessPolicies": {
+        "type": "array",
+        "metadata": {
+          "description": "The access policies to be applied to this vault."
         }
+      },
+      "enabledForDeployment": {
+        "type": "bool",
+        "metadata": {
+          "description": "Property to specify whether Azure Virtual Machines are permitted to retrieve certificates stored as secrets from the key vault."
+        },
+        "defaultValue": true
+      },
+      "enabledForDiskEncryption": {
+        "type": "bool",
+        "metadata": {
+          "description": "Property to specify whether Azure Disk Encryption is permitted to retrieve secrets from the vault and unwrap keys."
+        },
+        "defaultValue": true
+      },
+      "enabledForTemplateDeployment": {
+        "type": "bool",
+        "metadata": {
+          "description": "Property to specify whether Azure Resource Manager is permitted to retrieve secrets from the key vault."
+        },
+        "defaultValue": true
       }
     },
     "variables": {
       "vaults": {
-        "apiVersion": "[providers('Microsoft.KeyVault', 'vaults').apiVersions[0]]"
+        "apiVersion": "[if(equals(parameters('apiVersion'), 'latest'), providers('Microsoft.KeyVault', 'vaults').apiVersions[0], parameters('apiVersion'))]",
+        "location": "[if(empty(parameters('location')), resourceGroup().location, parameters('location'))]"
       }
     },
     "resources": [
       {
         "type": "Microsoft.KeyVault/vaults",
         "apiVersion": "[variables('vaults').apiVersion]",
-        "name": "[concat(parameters('vault').name, uniqueString(subscription().subscriptionId))]",
+        "name": "[parameters('name')]",
         "location": "[resourceGroup().location]",
         "properties": {
           "sku": {
-            "family": "A",
-            "name": "standard"
+            "name": "[parameters('sku')]",
+            "family": "A"
           },
           "tenantId": "[subscription().tenantId]",
-          "enabledForDeployment": true,
-          "enabledForDiskEncryption": true,
-          "enabledForTemplateDeployment": true,
-          "copy": [
-            {
-              "name": "accessPolicies",
-              "count": "[length(parameters('vault').properties.accessPolicies)]",
-              "input": {
-                "objectId": "[if(greater(length(parameters('vault').properties.accessPolicies[copyIndex('accessPolicies')].objectId), 0), parameters('vault').properties.accessPolicies[copyIndex('accessPolicies')].objectId, parameters('userObjectId'))]",
-                "tenantId": "[subscription().tenantId]",
-                "permissions": "[parameters('vault').properties.accessPolicies[copyIndex('accessPolicies')].permissions]"
-              }
-            }
-          ]
+          "enabledForDeployment": "[parameters('enabledForDeployment')]",
+          "enabledForDiskEncryption": "[parameters('enabledForDiskEncryption')]",
+          "enabledForTemplateDeployment": "[parameters('enabledForTemplateDeployment')]",
+          "accessPolicies": "[parameters('accessPolicies')]"
         }
       }
     ],
     "outputs": {
+      "name": {
+        "type": "string",
+        "value": "[parameters('name')]"
+      },
+      "resourceId": {
+        "type": "string",
+        "value": "[resourceId('Microsoft.KeyVault/vaults', parameters('name'))]"
+      },
       "vaultUri": {
         "type": "string",
-        "value": "[reference(concat(parameters('vault').name, uniqueString(subscription().subscriptionId)), variables('vaults').apiVersion).vaultUri]"
+        "value": "[reference(resourceId('Microsoft.KeyVault/vaults', parameters('name')), variables('vaults').apiVersion).vaultUri]"
       }
     }
   }
