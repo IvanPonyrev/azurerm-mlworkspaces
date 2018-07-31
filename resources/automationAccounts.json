@@ -1,0 +1,85 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "name": {
+            "type": "string",
+            "metadata": {
+                "description": "The name to be given to this automation account."
+            },
+            "defaultValue": "automation"
+        },
+        "apiVersion": {
+            "type": "string",
+            "metadata": {
+                "description": "The apiVersion of this resource. Value 'latest' will deploy using latest apiVersion."
+            },
+            "defaultValue": "2017-05-15-preview"
+        },
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource location."
+            },
+            "defaultValue": ""
+        },
+        "sku": {
+            "type": "string",
+            "metadata": {
+                "description": "The sku name of this resource."
+            },
+            "allowedValues": [
+                "Free",
+                "Basic"
+            ],
+            "defaultValue": "Free"
+        }
+    },
+    "variables": {
+        "automationAccounts": {
+            "apiVersion": "[if(equals(parameters('apiVersion'), 'latest'), providers('Microsoft.Automation', 'automationAccounts').apiVersions[0], parameters('apiVersion'))]",
+            "location": "[if(empty(parameters('location')), resourceGroup().location, parameters('location'))]"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Automation/automationAccounts",
+            "apiVersion": "[variables('automationAccounts').apiVersion]",
+            "name": "[parameters('name')]",
+            "location": "[variables('automationAccounts').location]",
+            "properties": {
+                "sku": {
+                    "name": "[parameters('sku')]"
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "name": {
+            "type": "string",
+            "value": "[parameters('name')]"
+        },
+        "resourceId": {
+            "type": "string",
+            "value": "[resourceId('Microsoft.Automation/automationAccounts', parameters('name'))]"
+        },
+        "registrationUrl": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Automation/automationAccounts', parameters('name')), variables('automationAccounts').apiVersion).RegistrationUrl]"
+        },
+        "primaryKey": {
+            "type": "secureObject",
+            "value": {
+                "name": "automationPrimaryKey",
+                "value": "[listKeys(resourceId('Microsoft.Automation/automationAccounts', parameters('name')), variables('automationAccounts').apiVersion).keys[0].value]"
+            }
+        },
+        "secondaryKey": {
+            "type": "secureObject",
+            "value": {
+                "name": "automationSecondaryKey",
+                "value": "[listKeys(resourceId('Microsoft.Automation/automationAccounts', parameters('name')), variables('automationAccounts').apiVersion).keys[1].value]"
+            }
+        }
+    }
+}

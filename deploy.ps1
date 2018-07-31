@@ -6,7 +6,7 @@ Param(
 	[array] $LinkedResourceGroups = @('network', 'machines', 'web', 'workspaces', 'sql'),
     [switch] $UploadArtifacts,
     [switch] $UpdateStorage,
-	[string] [ValidateSet("Complete", "Incremental")] $Mode = 'Complete',
+	[string] [ValidateSet("Complete", "Incremental")] $Mode = 'Incremental',
     [string] $TemplateFile = ".\azuredeploy.json",
     [string] $TemplateParametersFile = ".\azuredeploy.parameters.json",
     [switch] $ValidateOnly

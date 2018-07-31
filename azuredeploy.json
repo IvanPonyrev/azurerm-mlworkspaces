@@ -82,6 +82,32 @@
                     "detailLevel": "requestContent, responseContent"
                 }
             }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('deployments').apiVersion]",
+            "name": "automationAccounts",
+            "resourceGroup": "management",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'deployments/vault.json', parameters('_deploymentsLocationSasToken'))]"
+                },
+                "parameters": {
+                    "secrets": {
+                        "value": "[union(parameters('secrets'), variables('secrets'))]"
+                    },
+                    "_resourcesLocationSasToken": {
+                        "value": "[parameters('_resourcesLocationSasToken')]"
+                    },
+                    "vaultAdminId": {
+                        "value": "[parameters('vaultAdminId')]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
         }
     ],
     "outputs": {
