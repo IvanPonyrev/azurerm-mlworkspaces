@@ -1,0 +1,109 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "_resourcesLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Sas token to resources container."
+            },
+            "defaultValue": null
+        },
+        "resourceGroup": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the resource group to which resources will be provisioned."
+            },
+            "defaultValue": "workspaces"
+        },
+        "managementResourceGroup": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the resource group containing storageAccounts deployment."
+            },
+            "defaultValue": "management"
+        },
+        "workspaceName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the MachineLearning workspace."
+            },
+            "defaultValue": "mlworkspace"
+        },
+        "workspaceLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "Workspace location."
+            },
+            "defaultValue": "southcentralus"
+        }
+    },
+    "variables": {
+        "deployments": {
+            "apiVersion": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('deployments').apiVersion]",
+            "name": "workspaceStorage",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(parameters('managementResourceGroup'), 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/storageAccounts.json', parameters('_resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[parameters('workspaceName')]"
+                    },
+                    "location": {
+                        "value": "[parameters('workspaceLocation')]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('deployments').apiVersion]",
+            "name": "workspaces",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'workspaceStorage')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(parameters('managementResourceGroup'), 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/workspaces.json', parameters('_resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[parameters('workspaceName')]"
+                    },
+                    "vaultId": {
+                        "value": "[reference(resourceId(parameters('managementResourceGroup'), 'Microsoft.Resources/deployments', 'vaults'), variables('deployments').apiVersion).outputs.vault.value.resourceId]"
+                    },
+                    "storageAccountId": {
+                        "value": "[reference(resourceId('Microsoft.Resources/deployments', 'workspaceStorage'), variables('deployments').apiVersion).outputs.resourceId.value]"
+                    },
+                    "location": {
+                        "value": "[parameters('workspaceLocation')]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "apiVersion": {
+            "type": "string",
+            "value": "[variables('deployments').apiVersion]"
+        }
+    }
+}

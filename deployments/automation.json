@@ -29,17 +29,12 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('deployments').apiVersion]",
-            "name": "automation",
+            "name": "automationAccount",
             "resourceGroup": "[parameters('resourceGroup')]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
                     "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/automationAccounts.json', parameters('_resourcesLocationSasToken'))]"
-                },
-                "parameters": {
-                    "location": {
-                        "value": "eastus2"
-                    }
                 },
                 "debugSetting": {
                     "detailLevel": "requestContent, responseContent"
@@ -51,6 +46,9 @@
             "apiVersion": "[variables('deployments').apiVersion]",
             "name": "automationPrimaryKey",
             "resourceGroup": "[parameters('resourceGroup')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'automationAccount')]"
+            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -64,7 +62,7 @@
                         "value": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'vaults'), variables('deployments').apiVersion).outputs.vault.value.name]"
                     },
                     "value": {
-                        "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automation'), variables('deployments').apiVersion).outputs.primaryKey.value]"
+                        "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationAccount'), variables('deployments').apiVersion).outputs.primaryKey.value]"
                     }
                 },
                 "debugSetting": {

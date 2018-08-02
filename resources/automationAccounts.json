@@ -14,14 +14,14 @@
             "metadata": {
                 "description": "The apiVersion of this resource. Value 'latest' will deploy using latest apiVersion."
             },
-            "defaultValue": "2017-05-15-preview"
+            "defaultValue": "latest"
         },
         "location": {
             "type": "string",
             "metadata": {
                 "description": "Resource location."
             },
-            "defaultValue": ""
+            "defaultValue": "eastus2"
         },
         "sku": {
             "type": "string",
@@ -37,8 +37,7 @@
     },
     "variables": {
         "automationAccounts": {
-            "apiVersion": "[if(equals(parameters('apiVersion'), 'latest'), providers('Microsoft.Automation', 'automationAccounts').apiVersions[0], parameters('apiVersion'))]",
-            "location": "[if(empty(parameters('location')), resourceGroup().location, parameters('location'))]"
+            "apiVersion": "[if(equals(parameters('apiVersion'), 'latest'), providers('Microsoft.Automation', 'automationAccounts').apiVersions[0], parameters('apiVersion'))]"
         }
     },
     "resources": [
@@ -46,7 +45,7 @@
             "type": "Microsoft.Automation/automationAccounts",
             "apiVersion": "[variables('automationAccounts').apiVersion]",
             "name": "[parameters('name')]",
-            "location": "[variables('automationAccounts').location]",
+            "location": "[parameters('location')]",
             "properties": {
                 "sku": {
                     "name": "[parameters('sku')]"
