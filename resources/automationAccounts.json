@@ -68,18 +68,12 @@
             "value": "[reference(resourceId('Microsoft.Automation/automationAccounts', parameters('name')), variables('automationAccounts').apiVersion).RegistrationUrl]"
         },
         "primaryKey": {
-            "type": "secureObject",
-            "value": {
-                "name": "automationPrimaryKey",
-                "value": "[listKeys(resourceId('Microsoft.Automation/automationAccounts', parameters('name')), variables('automationAccounts').apiVersion).keys[0].value]"
-            }
+            "type": "securestring",
+            "value": "[listKeys(resourceId('Microsoft.Automation/automationAccounts', parameters('name')), variables('automationAccounts').apiVersion).keys[0].value]"
         },
         "secondaryKey": {
-            "type": "secureObject",
-            "value": {
-                "name": "automationSecondaryKey",
-                "value": "[listKeys(resourceId('Microsoft.Automation/automationAccounts', parameters('name')), variables('automationAccounts').apiVersion).keys[1].value]"
-            }
+            "type": "securestring",
+            "value": "[listKeys(resourceId('Microsoft.Automation/automationAccounts', parameters('name')), variables('automationAccounts').apiVersion).keys[1].value]"
         }
     }
 }

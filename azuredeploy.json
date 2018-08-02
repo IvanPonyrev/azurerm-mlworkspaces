@@ -88,20 +88,22 @@
             "apiVersion": "[variables('deployments').apiVersion]",
             "name": "automationAccounts",
             "resourceGroup": "management",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'vaults')]"
+            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'deployments/vault.json', parameters('_deploymentsLocationSasToken'))]"
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'deployments/automation.json', parameters('_deploymentsLocationSasToken'))]"
                 },
                 "parameters": {
-                    "secrets": {
-                        "value": "[union(parameters('secrets'), variables('secrets'))]"
-                    },
                     "_resourcesLocationSasToken": {
-                        "value": "[parameters('_resourcesLocationSasToken')]"
-                    },
-                    "vaultAdminId": {
-                        "value": "[parameters('vaultAdminId')]"
+                        "reference": {
+                            "keyVault": {
+                                "id": "[reference(resourceId('Microsoft.Resources/deployments', 'vaults'), variables('deployments').apiVersion).outputs.vault.value.resourceId]"
+                            },
+                            "secretName": "resourcesLocationSasToken"
+                        }
                     }
                 },
                 "debugSetting": {
