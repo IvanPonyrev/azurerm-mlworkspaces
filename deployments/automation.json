@@ -1,0 +1,89 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "_resourcesLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Sas token to resources container."
+            },
+            "defaultValue": null
+        },
+        "resourceGroup": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the resource group to which resources will be provisioned."
+            },
+            "defaultValue": "management"
+        }
+    },
+    "variables": {
+        "deployments": {
+            "apiVersion": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
+        },
+        "automation": {
+            "name": "[concat('vault', uniqueString(subscription().subscriptionId))]"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('deployments').apiVersion]",
+            "name": "automation",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/automationAccounts.json', parameters('_resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "eastus2"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('deployments').apiVersion]",
+            "name": "automationPrimaryKey",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/secrets.json', parameters('_resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "automationPrimaryKey"
+                    },
+                    "vaultName": {
+                        "value": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'vaults'), variables('deployments').apiVersion).outputs.vault.value.name]"
+                    },
+                    "value": {
+                        "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automation'), variables('deployments').apiVersion).outputs.primaryKey.value]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "apiVersion": {
+            "type": "string",
+            "value": "[variables('deployments').apiVersion]"
+        },
+        "automation": {
+            "type": "object",
+            "value": {
+                "name": "[reference(resourceId('Microsoft.Resources/deployments', variables('automation').name), variables('deployments').apiVersion).outputs.name.value]",
+                "resourceId": "[reference(resourceId('Microsoft.Resources/deployments', variables('automation').name), variables('deployments').apiVersion).outputs.resourceId.value]"
+            }
+        }
+    }
+}
