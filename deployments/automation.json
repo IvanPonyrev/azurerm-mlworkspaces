@@ -8,21 +8,11 @@
                 "description": "Sas token to resources container."
             },
             "defaultValue": null
-        },
-        "resourceGroup": {
-            "type": "string",
-            "metadata": {
-                "description": "The name of the resource group to which resources will be provisioned."
-            },
-            "defaultValue": "management"
         }
     },
     "variables": {
         "deployments": {
             "apiVersion": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
-        },
-        "automation": {
-            "name": "[concat('vault', uniqueString(subscription().subscriptionId))]"
         }
     },
     "resources": [
@@ -30,7 +20,6 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('deployments').apiVersion]",
             "name": "automationAccount",
-            "resourceGroup": "[parameters('resourceGroup')]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -45,7 +34,6 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('deployments').apiVersion]",
             "name": "automationPrimaryKey",
-            "resourceGroup": "[parameters('resourceGroup')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', 'automationAccount')]"
             ],
@@ -76,12 +64,13 @@
             "type": "string",
             "value": "[variables('deployments').apiVersion]"
         },
-        "automation": {
-            "type": "object",
-            "value": {
-                "name": "[reference(resourceId('Microsoft.Resources/deployments', variables('automation').name), variables('deployments').apiVersion).outputs.name.value]",
-                "resourceId": "[reference(resourceId('Microsoft.Resources/deployments', variables('automation').name), variables('deployments').apiVersion).outputs.resourceId.value]"
-            }
+        "name": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationAccount'), variables('deployments').apiVersion).outputs.name.value]"
+        },
+        "resourceId": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationAccount'), variables('deployments').apiVersion).outputs.resourceId.value]"
         }
     }
 }

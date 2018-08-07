@@ -53,6 +53,10 @@
             {
                 "name": "deploymentsLocationSasToken",
                 "value": "[parameters('_deploymentsLocationSasToken')]"
+            },
+            {
+                "name": "defaultPassword",
+                "value": "[uniqueString(subscription().subscriptionId)]"
             }
         ]
     },
