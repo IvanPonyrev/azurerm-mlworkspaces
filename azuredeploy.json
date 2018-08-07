@@ -16,13 +16,6 @@
             },
             "defaultValue": null
         },
-        "_paramsLocationSasToken": {
-            "type": "securestring",
-            "metadata": {
-                "description": "Sas token to params container."
-            },
-            "defaultValue": null
-        },
         "vaultAdminId": {
             "type": "securestring",
             "metadata": {
@@ -42,18 +35,6 @@
             "apiVersion": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
         },
         "secrets": [
-            {
-                "name": "resourcesLocationSasToken",
-                "value": "[parameters('_resourcesLocationSasToken')]"
-            },
-            {
-                "name": "paramsLocationSasToken",
-                "value": "[parameters('_paramsLocationSasToken')]"
-            },
-            {
-                "name": "deploymentsLocationSasToken",
-                "value": "[parameters('_deploymentsLocationSasToken')]"
-            },
             {
                 "name": "defaultPassword",
                 "value": "[uniqueString(subscription().subscriptionId)]"

@@ -1,7 +1,8 @@
-#Requires -Version 3.0
+#Requires -Version 5.0
+using module .\Deployment.psm1
 
 Param(
-    [string] [Parameter(Mandatory=$true)] $ResourceGroupLocation,
+    [string] [Parameter(Mandatory=$false)] $ResourceGroupLocation = 'eastus',
     [string] $ResourceGroupName = 'management',
 	[array] $LinkedResourceGroups = @('network', 'machines', 'web', 'workspaces', 'sql'),
     [switch] $UploadArtifacts,
@@ -17,7 +18,7 @@ try {
 } catch { }
 
 $ErrorActionPreference = 'Stop'
-Set-StrictMode -Version 3
+Set-StrictMode -Version 5
 
 function Format-ValidationOutput {
     param ($ValidationOutput, [int] $Depth = 0)
@@ -28,6 +29,8 @@ function Format-ValidationOutput {
 $OptionalParameters = New-Object -TypeName Hashtable
 $TemplateFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $TemplateFile))
 $TemplateParametersFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $TemplateParametersFile))
+
+$Deployment = [Deployment]::new($ResourceGroupName, $PSScriptRoot)
 
 # Create or update the resource group using the specified template file and template parameters file
 New-AzureRmResourceGroup -Name $ResourceGroupName -Location $ResourceGroupLocation -Verbose -Force
@@ -42,39 +45,19 @@ if ($UploadArtifacts) {
 	if ($UpdateStorage) {
 		New-AzureRmResourceGroupDeployment -Name "storageAccounts" -ResourceGroupName $ResourceGroupName -TemplateFile ".\resources\storageAccounts.json"
 	}
-	$storageAccount = Get-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName | Select-Object -First 1
-
-	Get-ChildItem -Directory | % {
-		# Create or get containers.
-		$storageContainer = @{
-			$true = New-AzureStorageContainer -Name $_.BaseName -Context $storageAccount.Context -ErrorAction SilentlyContinue;
-			$false = Get-AzureStorageContainer -Name $_.BaseName -Context $storageAccount.Context;
-		}[ (Get-AzureStorageContainer -Name $_.BaseName -Context $storageAccount.Context) -eq $null ]
-
-		# Upload to blobs.
-		Get-ChildItem "$($_.FullName)\*.json" -File | % {
-			Set-AzureStorageBlobContent -File "$($_.FullName)" -Blob $_.Name -Container $storageContainer.Name  -Context $storageAccount.Context -Force
-		}
-	}
+	$Deployment.UploadArtifacts()
 }
 
-$params = Get-Content $TemplateParametersFile -Raw | ConvertFrom-Json
-
-$tokens = "_*LocationSasToken"
-if ($params.parameters.PSObject.Properties.name -match $tokens) {
-	$storageAccount = Get-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName | Select -First 1
-
-	$params.parameters.PSObject.Properties.name -match $tokens | % {
-		$OptionalParameters[$_] = if ($OptionalParameters[$_] -eq $null) {
-			ConvertTo-SecureString -AsPlainText -Force `
-				(New-AzureStorageContainerSASToken -Container "$([regex]::Matches($_, '(?<=_).+?(?=Location)').value)" `
-					-Context $storageAccount.Context `
-					-Permission r `
-					-ExpiryTime (Get-Date).AddHours(4) `
-					-Verbose);
-			}
+$TemplateParams = Get-Content $TemplateFile -Raw | ConvertFrom-Json | Select parameters
+if ($TemplateParams.parameters.PSObject.Properties.name -contains "secrets") {
+	$OptionalParameters["secrets"] = $Deployment.GetSasTokens() | ConvertTo-Json -Depth 100
+}
+Get-ChildItem -Directory | % {
+	if ($TemplateParams.parameters.PSObject.Properties.name -contains "_$($_.BaseName)LocationSasToken") {
+		$OptionalParameters["_$($_.BaseName)LocationSasToken"] = $Deployment.GetToken("$($_.BaseName)LocationSasToken")
 	}
 }
+Write-Host $Deployment.SasTokens
 
 if ($ValidateOnly) {
 	$ErrorMessages = Format-ValidationOutput (Test-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName `
