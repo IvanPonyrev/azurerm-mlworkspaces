@@ -16,13 +16,12 @@ class Deployment {
         $this.TemplateFile = Get-Content $TemplateFile -Raw | ConvertFrom-Json
         $this.TemplateParametersFile = Get-Content $TemplateParametersFile -Raw | ConvertFrom-Json
 
-        $this.OptionalParameters = New-Object -TypeName Hashtable
         $this.StorageAccount = Get-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName | Select-Object -First 1
+        $this.OptionalParameters = New-Object -TypeName Hashtable
     }
 
     <#
-    .Description
-    Uploads all artifacts in child directories of PSScriptRoot.
+    .Description Uploads all artifacts in child directories of PSScriptRoot.
     #>
     [void] UploadArtifacts() {
         Get-ChildItem $PSScriptRoot -Directory | ForEach-Object {
@@ -37,54 +36,40 @@ class Deployment {
                 Set-AzureStorageBlobContent -File "$($_.FullName)" -Blob $_.Name -Container $storageContainer.Name  -Context $this.StorageAccount.Context -Force
             }
         }
+        $this.GetSasTokens()
     }
 
     <#
-    .Description
-    Generates tokens for each container in storage.
+    .Description Generates tokens for each container in storage.
     #>
-    [object[]] GetSasTokens() {
+    hidden [void] GetSasTokens() {
         Get-AzureStorageContainer -Context $this.StorageAccount.Context | ForEach-Object {
-            $container = $_
             $this.SasTokens += @{
                 key = "_$($_.Name)LocationSasToken";
                 value = ConvertTo-SecureString -AsPlainText -Force `
-                    (New-AzureStorageContainerSASToken -Container $container.Name `
+                    (New-AzureStorageContainerSASToken -Container "$($_.Name)" `
                         -Context $this.StorageAccount.Context `
                         -Permission r `
                         -ExpiryTime (Get-Date).AddHours(4) `
                         -Verbose);
             }
         }
-        
-        return $this.SasTokens
     }
 
     <#
-    .Description
-    Returns hashtable of optional parameters.
+    .Description Returns hashtable of optional parameters.
     #>
     [hashtable] GetOptionalParameters() {
-        $this.GetSasTokens()
-
         $this.TemplateFile.parameters.PSObject.Properties.Name | ForEach-Object {
             if ($this.TemplateParametersFile.parameters.PSObject.Properties.Name -notcontains $_) {
                 switch -Wildcard ($_) {
                     "_*LocationSasToken" {
-                        $this.OptionalParameters[$_] = $this.GetToken($_)
+                        $this.OptionalParameters[$_] = ($this.SasTokens | ? key -eq $_).value
                     }
                 }
             }
         }
 
         return $this.OptionalParameters
-    }
-
-    <#
-    .Description
-    Gets the token if it exists in SasTokens.
-    #>
-    [securestring] GetToken($TokenName) {
-        return ($this.SasTokens | ? key -eq $TokenName).value
     }
 }

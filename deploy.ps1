@@ -6,7 +6,7 @@ Param(
     [string] $ResourceGroupName = 'management',
 	[array] $LinkedResourceGroups = @('network', 'machines', 'web', 'workspaces', 'sql'),
     [switch] $UploadArtifacts,
-    [switch] $UpdateStorage,
+    [switch] $DeployStorage,
 	[string] [ValidateSet("Complete", "Incremental")] $Mode = 'Incremental',
     [string] $TemplateFile = ".\azuredeploy.json",
     [string] $TemplateParametersFile = ".\azuredeploy.parameters.json",
@@ -26,25 +26,23 @@ function Format-ValidationOutput {
     return @($ValidationOutput | Where-Object { $_ -ne $null } | ForEach-Object { @('  ' * $Depth + ': ' + $_.Message) + @(Format-ValidationOutput @($_.Details) ($Depth + 1)) })
 }
 
+# Create or update the resource group using the specified template file and template parameters file
+New-AzureRmResourceGroup -Name $ResourceGroupName -Location $ResourceGroupLocation -Verbose -Force
+$LinkedResourceGroups | ForEach-Object {
+	New-AzureRmResourceGroup -Name $_ -Location $ResourceGroupLocation -Verbose -Force
+}
+
 $OptionalParameters = New-Object -TypeName Hashtable
 $TemplateFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $TemplateFile))
 $TemplateParametersFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $TemplateParametersFile))
 
-$Deployment = [Deployment]::new($ResourceGroupName, $TemplateFile, $TemplateParametersFile)
-
-# Create or update the resource group using the specified template file and template parameters file
-New-AzureRmResourceGroup -Name $ResourceGroupName -Location $ResourceGroupLocation -Verbose -Force
-
-$LinkedResourceGroups | % { 
-	New-AzureRmResourceGroup -Name $_ -Location $ResourceGroupLocation -Verbose -Force
+# Update storage if flagged.
+if ($DeployStorage) {
+	New-AzureRmResourceGroupDeployment -Name "storageAccounts" -ResourceGroupName $ResourceGroupName -TemplateFile ".\resources\storageAccounts.json"
 }
 
+$Deployment = [Deployment]::new($ResourceGroupName, $TemplateFile, $TemplateParametersFile)
 if ($UploadArtifacts) {
-
-	# Update storage if flagged.
-	if ($UpdateStorage) {
-		New-AzureRmResourceGroupDeployment -Name "storageAccounts" -ResourceGroupName $ResourceGroupName -TemplateFile ".\resources\storageAccounts.json"
-	}
 	$Deployment.UploadArtifacts()
 }
 

@@ -44,7 +44,7 @@
         "secrets": [
             {
                 "name": "defaultPassword",
-                "value": "[uniqueString(subscription().subscriptionId)]"
+                "value": "[replace(guid(subscription().subscriptionId), '-', '')]"
             },
             {
                 "name": "deploymentsLocationSasToken",
