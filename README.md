@@ -2,4 +2,4 @@
 
 The following command will deploy storageAccounts and vaults with secrets.
 
-.\deploy.ps1 -ResourceGroupLocation eastus -UploadArtifacts -UpdateStorage
+.\deploy.ps1 -UploadArtifacts -DeployStorage

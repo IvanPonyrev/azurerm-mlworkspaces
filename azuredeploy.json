@@ -9,17 +9,17 @@
             },
             "defaultValue": null
         },
-        "_resourcesLocationSasToken": {
+        "_paramsLocationSasToken": {
             "type": "securestring",
             "metadata": {
                 "description": "Sas token to resources container."
             },
             "defaultValue": null
         },
-        "_paramsLocationSasToken": {
+        "_resourcesLocationSasToken": {
             "type": "securestring",
             "metadata": {
-                "description": "Sas token to params container."
+                "description": "Sas token to resources container."
             },
             "defaultValue": null
         },
@@ -43,20 +43,20 @@
         },
         "secrets": [
             {
-                "name": "resourcesLocationSasToken",
-                "value": "[parameters('_resourcesLocationSasToken')]"
-            },
-            {
-                "name": "paramsLocationSasToken",
-                "value": "[parameters('_paramsLocationSasToken')]"
+                "name": "defaultPassword",
+                "value": "[replace(guid(subscription().subscriptionId), '-', '')]"
             },
             {
                 "name": "deploymentsLocationSasToken",
                 "value": "[parameters('_deploymentsLocationSasToken')]"
             },
             {
-                "name": "defaultPassword",
-                "value": "[uniqueString(subscription().subscriptionId)]"
+                "name": "paramsLocationSasToken",
+                "value": "[parameters('_paramsLocationSasToken')]"
+            },
+            {
+                "name": "resourcesLocationSasToken",
+                "value": "[parameters('_resourcesLocationSasToken')]"
             }
         ]
     },

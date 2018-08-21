@@ -1,11 +1,12 @@
-#Requires -Version 3.0
+#Requires -Version 5.0
+using module .\Deployment.psm1
 
 Param(
-    [string] [Parameter(Mandatory=$true)] $ResourceGroupLocation,
+    [string] [Parameter(Mandatory=$false)] $ResourceGroupLocation = 'eastus',
     [string] $ResourceGroupName = 'management',
 	[array] $LinkedResourceGroups = @('network', 'machines', 'web', 'workspaces', 'sql'),
     [switch] $UploadArtifacts,
-    [switch] $UpdateStorage,
+    [switch] $DeployStorage,
 	[string] [ValidateSet("Complete", "Incremental")] $Mode = 'Incremental',
     [string] $TemplateFile = ".\azuredeploy.json",
     [string] $TemplateParametersFile = ".\azuredeploy.parameters.json",
@@ -17,7 +18,7 @@ try {
 } catch { }
 
 $ErrorActionPreference = 'Stop'
-Set-StrictMode -Version 3
+Set-StrictMode -Version 5
 
 function Format-ValidationOutput {
     param ($ValidationOutput, [int] $Depth = 0)
@@ -25,56 +26,27 @@ function Format-ValidationOutput {
     return @($ValidationOutput | Where-Object { $_ -ne $null } | ForEach-Object { @('  ' * $Depth + ': ' + $_.Message) + @(Format-ValidationOutput @($_.Details) ($Depth + 1)) })
 }
 
+# Create or update the resource group using the specified template file and template parameters file
+New-AzureRmResourceGroup -Name $ResourceGroupName -Location $ResourceGroupLocation -Verbose -Force
+$LinkedResourceGroups | ForEach-Object {
+	New-AzureRmResourceGroup -Name $_ -Location $ResourceGroupLocation -Verbose -Force
+}
+
 $OptionalParameters = New-Object -TypeName Hashtable
 $TemplateFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $TemplateFile))
 $TemplateParametersFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $TemplateParametersFile))
 
-# Create or update the resource group using the specified template file and template parameters file
-New-AzureRmResourceGroup -Name $ResourceGroupName -Location $ResourceGroupLocation -Verbose -Force
-
-$LinkedResourceGroups | % { 
-	New-AzureRmResourceGroup -Name $_ -Location $ResourceGroupLocation -Verbose -Force
+# Update storage if flagged.
+if ($DeployStorage) {
+	New-AzureRmResourceGroupDeployment -Name "storageAccounts" -ResourceGroupName $ResourceGroupName -TemplateFile ".\resources\storageAccounts.json"
 }
 
+$Deployment = [Deployment]::new($ResourceGroupName, $TemplateFile, $TemplateParametersFile)
 if ($UploadArtifacts) {
-
-	# Update storage if flagged.
-	if ($UpdateStorage) {
-		New-AzureRmResourceGroupDeployment -Name "storageAccounts" -ResourceGroupName $ResourceGroupName -TemplateFile ".\resources\storageAccounts.json"
-	}
-	$storageAccount = Get-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName | Select-Object -First 1
-
-	Get-ChildItem -Directory | % {
-		# Create or get containers.
-		$storageContainer = @{
-			$true = New-AzureStorageContainer -Name $_.BaseName -Context $storageAccount.Context -ErrorAction SilentlyContinue;
-			$false = Get-AzureStorageContainer -Name $_.BaseName -Context $storageAccount.Context;
-		}[ (Get-AzureStorageContainer -Name $_.BaseName -Context $storageAccount.Context) -eq $null ]
-
-		# Upload to blobs.
-		Get-ChildItem "$($_.FullName)\*.json" -File | % {
-			Set-AzureStorageBlobContent -File "$($_.FullName)" -Blob $_.Name -Container $storageContainer.Name  -Context $storageAccount.Context -Force
-		}
-	}
+	$Deployment.UploadArtifacts()
 }
 
-$params = Get-Content $TemplateParametersFile -Raw | ConvertFrom-Json
-
-$tokens = "_*LocationSasToken"
-if ($params.parameters.PSObject.Properties.name -match $tokens) {
-	$storageAccount = Get-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName | Select -First 1
-
-	$params.parameters.PSObject.Properties.name -match $tokens | % {
-		$OptionalParameters[$_] = if ($OptionalParameters[$_] -eq $null) {
-			ConvertTo-SecureString -AsPlainText -Force `
-				(New-AzureStorageContainerSASToken -Container "$([regex]::Matches($_, '(?<=_).+?(?=Location)').value)" `
-					-Context $storageAccount.Context `
-					-Permission r `
-					-ExpiryTime (Get-Date).AddHours(4) `
-					-Verbose);
-			}
-	}
-}
+$OptionalParameters = $Deployment.GetOptionalParameters()
 
 if ($ValidateOnly) {
 	$ErrorMessages = Format-ValidationOutput (Test-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName `
