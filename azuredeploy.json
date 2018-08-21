@@ -9,6 +9,13 @@
             },
             "defaultValue": null
         },
+        "_paramsLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Sas token to resources container."
+            },
+            "defaultValue": null
+        },
         "_resourcesLocationSasToken": {
             "type": "securestring",
             "metadata": {
@@ -38,6 +45,18 @@
             {
                 "name": "defaultPassword",
                 "value": "[uniqueString(subscription().subscriptionId)]"
+            },
+            {
+                "name": "deploymentsLocationSasToken",
+                "value": "[parameters('_deploymentsLocationSasToken')]"
+            },
+            {
+                "name": "paramsLocationSasToken",
+                "value": "[parameters('_paramsLocationSasToken')]"
+            },
+            {
+                "name": "resourcesLocationSasToken",
+                "value": "[parameters('_resourcesLocationSasToken')]"
             }
         ]
     },

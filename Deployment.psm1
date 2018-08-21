@@ -1,20 +1,31 @@
 class Deployment {
     [string] $ResourceGroupName
 
-    [string] $ScriptRoot
+    [object] $TemplateFile
+
+    [object] $TemplateParametersFile
+
+    [hashtable] $OptionalParameters
 
     [object] $StorageAccount
 
-    [object[]] $SasTokens
+    [object[]] $SasTokens = @()
 
-    Deployment([string] $ResourceGroupName, [string] $ScriptRoot) {
+    Deployment([string] $ResourceGroupName, [string] $TemplateFile, [string] $TemplateParametersFile) {
         $this.ResourceGroupName = $ResourceGroupName
-        $this.ScriptRoot = $ScriptRoot
+        $this.TemplateFile = Get-Content $TemplateFile -Raw | ConvertFrom-Json
+        $this.TemplateParametersFile = Get-Content $TemplateParametersFile -Raw | ConvertFrom-Json
+
+        $this.OptionalParameters = New-Object -TypeName Hashtable
         $this.StorageAccount = Get-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName | Select-Object -First 1
     }
 
+    <#
+    .Description
+    Uploads all artifacts in child directories of PSScriptRoot.
+    #>
     [void] UploadArtifacts() {
-        Get-ChildItem $this.ScriptRoot -Directory | ForEach-Object {
+        Get-ChildItem $PSScriptRoot -Directory | ForEach-Object {
             # Create or get containers.
             $storageContainer = @{
                 $true = New-AzureStorageContainer -Name $_.BaseName -Context $this.StorageAccount.Context -ErrorAction SilentlyContinue;
@@ -28,12 +39,15 @@ class Deployment {
         }
     }
 
+    <#
+    .Description
+    Generates tokens for each container in storage.
+    #>
     [object[]] GetSasTokens() {
-        $this.SasTokens = @()
         Get-AzureStorageContainer -Context $this.StorageAccount.Context | ForEach-Object {
             $container = $_
             $this.SasTokens += @{
-                name = "$($container.Name)LocationSasToken";
+                key = "_$($_.Name)LocationSasToken";
                 value = ConvertTo-SecureString -AsPlainText -Force `
                     (New-AzureStorageContainerSASToken -Container $container.Name `
                         -Context $this.StorageAccount.Context `
@@ -42,10 +56,35 @@ class Deployment {
                         -Verbose);
             }
         }
+        
         return $this.SasTokens
     }
 
+    <#
+    .Description
+    Returns hashtable of optional parameters.
+    #>
+    [hashtable] GetOptionalParameters() {
+        $this.GetSasTokens()
+
+        $this.TemplateFile.parameters.PSObject.Properties.Name | ForEach-Object {
+            if ($this.TemplateParametersFile.parameters.PSObject.Properties.Name -notcontains $_) {
+                switch -Wildcard ($_) {
+                    "_*LocationSasToken" {
+                        $this.OptionalParameters[$_] = $this.GetToken($_)
+                    }
+                }
+            }
+        }
+
+        return $this.OptionalParameters
+    }
+
+    <#
+    .Description
+    Gets the token if it exists in SasTokens.
+    #>
     [securestring] GetToken($TokenName) {
-        return ($this.SasTokens | ? name -eq $TokenName).value
+        return ($this.SasTokens | ? key -eq $TokenName).value
     }
 }

@@ -30,7 +30,7 @@ $OptionalParameters = New-Object -TypeName Hashtable
 $TemplateFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $TemplateFile))
 $TemplateParametersFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $TemplateParametersFile))
 
-$Deployment = [Deployment]::new($ResourceGroupName, $PSScriptRoot)
+$Deployment = [Deployment]::new($ResourceGroupName, $TemplateFile, $TemplateParametersFile)
 
 # Create or update the resource group using the specified template file and template parameters file
 New-AzureRmResourceGroup -Name $ResourceGroupName -Location $ResourceGroupLocation -Verbose -Force
@@ -48,16 +48,7 @@ if ($UploadArtifacts) {
 	$Deployment.UploadArtifacts()
 }
 
-$TemplateParams = Get-Content $TemplateFile -Raw | ConvertFrom-Json | Select parameters
-if ($TemplateParams.parameters.PSObject.Properties.name -contains "secrets") {
-	$OptionalParameters["secrets"] = $Deployment.GetSasTokens() | ConvertTo-Json -Depth 100
-}
-Get-ChildItem -Directory | % {
-	if ($TemplateParams.parameters.PSObject.Properties.name -contains "_$($_.BaseName)LocationSasToken") {
-		$OptionalParameters["_$($_.BaseName)LocationSasToken"] = $Deployment.GetToken("$($_.BaseName)LocationSasToken")
-	}
-}
-Write-Host $Deployment.SasTokens
+$OptionalParameters = $Deployment.GetOptionalParameters()
 
 if ($ValidateOnly) {
 	$ErrorMessages = Format-ValidationOutput (Test-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName `
