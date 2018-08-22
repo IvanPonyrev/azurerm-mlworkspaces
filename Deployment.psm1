@@ -1,3 +1,5 @@
+using module .\Certificate.psm1
+
 class Deployment {
     [string] $ResourceGroupName
 
@@ -9,7 +11,7 @@ class Deployment {
 
     [object] $StorageAccount
 
-    [object[]] $SasTokens = @()
+    hidden [object[]] $SasTokens = @()
 
     Deployment([string] $ResourceGroupName, [string] $TemplateFile, [string] $TemplateParametersFile) {
         $this.ResourceGroupName = $ResourceGroupName
@@ -36,7 +38,6 @@ class Deployment {
                 Set-AzureStorageBlobContent -File "$($_.FullName)" -Blob $_.Name -Container $storageContainer.Name  -Context $this.StorageAccount.Context -Force
             }
         }
-        $this.GetSasTokens()
     }
 
     <#
@@ -60,11 +61,31 @@ class Deployment {
     .Description Returns hashtable of optional parameters.
     #>
     [hashtable] GetOptionalParameters() {
+        $this.GetSasTokens()
         $this.TemplateFile.parameters.PSObject.Properties.Name | ForEach-Object {
             if ($this.TemplateParametersFile.parameters.PSObject.Properties.Name -notcontains $_) {
                 switch -Wildcard ($_) {
                     "_*LocationSasToken" {
                         $this.OptionalParameters[$_] = ($this.SasTokens | ? key -eq $_).value
+                    }
+                }
+            } else {
+                switch ($_) {
+                    "certificates" {
+                        $certificates = @{
+                            certificates = @()
+                        }
+                        $secrets = @{
+                            secrets = @()
+                        }
+                        $this.TemplateParametersFile.parameters.$_.value.certificates | ForEach-Object {
+                            $certificate = [Certificate]::new($_.name)
+                            $certificates.certificates += $certificate.GetCertificate()
+                            $secrets.secrets += $certificate.GetPassword()
+                            $certificate.RemoveCertificate()
+                        }
+                        $this.OptionalParameters[$_] = $certificates
+                        $this.OptionalParameters["secrets"] = $secrets
                     }
                 }
             }

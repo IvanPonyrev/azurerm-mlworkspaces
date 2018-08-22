@@ -1,40 +1,39 @@
 class Certificate {
     [string] $Name
 
-    [string] $Subject
-
     hidden [string] $CertStoreLocation = "Cert:\CurrentUser\My"
 
-    hidden [string] $FilePath = "$([System.IO.Path]::GetTempPath())~$([System.IO.Path]::GetRandomFileName().Split('.')[0])"
+    hidden [string] $FilePath = "$($env:TEMP)~$([System.IO.Path]::GetRandomFileName().Split('.')[0])"
 
-    hidden [securestring] $Password
+    hidden [string] $Password
 
-    hidden [securestring] $Thumbprint
+    hidden [string] $Thumbprint
 
-    hidden [securestring] $Base64Value
+    hidden [string] $Base64Value
 
-    Certificate([string] $Name, [string] $Subject) {
+    Certificate([string] $Name) {
         $this.Name = $Name
-        $this.Subject = $Subject
         $this.Password = (New-Guid).ToString("N")
+
         $this.GenerateCertificate()
     }
 
     <# .Description Generates a certificate. #>
-    hidden [void] GenerateCertificate([string] $VaultName) {
+    hidden [void] GenerateCertificate() {
         # Create certificate, export to temp directory, store base64Value and thumbprint.
-        $certificate = New-SelfSignedCertificate -Subject $this.Subject `
+        $certificate = New-SelfSignedCertificate -Subject "CN=$($this.Name)" `
             -KeyAlgorithm RSA `
             -KeyLength 2048 `
             -Type CodeSigningCert `
             -CertStoreLocation $this.CertStoreLocation
-        $this.Thumbprint = $certificate.Thumbprint
 
+        New-Item -ItemType Directory -Path $this.FilePath
         $pfx = Export-PfxCertificate -Cert $certificate `
             -FilePath "$($this.Filepath)\$($this.Name).pfx" `
-            -Password $this.Password
-        $content = Get-Content $pfx -Encoding Byte
-        $this.Base64Value = [System.Convert]::ToBase64String($content)
+            -Password (ConvertTo-SecureString -AsPlainText -Force $this.Password)
+
+        $this.Base64Value = [System.Convert]::ToBase64String($certificate.GetRawCertData())
+        $this.Thumbprint = [System.Convert]::ToBase64String($certificate.GetCertHash())
     }
 
     <# .Description Returns certificate in object format. #>

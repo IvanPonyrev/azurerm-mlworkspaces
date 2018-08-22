@@ -29,12 +29,23 @@
                 "description": "The object id to which vault admin access policies will be applied."
             }
         },
-        "secrets": {
-            "type": "array",
+        "certificates": {
+            "type": "secureObject",
             "metadata": {
-                "description": "An array containing name value pairs."
+                "description": "A secureObject containing array of certificates containing name, base64Value, and thumbprint."
             },
-            "defaultValue": [ ]
+            "defaultValue": {
+                "certificates": [ ]
+            }
+        },
+        "secrets": {
+            "type": "secureObject",
+            "metadata": {
+                "description": "A secureObject containing array of name value pairs."
+            },
+            "defaultValue": {
+                "secrets": [ ]
+            }
         }
     },
     "variables": {
@@ -73,7 +84,7 @@
                 },
                 "parameters": {
                     "secrets": {
-                        "value": "[union(parameters('secrets'), variables('secrets'))]"
+                        "value": "[union(parameters('secrets').secrets, variables('secrets'))]"
                     },
                     "_resourcesLocationSasToken": {
                         "value": "[parameters('_resourcesLocationSasToken')]"
@@ -108,6 +119,9 @@
                             },
                             "secretName": "resourcesLocationSasToken"
                         }
+                    },
+                    "certificates": {
+                        "value": "[parameters('certificates')]"
                     }
                 },
                 "debugSetting": {

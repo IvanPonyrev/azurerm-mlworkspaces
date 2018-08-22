@@ -8,6 +8,15 @@
                 "description": "Sas token to resources container."
             },
             "defaultValue": null
+        },
+        "certificates": {
+            "type": "object", 
+            "metadata": {
+                "description": "A secureObject containing array of certificates objects containing name, base64Value, and thumbprint."
+            },
+            "defaultValue": {
+                "certificates": [ ]
+            }
         }
     },
     "variables": {
@@ -28,6 +37,41 @@
                 "debugSetting": {
                     "detailLevel": "requestContent, responseContent"
                 }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('deployments').apiVersion]",
+            "name": "[concat(parameters('certificates').certificates[copyIndex()].name, 'Certificate')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'automationAccount')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/certificates.json', parameters('_resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[concat(parameters('certificates').certificates[copyIndex()].name, 'Certificate')]"
+                    },
+                    "automationAccountName": {
+                        "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationAccount'), variables('deployments').apiVersion).outputs.name.value]"
+                    },
+                    "base64Value": {
+                        "value": "[parameters('certificates').certificates[copyIndex()].base64Value]"
+                    },
+                    "thumbprint": {
+                        "value": "[parameters('certificates').certificates[copyIndex()].thumbprint]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            },
+            "copy": {
+                "name": "certificates",
+                "count": "[length(parameters('certificates').certificates)]"
             }
         },
         {
