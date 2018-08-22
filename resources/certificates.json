@@ -28,52 +28,50 @@
             },
             "defaultValue": "eastus2"
         },
-        "connectionType": {
-            "type": "string",
+        "base64Value": {
+            "type": "securestring", 
             "metadata": {
-                "description": "Sets the type of connection."
-            },
-            "defaultValue": "AzureRunAsConnection",
-            "allowedValues": [
-                "Azure", 
-                "AzureServicePrincipal", 
-                "AzureClassicCertificate",
-                "AzureRunAsConnection"
-            ]
+                "description": "Sets the base64 encoded value of the certificate."
+            }
         },
         "description": {
             "type": "string", 
             "metadata": {
-                "description": "Sets the description of the runbook."
+                "description": "Sets the description of the certificate."
             },
             "defaultValue": ""
         },
-        "fieldDefinitionValues": {
-            "type": "secureObject",
+        "thumbprint": {
+            "type": "securestring",
             "metadata": {
-                "description": "Sets the field definition properties of the connection."
+                "description": "Sets the thumbprint of the certificate."
+            }
+        },
+        "isExportable": {
+            "type": "bool",
+            "metadata": {
+                "description": "Sets the is exportable flag of the certificate."
             }
         }
     },
     "variables": {
-        "connections": {
-            "apiVersion": "[if(equals(parameters('apiVersion'), 'latest'), providers('Microsoft.Automation', 'automationAccounts/connections').apiVersions[0], parameters('apiVersion'))]",
+        "runbooks": {
+            "apiVersion": "[if(equals(parameters('apiVersion'), 'latest'), providers('Microsoft.Automation', 'automationAccounts/certificates').apiVersions[0], parameters('apiVersion'))]",
             "name": "[concat(parameters('automationAccountName'), '/', parameters('name'))]",
             "location": "[if(empty(parameters('location')), resourceGroup().location, parameters('location'))]"
         }
     },
     "resources": [
         {
-            "type": "Microsoft.Automation/automationAccounts/connections",
-            "apiVersion": "[variables('connections').apiVersion]",
-            "name": "[variables('connections').name]",
-            "location": "[variables('connections').location]",
+            "type": "Microsoft.Automation/automationAccounts/certificates",
+            "apiVersion": "[variables('runbooks').apiVersion]",
+            "name": "[variables('runbooks').name]",
+            "location": "[variables('runbooks').location]",
             "properties": {
+                "base64Value": "[parameters('base64Value')]",
                 "description": "[parameters('description')]",
-                "connectionType": {
-                    "name": "[parameters('connectionType')]"
-                },
-                "fieldDefinitionValues": "[parameters('fieldDefinitionValues')]"
+                "thumbprint": "[parameters('thumbprint')]",
+                "isExportable": "[parameters('isExportable')]"
             }
         }
     ],
@@ -84,11 +82,15 @@
         },
         "apiVersion": {
             "type": "string",
-            "value": "[variables('connections').apiVersion]"
+            "value": "[variables('runbooks').apiVersion]"
         },
         "resourceId": {
             "type": "string",
-            "value": "[resourceId('Microsoft.Automation/automationAccounts/connections', parameters('automationAccountName'), parameters('name'))]"
+            "value": "[resourceId('Microsoft.Automation/automationAccounts/certificates', parameters('automationAccountName'), parameters('name'))]"
+        },
+        "thumbprint": {
+            "type": "securestring",
+            "value": "[parameters('thumbprint')]"
         }
     }
 }
