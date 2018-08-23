@@ -17,6 +17,12 @@
             "defaultValue": {
                 "certificates": [ ]
             }
+        },
+        "secrets": {
+            "type": "object",
+            "defaultValue": {
+                "secrets": [ ]
+            }
         }
     },
     "variables": {

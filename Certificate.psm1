@@ -28,12 +28,13 @@ class Certificate {
             -CertStoreLocation $this.CertStoreLocation
 
         New-Item -ItemType Directory -Path $this.FilePath
-        $pfx = Export-PfxCertificate -Cert $certificate `
-            -FilePath "$($this.Filepath)\$($this.Name).pfx" `
-            -Password (ConvertTo-SecureString -AsPlainText -Force $this.Password)
+        $cer = Export-Certificate -Cert $certificate `
+            -FilePath "$($this.Filepath)\$($this.Name).cer"
 
-        $this.Base64Value = [System.Convert]::ToBase64String($certificate.GetRawCertData())
-        $this.Thumbprint = [System.Convert]::ToBase64String($certificate.GetCertHash())
+        certutil.exe -encode $cer "$($this.Filepath)\$($this.Name)Encoded.cer"
+
+        $this.Base64Value = Get-Content "$($this.Filepath)\$($this.Name)Encoded.cer" -Encoding Ascii
+        $this.Thumbprint = $certificate.GetCertHash()
     }
 
     <# .Description Returns certificate in object format. #>
