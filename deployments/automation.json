@@ -2,12 +2,21 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "_resourcesLocationSasToken": {
+        "resourcesLocationSasToken": {
             "type": "securestring",
             "metadata": {
                 "description": "Sas token to resources container."
             },
             "defaultValue": null
+        },
+        "certificates": {
+            "type": "secureObject", 
+            "metadata": {
+                "description": "A secureObject containing array of certificates objects containing name, base64Value, and thumbprint."
+            },
+            "defaultValue": {
+                "certificates": [ ]
+            }
         }
     },
     "variables": {
@@ -23,7 +32,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/automationAccounts.json', parameters('_resourcesLocationSasToken'))]"
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/automationAccounts.json', parameters('resourcesLocationSasToken'))]"
                 },
                 "debugSetting": {
                     "detailLevel": "requestContent, responseContent"
@@ -40,7 +49,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/secrets.json', parameters('_resourcesLocationSasToken'))]"
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/secrets.json', parameters('resourcesLocationSasToken'))]"
                 },
                 "parameters": {
                     "name": {

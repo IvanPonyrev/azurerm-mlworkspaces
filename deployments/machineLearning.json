@@ -2,7 +2,7 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "_resourcesLocationSasToken": {
+        "resourcesLocationSasToken": {
             "type": "securestring",
             "metadata": {
                 "description": "Sas token to resources container."
@@ -52,7 +52,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(reference(resourceId(parameters('managementResourceGroup'), 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/storageAccounts.json', parameters('_resourcesLocationSasToken'))]"
+                    "uri": "[concat(reference(resourceId(parameters('managementResourceGroup'), 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/storageAccounts.json', parameters('resourcesLocationSasToken'))]"
                 },
                 "parameters": {
                     "name": {
@@ -78,7 +78,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(reference(resourceId(parameters('managementResourceGroup'), 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/workspaces.json', parameters('_resourcesLocationSasToken'))]"
+                    "uri": "[concat(reference(resourceId(parameters('managementResourceGroup'), 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/workspaces.json', parameters('resourcesLocationSasToken'))]"
                 },
                 "parameters": {
                     "name": {

@@ -1,3 +1,6 @@
+using module .\classes\Token.psm1
+using module .\classes\Certificate.psm1
+
 class Deployment {
     [string] $ResourceGroupName
 
@@ -9,7 +12,7 @@ class Deployment {
 
     [object] $StorageAccount
 
-    [object[]] $SasTokens = @()
+    [object] $Secrets
 
     Deployment([string] $ResourceGroupName, [string] $TemplateFile, [string] $TemplateParametersFile) {
         $this.ResourceGroupName = $ResourceGroupName
@@ -36,23 +39,18 @@ class Deployment {
                 Set-AzureStorageBlobContent -File "$($_.FullName)" -Blob $_.Name -Container $storageContainer.Name  -Context $this.StorageAccount.Context -Force
             }
         }
-        $this.GetSasTokens()
     }
 
     <#
     .Description Generates tokens for each container in storage.
     #>
     hidden [void] GetSasTokens() {
+        $this.Secrets = @{
+            secrets = @()
+        }
         Get-AzureStorageContainer -Context $this.StorageAccount.Context | ForEach-Object {
-            $this.SasTokens += @{
-                key = "_$($_.Name)LocationSasToken";
-                value = ConvertTo-SecureString -AsPlainText -Force `
-                    (New-AzureStorageContainerSASToken -Container "$($_.Name)" `
-                        -Context $this.StorageAccount.Context `
-                        -Permission r `
-                        -ExpiryTime (Get-Date).AddHours(4) `
-                        -Verbose);
-            }
+            $container = $_.Name
+            $this.Secrets.secrets += [Token]::new("$($container)LocationSasToken", $container, $this.StorageAccount.Context).GetToken()
         }
     }
 
@@ -60,11 +58,31 @@ class Deployment {
     .Description Returns hashtable of optional parameters.
     #>
     [hashtable] GetOptionalParameters() {
+        $this.GetSasTokens()
         $this.TemplateFile.parameters.PSObject.Properties.Name | ForEach-Object {
             if ($this.TemplateParametersFile.parameters.PSObject.Properties.Name -notcontains $_) {
                 switch -Wildcard ($_) {
-                    "_*LocationSasToken" {
-                        $this.OptionalParameters[$_] = ($this.SasTokens | ? key -eq $_).value
+                    "*LocationSasToken" {
+                        $this.OptionalParameters[$_] = ConvertTo-SecureString -AsPlainText -Force ($this.Secrets.secrets | Where-Object name -eq $_).value
+                    }
+                    "secrets" {
+                        $this.OptionalParameters[$_] = $this.Secrets
+                    }
+                }
+            } else {
+                switch ($_) {
+                    "certificates" {
+                        $certificates = @{
+                            certificates = @()
+                        }
+                        $this.TemplateParametersFile.parameters.$_.value.certificates | ForEach-Object {
+                            $certificate = [Certificate]::new($_.name)
+                            $certificates.certificates += $certificate.GetCertificate()
+                            $this.Secrets.secrets += $certificate.GetPassword()
+                            $certificate.RemoveCertificate()
+                        }
+                        $this.OptionalParameters[$_] = $certificates
+                        $this.OptionalParameters["secrets"] = $this.Secrets
                     }
                 }
             }

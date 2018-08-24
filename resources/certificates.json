@@ -1,0 +1,97 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "name": {
+            "type": "string",
+            "metadata": {
+                "description": "The name to be given to this automation account."
+            }
+        },
+        "automationAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name to be given to this automation account."
+            }
+        },
+        "apiVersion": {
+            "type": "string",
+            "metadata": {
+                "description": "The apiVersion of this resource. Value 'latest' will deploy using latest apiVersion."
+            },
+            "defaultValue": "latest"
+        },
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource location."
+            },
+            "defaultValue": "eastus2"
+        },
+        "base64Value": {
+            "type": "securestring", 
+            "metadata": {
+                "description": "Sets the base64 encoded value of the certificate."
+            }
+        },
+        "description": {
+            "type": "string", 
+            "metadata": {
+                "description": "Sets the description of the certificate."
+            },
+            "defaultValue": ""
+        },
+        "thumbprint": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Sets the thumbprint of the certificate."
+            }
+        },
+        "isExportable": {
+            "type": "bool",
+            "metadata": {
+                "description": "Sets the is exportable flag of the certificate."
+            },
+            "defaultValue": true
+        }
+    },
+    "variables": {
+        "certificates": {
+            "apiVersion": "[if(equals(parameters('apiVersion'), 'latest'), providers('Microsoft.Automation', 'automationAccounts').apiVersions[0], parameters('apiVersion'))]",
+            "name": "[concat(parameters('automationAccountName'), '/', parameters('name'))]",
+            "location": "[if(empty(parameters('location')), resourceGroup().location, parameters('location'))]"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Automation/automationAccounts/certificates",
+            "apiVersion": "[variables('certificates').apiVersion]",
+            "name": "[variables('certificates').name]",
+            "location": "[variables('certificates').location]",
+            "properties": {
+                "base64Value": "[parameters('base64Value')]",
+                "description": "[parameters('description')]",
+                "thumbprint": "[parameters('thumbprint')]",
+                "isExportable": "[parameters('isExportable')]"
+            }
+        }
+    ],
+    "outputs": {
+        "name": {
+            "type": "string",
+            "value": "[parameters('name')]"
+        },
+        "apiVersion": {
+            "type": "string",
+            "value": "[variables('certificates').apiVersion]"
+        },
+        "resourceId": {
+            "type": "string",
+            "value": "[resourceId('Microsoft.Automation/automationAccounts/certificates', parameters('automationAccountName'), parameters('name'))]"
+        },
+        "thumbprint": {
+            "type": "securestring",
+            "value": "[parameters('thumbprint')]"
+        }
+    }
+}
