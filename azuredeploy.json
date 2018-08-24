@@ -45,13 +45,14 @@
         "deployments": {
             "apiVersion": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
         },
+        "defaultSecrets": [
+            {
+                "name": "defaultPassword",
+                "value": "[replace(guid(subscription().subscriptionId), '-', '')]"
+            }
+        ],
         "secrets": {
-            "secrets": [
-                {
-                    "name": "defaultPassword",
-                    "value": "[replace(guid(subscription().subscriptionId), '-', '')]"
-                }
-            ]
+            "secrets": "[concat(parameters('secrets').secrets, variables('defaultSecrets'))]"
         }
     },
     "resources": [
@@ -67,7 +68,7 @@
                 },
                 "parameters": {
                     "secrets": {
-                        "value": "[union(parameters('secrets'), variables('secrets'))]"
+                        "value": "[variables('secrets')]"
                     },
                     "resourcesLocationSasToken": {
                         "value": "[parameters('resourcesLocationSasToken')]"
