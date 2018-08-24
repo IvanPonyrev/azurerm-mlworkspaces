@@ -1,5 +1,5 @@
 #Requires -Version 5.0
-using module .\classes\Deployment.psm1
+using module .\Deployment.psm1
 
 Param(
     [string] [Parameter(Mandatory=$false)] $ResourceGroupLocation = 'eastus',

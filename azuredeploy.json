@@ -2,21 +2,14 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "_deploymentsLocationSasToken": {
+        "deploymentsLocationSasToken": {
             "type": "securestring",
             "metadata": {
                 "description": "Sas token to deployments container."
             },
             "defaultValue": null
         },
-        "_paramsLocationSasToken": {
-            "type": "securestring",
-            "metadata": {
-                "description": "Sas token to resources container."
-            },
-            "defaultValue": null
-        },
-        "_resourcesLocationSasToken": {
+        "resourcesLocationSasToken": {
             "type": "securestring",
             "metadata": {
                 "description": "Sas token to resources container."
@@ -52,24 +45,14 @@
         "deployments": {
             "apiVersion": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
         },
-        "secrets": [
-            {
-                "name": "defaultPassword",
-                "value": "[replace(guid(subscription().subscriptionId), '-', '')]"
-            },
-            {
-                "name": "deploymentsLocationSasToken",
-                "value": "[parameters('_deploymentsLocationSasToken')]"
-            },
-            {
-                "name": "paramsLocationSasToken",
-                "value": "[parameters('_paramsLocationSasToken')]"
-            },
-            {
-                "name": "resourcesLocationSasToken",
-                "value": "[parameters('_resourcesLocationSasToken')]"
-            }
-        ]
+        "secrets": {
+            "secrets": [
+                {
+                    "name": "defaultPassword",
+                    "value": "[replace(guid(subscription().subscriptionId), '-', '')]"
+                }
+            ]
+        }
     },
     "resources": [
         {
@@ -80,14 +63,14 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'deployments/vault.json', parameters('_deploymentsLocationSasToken'))]"
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'deployments/vault.json', parameters('deploymentsLocationSasToken'))]"
                 },
                 "parameters": {
                     "secrets": {
-                        "value": "[union(parameters('secrets').secrets, variables('secrets'))]"
+                        "value": "[union(parameters('secrets'), variables('secrets'))]"
                     },
-                    "_resourcesLocationSasToken": {
-                        "value": "[parameters('_resourcesLocationSasToken')]"
+                    "resourcesLocationSasToken": {
+                        "value": "[parameters('resourcesLocationSasToken')]"
                     },
                     "vaultAdminId": {
                         "value": "[parameters('vaultAdminId')]"
@@ -109,10 +92,10 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'deployments/automation.json', parameters('_deploymentsLocationSasToken'))]"
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'deployments/automation.json', parameters('deploymentsLocationSasToken'))]"
                 },
                 "parameters": {
-                    "_resourcesLocationSasToken": {
+                    "resourcesLocationSasToken": {
                         "reference": {
                             "keyVault": {
                                 "id": "[reference(resourceId('Microsoft.Resources/deployments', 'vaults'), variables('deployments').apiVersion).outputs.vault.value.resourceId]"

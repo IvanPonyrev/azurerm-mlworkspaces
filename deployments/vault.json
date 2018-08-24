@@ -2,7 +2,7 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "_resourcesLocationSasToken": {
+        "resourcesLocationSasToken": {
             "type": "securestring",
             "metadata": {
                 "description": "Sas token to resources container."
@@ -10,11 +10,13 @@
             "defaultValue": null
         },
         "secrets": {
-            "type": "array",
+            "type": "secureObject",
             "metadata": {
                 "description": "Secrets to deploy to the vault."
             },
-            "defaultValue": [ ]
+            "defaultValue": {
+                "secrets": [ ]
+            }
         },
         "vaultAdminId": {
             "type": "securestring",
@@ -47,7 +49,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/vaults.json', parameters('_resourcesLocationSasToken'))]"
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/vaults.json', parameters('resourcesLocationSasToken'))]"
                 },
                 "parameters": {
                     "name": {
@@ -84,22 +86,22 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('deployments').apiVersion]",
-            "name": "[parameters('secrets')[copyIndex()].name]",
+            "name": "[parameters('secrets').secrets[copyIndex()].name]",
             "resourceGroup": "[parameters('resourceGroup')]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/secrets.json', parameters('_resourcesLocationSasToken'))]"
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/secrets.json', parameters('resourcesLocationSasToken'))]"
                 },
                 "parameters": {
                     "name": {
-                        "value": "[parameters('secrets')[copyIndex()].name]"
+                        "value": "[parameters('secrets').secrets[copyIndex()].name]"
                     },
                     "vaultName": {
                         "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('vaults').name), variables('deployments').apiVersion).outputs.name.value]"
                     },
                     "value": {
-                        "value": "[parameters('secrets')[copyIndex()].value]"
+                        "value": "[parameters('secrets').secrets[copyIndex()].value]"
                     }
                 },
                 "debugSetting": {
@@ -108,7 +110,7 @@
             },
             "copy": {
                 "name": "secrets",
-                "count": "[length(parameters('secrets'))]"
+                "count": "[length(parameters('secrets').secrets)]"
             }
         }
     ],
