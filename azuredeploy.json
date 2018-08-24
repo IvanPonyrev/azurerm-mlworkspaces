@@ -99,13 +99,49 @@
                     "resourcesLocationSasToken": {
                         "reference": {
                             "keyVault": {
-                                "id": "[reference(resourceId('Microsoft.Resources/deployments', 'vaults'), variables('deployments').apiVersion).outputs.vault.value.resourceId]"
+                                "id": "[reference(resourceId('Microsoft.Resources/deployments', 'vaults'), variables('deployments').apiVersion).outputs.resourceId.value]"
                             },
                             "secretName": "resourcesLocationSasToken"
                         }
                     },
                     "certificates": {
                         "value": "[parameters('certificates')]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('deployments').apiVersion]",
+            "name": "virtualNetworks",
+            "resourceGroup": "network",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'vaults')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'deployments/network.json', parameters('deploymentsLocationSasToken'))]"
+                },
+                "parameters": {
+                    "resourcesLocationSasToken": {
+                        "reference": {
+                            "keyVault": {
+                                "id": "[reference(resourceId('Microsoft.Resources/deployments', 'vaults'), variables('deployments').apiVersion).outputs.resourceId.value]"
+                            },
+                            "secretName": "resourcesLocationSasToken"
+                        }
+                    },
+                    "paramsLocationSasToken": {
+                        "reference": {
+                            "keyVault": {
+                                "id": "[reference(resourceId('Microsoft.Resources/deployments', 'vaults'), variables('deployments').apiVersion).outputs.resourceId.value]"
+                            },
+                            "secretName": "paramsLocationSasToken"
+                        }
                     }
                 },
                 "debugSetting": {

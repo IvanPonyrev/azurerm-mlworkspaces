@@ -115,17 +115,21 @@
         }
     ],
     "outputs": {
+        "name": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('vaults').name), variables('deployments').apiVersion).outputs.name.value]"
+        },
         "apiVersion": {
             "type": "string",
-            "value": "[variables('deployments').apiVersion]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('vaults').name), variables('deployments').apiVersion).outputs.apiVersion.value]"
         },
-        "vault": {
-            "type": "object",
-            "value": {
-                "name": "[reference(resourceId('Microsoft.Resources/deployments', variables('vaults').name), variables('deployments').apiVersion).outputs.name.value]",
-                "resourceId": "[reference(resourceId('Microsoft.Resources/deployments', variables('vaults').name), variables('deployments').apiVersion).outputs.resourceId.value]",
-                "vaultUri": "[reference(resourceId('Microsoft.Resources/deployments', variables('vaults').name), variables('deployments').apiVersion).outputs.vaultUri.value]"
-            }
+        "resourceId": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('vaults').name), variables('deployments').apiVersion).outputs.resourceId.value]"
+        },
+        "vaultUri": {
+            "type": "securestring",
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('vaults').name), variables('deployments').apiVersion).outputs.resourceId.value]"
         }
     }
 }
