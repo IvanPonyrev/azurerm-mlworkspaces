@@ -31,27 +31,7 @@
                     "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/virtualNetworks.json', parameters('resourcesLocationSasToken'))]"
                 },
                 "parametersLink": {
-                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'params/network.json', parameters('paramsLocationSasToken'))]"
-                },
-                "debugSetting": {
-                    "detailLevel": "requestContent, responseContent"
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('deployments').apiVersion]",
-            "name": "subnets",
-            "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', 'virtualNetwork')]"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'deployments/subnets.json', parameters('deploymentsLocationSasToken'))]"
-                },
-                "parametersLink": {
-                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'params/subnets.json', parameters('paramsLocationSasToken'))]"
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'params/network.parameters.json', parameters('paramsLocationSasToken'))]"
                 },
                 "debugSetting": {
                     "detailLevel": "requestContent, responseContent"
