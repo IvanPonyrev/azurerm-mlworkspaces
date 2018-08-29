@@ -142,6 +142,9 @@
                             },
                             "secretName": "resourcesLocationSasToken"
                         }
+                    },
+                    "resourceGroup": {
+                        "value": "network"
                     }
                 },
                 "debugSetting": {
