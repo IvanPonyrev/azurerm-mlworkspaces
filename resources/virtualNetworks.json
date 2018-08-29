@@ -2,39 +2,74 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "virtualNetworks": {
+    "name": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the virtualNetwork."
+      }
+    },
+    "apiVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "The apiVersion of this resource. Value 'latest' will deploy using latest apiVersion."
+      },
+      "defaultValue": "latest"
+    },
+    "addressPrefixes": {
       "type": "array",
       "metadata": {
-        "description": "Array of virtual network objects matching appropriate schema."
+        "description": "A list of address blocks reserved for this virtual network in CIDR notation."
       }
+    },
+    "dnsServers": {
+      "type": "array",
+      "metadata": {
+        "description": "The list of DNS servers IP addresses."
+      },
+      "defaultValue": [ ]
+    },
+    "enableVmProtection": {
+      "type": "bool",
+      "metadata": {
+        "description": "Indicates if Vm protection is enabled for all the subnets in a Virtual Network."
+      },
+      "defaultValue": true
     }
   },
   "variables": {
     "virtualNetworks": {
-      "apiVersion": "[providers('Microsoft.Network', 'virtualNetworks').apiVersions[0]]"
+        "apiVersion": "[if(equals(parameters('apiVersion'), 'latest'), providers('Microsoft.Network', 'virtualNetworks').apiVersions[0], parameters('apiVersion'))]"
     }
   },
   "resources": [
     {
       "type": "Microsoft.Network/virtualNetworks",
       "apiVersion": "[variables('virtualNetworks').apiVersion]",
-      "name": "[parameters('virtualNetworks')[copyIndex()].name]",
+      "name": "[parameters('name')]",
       "location": "[resourceGroup().location]",
-      "properties": "[parameters('virtualNetworks')[copyIndex()].properties]",
-      "copy": {
-        "name": "virtualNetworks",
-        "count": "[length(parameters('virtualNetworks'))]"
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": "[parameters('addressPrefixes')]"
+        },
+        "dhcpOptions": {
+          "dnsServers": "[parameters('dnsServers')]"
+        },
+        "enableVmProtection": "[parameters('enableVmProtection')]"
       }
     }
   ],
   "outputs": {
-    "virtualNetwork": {
-      "type": "object",
-      "value": "[reference(parameters('virtualNetworks')[0].name, variables('virtualNetworks').apiVersion, 'Full')]"
-    },
-    "virtualNetworkName": {
+    "name": {
       "type": "string",
-      "value": "[parameters('virtualNetworks')[0].name]"
+      "value": "[parameters('name')]"
+    },
+    "resourceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/virtualNetworks', parameters('name'))]"
+    },
+    "reference": {
+      "type": "object",
+      "value": "[reference(resourceId('Microsoft.Network/virtualNetworks', parameters('name')), variables('virtualNetworks').apiVersion, 'Full')]"
     }
   }
 }

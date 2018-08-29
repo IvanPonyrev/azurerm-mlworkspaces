@@ -56,7 +56,7 @@
                         "value": "automationPrimaryKey"
                     },
                     "vaultName": {
-                        "value": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'vaults'), variables('deployments').apiVersion).outputs.vault.value.name]"
+                        "value": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'vaults'), variables('deployments').apiVersion).outputs.name.value]"
                     },
                     "value": {
                         "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationAccount'), variables('deployments').apiVersion).outputs.primaryKey.value]"
