@@ -127,20 +127,20 @@
                     "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'deployments/network.json', parameters('deploymentsLocationSasToken'))]"
                 },
                 "parameters": {
+                    "deploymentsLocationSasToken": {
+                        "reference": {
+                            "keyVault": {
+                                "id": "[reference(resourceId('Microsoft.Resources/deployments', 'vaults'), variables('deployments').apiVersion).outputs.resourceId.value]"
+                            },
+                            "secretName": "deploymentsLocationSasToken"
+                        }
+                    },
                     "resourcesLocationSasToken": {
                         "reference": {
                             "keyVault": {
                                 "id": "[reference(resourceId('Microsoft.Resources/deployments', 'vaults'), variables('deployments').apiVersion).outputs.resourceId.value]"
                             },
                             "secretName": "resourcesLocationSasToken"
-                        }
-                    },
-                    "paramsLocationSasToken": {
-                        "reference": {
-                            "keyVault": {
-                                "id": "[reference(resourceId('Microsoft.Resources/deployments', 'vaults'), variables('deployments').apiVersion).outputs.resourceId.value]"
-                            },
-                            "secretName": "paramsLocationSasToken"
                         }
                     }
                 },

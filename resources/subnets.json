@@ -24,7 +24,7 @@
     "addressPrefix": {
       "type": "string",
       "metadata": {
-        "description": "Array of subnet objects matching appropriate schema."
+        "description": "Address prefix of the subnet."
       }
     }
   },
@@ -52,6 +52,10 @@
     "resourceId": {
       "type": "string",
       "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('name'))]"
+    },
+    "apiVersion": {
+      "type": "string",
+      "value": "[variables('virtualNetworks').apiVersion]"
     }
   }
 }
