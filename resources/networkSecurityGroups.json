@@ -2,16 +2,23 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "networkSecurityGroups": {
-      "type": "array",
+    "name": {
+      "type": "string",
       "metadata": {
-        "description": "An array of network security group objects matching schema."
+        "description": "The name of this resource."
       }
+    },
+    "apiVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "The apiVersion of this resource. Value 'latest' will deploy using latest apiVersion."
+      },
+      "defaultValue": "latest"
     }
   },
   "variables": {
     "virtualNetworks": {
-      "apiVersion": "[providers('Microsoft.Network', 'virtualNetworks').apiVersions[0]]"
+      "apiVersion": "[if(equals(parameters('apiVersion'), 'latest'), providers('Microsoft.Network', 'virtualNetworks').apiVersions[0], parameters('apiVersion'))]"
     }
   },
   "resources": [
@@ -20,28 +27,19 @@
       "apiVersion": "[variables('virtualNetworks').apiVersion]",
       "name": "[parameters('networkSecurityGroups')[copyIndex()].name]",
       "location": "[resourceGroup().location]",
-      "properties": "[parameters('networkSecurityGroups')[copyIndex()].properties]",
-      "copy": {
-        "name": "networkSecurityGroups",
-        "count": "[length(parameters('networkSecurityGroups'))]"
+      "properties": {
+        
       }
     }
   ],
   "outputs": {
-    "groups": {
-      "type": "array",
-      "value": [
-        {
-          "name": "[parameters('networkSecurityGroups')[0].name]",
-          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups')[0].name)]"
-        },
-        {
-          "name": "[parameters('networkSecurityGroups')[1].name]",
-          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups')[1].name)]"
-        }
-        
-        
-      ]
+    "name": {
+      "type": "string",
+      "value": "[parameters('name')]"
+    },
+    "resourceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('name'))]"
     }
   }
 }

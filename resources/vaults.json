@@ -14,14 +14,14 @@
         "metadata": {
           "description": "The desired apiVersion of this resource. Default is latest."
         },
-        "defaultValue": "latest"
+        "defaultValue": "[providers('Microsoft.KeyVault', 'vaults').apiVersions[0]]"
       },
       "location": {
         "type": "string", 
         "metadata": {
           "description": "Sets the location of the resource."
         },
-        "defaultValue": ""
+        "defaultValue": "[resourceGroup().location]"
       },
       "sku": {
         "type": "string",
@@ -60,17 +60,13 @@
       }
     },
     "variables": {
-      "vaults": {
-        "apiVersion": "[if(equals(parameters('apiVersion'), 'latest'), providers('Microsoft.KeyVault', 'vaults').apiVersions[0], parameters('apiVersion'))]",
-        "location": "[if(empty(parameters('location')), resourceGroup().location, parameters('location'))]"
-      }
     },
     "resources": [
       {
         "type": "Microsoft.KeyVault/vaults",
-        "apiVersion": "[variables('vaults').apiVersion]",
+        "apiVersion": "[parameters('apiVersion')]",
         "name": "[parameters('name')]",
-        "location": "[resourceGroup().location]",
+        "location": "[parameters('location')]",
         "properties": {
           "sku": {
             "name": "[parameters('sku')]",
@@ -91,7 +87,7 @@
       },
       "apiVersion": {
         "type": "string",
-        "value": "[variables('vaults').apiVersion]"
+        "value": "[parameters('apiVersion')]"
       },
       "resourceId": {
         "type": "string",
@@ -99,7 +95,7 @@
       },
       "vaultUri": {
         "type": "securestring",
-        "value": "[reference(resourceId('Microsoft.KeyVault/vaults', parameters('name')), variables('vaults').apiVersion).vaultUri]"
+        "value": "[reference(resourceId('Microsoft.KeyVault/vaults', parameters('name')), parameters('apiVersion')).vaultUri]"
       }
     }
   }

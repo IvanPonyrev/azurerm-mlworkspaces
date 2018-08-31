@@ -39,6 +39,18 @@
             "defaultValue": {
                 "secrets": [ ]
             }
+        },
+        "addressPrefixes": {
+            "type": "array",
+            "metadata": {
+                "description": "A list of address blocks reserved for this virtual network in CIDR notation."
+            }
+        },
+        "subnets": {
+            "type": "array",
+            "metadata": {
+                "defaultValue": "Array of subnet objects containing name, addressPrefix, and networkSecurityGroups parameters name."
+            }
         }
     },
     "variables": {

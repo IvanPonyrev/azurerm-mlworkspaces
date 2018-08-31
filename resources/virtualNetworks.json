@@ -13,7 +13,14 @@
       "metadata": {
         "description": "The apiVersion of this resource. Value 'latest' will deploy using latest apiVersion."
       },
-      "defaultValue": "latest"
+      "defaultValue": "[providers('Microsoft.Network', 'virtualNetworks').apiVersions[0]]"
+    },
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource location."
+      },
+      "defaultValue": "[resourceGroup().location]"
     },
     "addressPrefixes": {
       "type": "array",
@@ -37,16 +44,13 @@
     }
   },
   "variables": {
-    "virtualNetworks": {
-        "apiVersion": "[if(equals(parameters('apiVersion'), 'latest'), providers('Microsoft.Network', 'virtualNetworks').apiVersions[0], parameters('apiVersion'))]"
-    }
   },
   "resources": [
     {
       "type": "Microsoft.Network/virtualNetworks",
-      "apiVersion": "[variables('virtualNetworks').apiVersion]",
+      "apiVersion": "[parameters('apiVersion')]",
       "name": "[parameters('name')]",
-      "location": "[resourceGroup().location]",
+      "location": "[parameters('location')]",
       "properties": {
         "addressSpace": {
           "addressPrefixes": "[parameters('addressPrefixes')]"
@@ -69,7 +73,7 @@
     },
     "reference": {
       "type": "object",
-      "value": "[reference(resourceId('Microsoft.Network/virtualNetworks', parameters('name')), variables('virtualNetworks').apiVersion, 'Full')]"
+      "value": "[reference(resourceId('Microsoft.Network/virtualNetworks', parameters('name')), parameters('apiVersion'), 'Full')]"
     }
   }
 }

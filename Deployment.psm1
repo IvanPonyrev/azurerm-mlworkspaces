@@ -63,10 +63,15 @@ class Deployment {
             if ($this.TemplateParametersFile.parameters.PSObject.Properties.Name -notcontains $_) {
                 switch -Wildcard ($_) {
                     "*LocationSasToken" {
-                        $this.OptionalParameters[$_] = ConvertTo-SecureString -AsPlainText -Force ($this.Secrets.secrets | Where-Object name -eq $_).value
+                        $this.OptionalParameters[$_] = ConvertTo-SecureString -AsPlainText -Force `
+                            ($this.Secrets.secrets | Where-Object name -eq $_).value
                     }
                     "secrets" {
                         $this.OptionalParameters[$_] = $this.Secrets
+                    }
+                    "vaultAdminId" {
+                        $this.OptionalParameters[$_] = ConvertTo-SecureString -AsPlainText -Force `
+                            (Get-AzureRmADUser | ? UserPrincipalName -match (Get-AzureRmContext).Account.Id.ToLower().Replace("@", "_") | select -First 1 Id).Id.ToString()
                     }
                 }
             } else {

@@ -19,28 +19,36 @@
       "metadata": {
         "description": "The apiVersion of this resource. Value 'latest' will deploy using latest apiVersion."
       },
-      "defaultValue": "latest"
+      "defaultValue": "[providers('Microsoft.Network', 'virtualNetworks').apiVersions[0]]"
     },
     "addressPrefix": {
       "type": "string",
       "metadata": {
         "description": "Address prefix of the subnet."
       }
+    },
+    "networkSecurityGroupId": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource id of network security group."
+      },
+      "defaultValue": ""
     }
   },
   "variables": {
-    "virtualNetworks": {
-        "apiVersion": "[if(equals(parameters('apiVersion'), 'latest'), providers('Microsoft.Network', 'virtualNetworks').apiVersions[0], parameters('apiVersion'))]"
+    "networkSecurityGroup": {
+      "id": "[parameters('networkSecurityGroupId')]"
     }
   },
   "resources": [
     {
       "type": "Microsoft.Network/virtualNetworks/subnets",
-      "apiVersion": "[variables('virtualNetworks').apiVersion]",
+      "apiVersion": "[parameters('apiVersion')]",
       "name": "[concat(parameters('virtualNetworkName'), '/', parameters('name'))]",
       "location": "[resourceGroup().location]",
       "properties": {
-        "addressPrefix": "[parameters('addressPrefix')]"
+        "addressPrefix": "[parameters('addressPrefix')]",
+        "networkSecurityGroup": "[if(empty(parameters('networkSecurityGroupId')), json('null'), variables('networkSecurityGroup'))]"
       }
     }
   ],
@@ -49,13 +57,13 @@
       "type": "string",
       "value": "[parameters('name')]"
     },
+    "apiVersion": {
+      "type": "string",
+      "value": "[parameters('apiVersion')]"
+    },
     "resourceId": {
       "type": "string",
       "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('name'))]"
-    },
-    "apiVersion": {
-      "type": "string",
-      "value": "[variables('virtualNetworks').apiVersion]"
     }
   }
 }
