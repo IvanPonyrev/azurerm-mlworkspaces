@@ -118,6 +118,10 @@
       "resourceId": {
         "type": "string",
         "value": "[resourceId('Microsoft.Network/networkSecurityGroups/securityRules', parameters('networkSecurityGroupName'), parameters('name'))]"
+      },
+      "reference": {
+        "type": "object",
+        "value": "[reference(resourceId('Microsoft.Network/networkSecurityGroups/securityRules', parameters('networkSecurityGroupName'), parameters('name')), parameters('apiVersion'))]"
       }
     }
   }

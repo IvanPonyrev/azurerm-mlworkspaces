@@ -61,6 +61,53 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('deployments').apiVersion]",
+            "name": "[parameters('networkSecurityGroup').securityRules[copyIndex()].name]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/securityRules.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[parameters('networkSecurityGroup').securityRules[copyIndex()].name]"
+                    },
+                    "networkSecurityGroupName": {
+                        "value": "[reference(resourceId('Microsoft.Resources/deployments', parameters('networkSecurityGroup').name), variables('deployments').apiVersion).outputs.name.value]"
+                    },
+                    "protocol": {
+                        "value": "[parameters('networkSecurityGroup').securityRules[copyIndex()].protocol]"
+                    },
+                    "sourcePortRanges": {
+                        "value": "[parameters('networkSecurityGroup').securityRules[copyIndex()].sourcePortRanges]"
+                    },
+                    "destinationPortRanges": {
+                        "value": "[parameters('networkSecurityGroup').securityRules[copyIndex()].destinationPortRanges]"
+                    },
+                    "sourceAddressPrefixes": {
+                        "value": "[parameters('networkSecurityGroup').securityRules[copyIndex()].sourceAddressPrefixes]"
+                    },
+                    "destinationAddressPrefixes": {
+                        "value": "[parameters('networkSecurityGroup').securityRules[copyIndex()].destinationAddressPrefixes]"
+                    },
+                    "access": {
+                        "value": "[parameters('networkSecurityGroup').securityRules[copyIndex()].access]"
+                    },
+                    "priority": {
+                        "value": "[parameters('networkSecurityGroup').securityRules[copyIndex()].priority]"
+                    },
+                    "direction": {
+                        "value": "[parameters('networkSecurityGroup').securityRules[copyIndex()].direction]"
+                    }
+                }
+            },
+            "copy": {
+                "name": "securityRules",
+                "count": "[length(parameters('networkSecurityGroup').securityRules)]"
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('deployments').apiVersion]",
             "name": "[parameters('name')]",
             "properties": {
                 "mode": "Incremental",
