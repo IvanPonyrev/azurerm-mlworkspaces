@@ -13,22 +13,18 @@
       "metadata": {
         "description": "The apiVersion of this resource. Value 'latest' will deploy using latest apiVersion."
       },
-      "defaultValue": "latest"
+      "defaultValue": "[providers('Microsoft.Network', 'networkSecurityGroups').apiVersions[0]]"
     }
   },
   "variables": {
-    "virtualNetworks": {
-      "apiVersion": "[if(equals(parameters('apiVersion'), 'latest'), providers('Microsoft.Network', 'virtualNetworks').apiVersions[0], parameters('apiVersion'))]"
-    }
   },
   "resources": [
     {
       "type": "Microsoft.Network/networkSecurityGroups",
-      "apiVersion": "[variables('virtualNetworks').apiVersion]",
+      "apiVersion": "[parameters('apiVersion')]",
       "name": "[parameters('name')]",
       "location": "[resourceGroup().location]",
       "properties": {
-
       }
     }
   ],

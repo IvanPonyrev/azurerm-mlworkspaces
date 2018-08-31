@@ -8,24 +8,85 @@
           "description": "Secret name."
         }
       },
-      "apiVersion": {
-        "type": "string",
-        "metadata": {
-          "description": "The apiVersion of this resource. Value 'latest' will deploy using latest apiVersion."
-        },
-        "defaultValue": "[providers('Microsoft.Network', 'vaults').apiVersions[0]]"
-      },
-      "vaultName": {
+      "networkSecurityGroupName": {
         "type": "string",
         "metadata": {
           "description": "Parent vault name."
         }
       },
-      "value": {
-        "type": "securestring",
+      "apiVersion": {
+        "type": "string",
         "metadata": {
-          "description": "The value of the secret. NOTE: 'value' will never be returned from the service, as APIs using this model are intended for internal use in ARM deployments. Users should use the data-plane REST service for interaction with vault secrets."
+          "description": "The apiVersion of this resource. Value 'latest' will deploy using latest apiVersion."
+        },
+        "defaultValue": "[providers('Microsoft.Network', 'networkSecurityGroups').apiVersions[0]]"
+      },
+      "location": {
+        "type": "string",
+        "metadata": {
+          "description": "The location to which this resource will be provisioned."
+        },
+        "defaultValue": "[resourceGroup().location]"
+      },
+      "description": {
+        "type": "string",
+        "metadata": {
+          "description": "Description for this rule. Restricted to 140 chars."
+        },
+        "defaultValue": ""
+      },
+      "protocol": {
+        "type": "string",
+        "metadata": {
+          "description": "Network protocol this rule applies to."
+        },
+        "allowedValues": [ "Tcp", "Udp", "*" ]
+      },
+      "sourcePortRanges": {
+        "type": "array",
+        "metadata": {
+          "description": "The source port ranges. Range between 0 and 65,535. * to match all ports."
         }
+      },
+      "destinationPortRanges": {
+        "type": "array",
+        "metadata": {
+          "description": "The destination port ranges. Range between 0 and 65,535. * to match all ports."
+        }
+      },
+      "sourceAddressPrefixes": {
+        "type": "array",
+        "metadata": {
+          "description": "The CIDR or source IP ranges."
+        }
+      },
+      "destinationAddressPrefixes": {
+        "type": "array",
+        "metadata": {
+          "description": "The destination address prefixes. CIDR or destination IP ranges."
+        }
+      },
+      "access": {
+        "type": "string",
+        "metadata": {
+          "description": "Network traffic is allowed or denied."
+        },
+        "allowedValues": [ "Allow", "Deny" ]
+      },
+      "priority": {
+        "type": "int", 
+        "metadata": {
+          "description": "Lower number indicates higher priority. Must be unique for each rule in the collection."
+        },
+        "minValue": 100,
+        "maxValue": 4096
+      },
+      "direction": {
+        "type": "string",
+        "metadata": {
+          "description": "Specifies if rule will be evaluated on incoming or outgoing traffic."
+        },
+        "allowedValues": [ "Inbound", "Outbound" ]
       }
     },
     "variables": {
@@ -34,10 +95,18 @@
       {
         "type": "Microsoft.Network/networkSecurityGroups/securityRules",
         "apiVersion": "[parameters('apiVersion')]",
-        "name": "[concat(parameters('vaultName'), '/', parameters('name'))]",
-        "location": "[resourceGroup().location]",
+        "name": "[concat(parameters('networkSecurityGroupName'), '/', parameters('name'))]",
+        "location": "[parameters('location')]",
         "properties": {
-          "value": "[parameters('value')]"
+          "description": "[parameters('description')]",
+          "protocol": "[parameters('protocol')]",
+          "sourceAddressPrefixes": "[parameters('sourceAddressPrefixes')]",
+          "destinationAddressPrefixes": "[parameters('destinationAddressPrefixes')]",
+          "sourcePortRanges": "[parameters('sourcePortRanges')]",
+          "destinationPortRanges": "[parameters('destinationPortRanges')]",
+          "access": "[parameters('access')]",
+          "priority": "[parameters('priority')]",
+          "direction": "[parameters('direction')]"
         }
       }
     ],
@@ -48,7 +117,7 @@
       },
       "resourceId": {
         "type": "string",
-        "value": "[resourceId('Microsoft.KeyVault/vaults/secrets', parameters('vaultName'), parameters('name'))]"
+        "value": "[resourceId('Microsoft.Network/networkSecurityGroups/securityRules', parameters('networkSecurityGroupName'), parameters('name'))]"
       }
     }
   }
