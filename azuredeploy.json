@@ -39,18 +39,6 @@
             "defaultValue": {
                 "secrets": [ ]
             }
-        },
-        "addressPrefixes": {
-            "type": "array",
-            "metadata": {
-                "description": "A list of address blocks reserved for this virtual network in CIDR notation."
-            }
-        },
-        "subnets": {
-            "type": "array",
-            "metadata": {
-                "defaultValue": "Array of subnet objects containing name, addressPrefix, and networkSecurityGroups parameters name."
-            }
         }
     },
     "variables": {
@@ -118,45 +106,6 @@
                     },
                     "certificates": {
                         "value": "[parameters('certificates')]"
-                    }
-                },
-                "debugSetting": {
-                    "detailLevel": "requestContent, responseContent"
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('deployments').apiVersion]",
-            "name": "virtualNetworks",
-            "resourceGroup": "network",
-            "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', 'vaults')]"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'deployments/network.json', parameters('deploymentsLocationSasToken'))]"
-                },
-                "parameters": {
-                    "deploymentsLocationSasToken": {
-                        "reference": {
-                            "keyVault": {
-                                "id": "[reference(resourceId('Microsoft.Resources/deployments', 'vaults'), variables('deployments').apiVersion).outputs.resourceId.value]"
-                            },
-                            "secretName": "deploymentsLocationSasToken"
-                        }
-                    },
-                    "resourcesLocationSasToken": {
-                        "reference": {
-                            "keyVault": {
-                                "id": "[reference(resourceId('Microsoft.Resources/deployments', 'vaults'), variables('deployments').apiVersion).outputs.resourceId.value]"
-                            },
-                            "secretName": "resourcesLocationSasToken"
-                        }
-                    },
-                    "resourceGroup": {
-                        "value": "network"
                     }
                 },
                 "debugSetting": {

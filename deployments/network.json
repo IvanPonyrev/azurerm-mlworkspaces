@@ -2,6 +2,20 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "deploymentsLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Sas token to deployments container."
+            },
+            "defaultValue": null
+        },
+        "resourcesLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Sas token to resources container."
+            },
+            "defaultValue": null
+        },
         "apiVersion": {
           "type": "string",
           "metadata": {
@@ -113,6 +127,9 @@
                     },
                     "addressPrefix": {
                         "value": "[parameters('subnets')[copyIndex()].addressPrefix]"
+                    },
+                    "networkSecurityGroup": {
+                        "value": "[parameters('subnets')[copyIndex()].networkSecurityGroup]"
                     }
                 },
                 "debugSetting": {

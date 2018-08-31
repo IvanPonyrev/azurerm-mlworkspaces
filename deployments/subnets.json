@@ -10,23 +10,30 @@
             "defaultValue": null
         },
         "name": {
-          "type": "string",
-          "metadata": {
-            "description": "The name of the virtualNetwork."
-          },
-          "defaultValue": "network"
+            "type": "string",
+            "metadata": {
+                "description": "The name of the virtualNetwork."
+            },
+            "defaultValue": "network"
         },
         "virtualNetworkName": {
-          "type": "string",
-          "metadata": {
-            "description": "The name of the virtual network to which this subnet will be provisioned."
-          }
+            "type": "string",
+            "metadata": {
+                "description": "The name of the virtual network to which this subnet will be provisioned."
+            }
         },
         "addressPrefix": {
-          "type": "string",
-          "metadata": {
-            "description": "Address prefix of the subnet."
-          }
+            "type": "string",
+            "metadata": {
+                "description": "Address prefix of the subnet."
+            }
+        },
+        "networkSecurityGroup": {
+            "type": "secureObject",
+            "metadata": {
+                "description": "Object of networkSecurityGroup containing name and rules."
+            },
+            "defaultValue": { }
         }
     },
     "variables": {
@@ -35,6 +42,22 @@
         }
     },
     "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('deployments').apiVersion]",
+            "name": "[parameters('networkSecurityGroup').name]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/networkSecurityGroups.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[parameters('networkSecurityGroup').name]"
+                    }
+                }
+            }
+        },
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('deployments').apiVersion]",
@@ -53,6 +76,9 @@
                     },
                     "addressPrefix": {
                         "value": "[parameters('addressPrefix')]"
+                    },
+                    "networkSecurityGroupId": {
+                        "value": "[reference(resourceId('Microsoft.Resources/deployments', parameters('networkSecurityGroup').name), variables('deployments').apiVersion).outputs.resourceId.value]"
                     }
                 },
                 "debugSetting": {

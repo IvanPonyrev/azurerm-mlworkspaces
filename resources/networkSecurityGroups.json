@@ -25,10 +25,10 @@
     {
       "type": "Microsoft.Network/networkSecurityGroups",
       "apiVersion": "[variables('virtualNetworks').apiVersion]",
-      "name": "[parameters('networkSecurityGroups')[copyIndex()].name]",
+      "name": "[parameters('name')]",
       "location": "[resourceGroup().location]",
       "properties": {
-        
+
       }
     }
   ],
