@@ -1,0 +1,103 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "resourcesLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Sas token to resources container."
+            },
+            "defaultValue": null
+        },
+        "name": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of this networkSecurityGroup."
+            },
+            "defaultValue": "network-security"
+        },
+        "apiVersion": {
+            "type": "string",
+            "metadata": {
+                "description": "The apiVersion of this resource."
+            },
+            "defaultValue": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
+        },
+        "securityRules": {
+            "type": "array",
+            "metadata": {
+                "description": "An object containing networkSecurityGroup name and securityRules."
+            }, 
+            "defaultValue": [ ]
+        }
+    },
+    "variables": {
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[parameters('name')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/networkSecurityGroups.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[parameters('name')]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[parameters('securityRules')[copyIndex()].name]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', parameters('name'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/securityRules.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "networkSecurityGroupName": {
+                        "value": "[parameters('name')]"
+                    },
+                    "name": {
+                        "value": "[parameters('securityRules')[copyIndex()].name]"
+                    },
+                    "properties": {
+                        "value": "[parameters('securityRules')[copyIndex()].properties]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            },
+            "copy": {
+                "name": "securityRules",
+                "count": "[length(parameters('securityRules'))]"
+            }
+        }
+    ],
+    "outputs": {
+        "apiVersion": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', parameters('name')), parameters('apiVersion')).outputs.apiVersion.value]"
+        },
+        "name": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', parameters('name')), parameters('apiVersion')).outputs.name.value]"
+        },
+        "resourceId": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', parameters('name')), parameters('apiVersion')).outputs.resourceId.value]"
+        }
+    }
+}

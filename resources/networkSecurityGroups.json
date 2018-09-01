@@ -33,6 +33,10 @@
       "type": "string",
       "value": "[parameters('name')]"
     },
+    "apiVersion": {
+      "type": "string",
+      "value": "[parameters('apiVersion')]"
+    },
     "resourceId": {
       "type": "string",
       "value": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('name'))]"

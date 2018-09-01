@@ -28,65 +28,11 @@
         },
         "defaultValue": "[resourceGroup().location]"
       },
-      "description": {
-        "type": "string",
+      "properties": {
+        "type": "object",
         "metadata": {
-          "description": "Description for this rule. Restricted to 140 chars."
-        },
-        "defaultValue": ""
-      },
-      "protocol": {
-        "type": "string",
-        "metadata": {
-          "description": "Network protocol this rule applies to."
-        },
-        "allowedValues": [ "Tcp", "Udp", "*" ]
-      },
-      "sourcePortRanges": {
-        "type": "array",
-        "metadata": {
-          "description": "The source port ranges. Range between 0 and 65,535. * to match all ports."
+          "description": "The properties of this security rule."
         }
-      },
-      "destinationPortRanges": {
-        "type": "array",
-        "metadata": {
-          "description": "The destination port ranges. Range between 0 and 65,535. * to match all ports."
-        }
-      },
-      "sourceAddressPrefixes": {
-        "type": "array",
-        "metadata": {
-          "description": "The CIDR or source IP ranges."
-        }
-      },
-      "destinationAddressPrefixes": {
-        "type": "array",
-        "metadata": {
-          "description": "The destination address prefixes. CIDR or destination IP ranges."
-        }
-      },
-      "access": {
-        "type": "string",
-        "metadata": {
-          "description": "Network traffic is allowed or denied."
-        },
-        "allowedValues": [ "Allow", "Deny" ]
-      },
-      "priority": {
-        "type": "int", 
-        "metadata": {
-          "description": "Lower number indicates higher priority. Must be unique for each rule in the collection."
-        },
-        "minValue": 100,
-        "maxValue": 4096
-      },
-      "direction": {
-        "type": "string",
-        "metadata": {
-          "description": "Specifies if rule will be evaluated on incoming or outgoing traffic."
-        },
-        "allowedValues": [ "Inbound", "Outbound" ]
       }
     },
     "variables": {
@@ -97,17 +43,7 @@
         "apiVersion": "[parameters('apiVersion')]",
         "name": "[concat(parameters('networkSecurityGroupName'), '/', parameters('name'))]",
         "location": "[parameters('location')]",
-        "properties": {
-          "description": "[parameters('description')]",
-          "protocol": "[parameters('protocol')]",
-          "sourceAddressPrefixes": "[parameters('sourceAddressPrefixes')]",
-          "destinationAddressPrefixes": "[parameters('destinationAddressPrefixes')]",
-          "sourcePortRanges": "[parameters('sourcePortRanges')]",
-          "destinationPortRanges": "[parameters('destinationPortRanges')]",
-          "access": "[parameters('access')]",
-          "priority": "[parameters('priority')]",
-          "direction": "[parameters('direction')]"
-        }
+        "properties": "[parameters('properties')]"
       }
     ],
     "outputs": {
