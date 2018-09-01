@@ -14,7 +14,7 @@
         "metadata": {
           "description": "The desired apiVersion of this resource. Default is latest."
         },
-        "defaultValue": "latest"
+        "defaultValue": "[providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]]"
       },
       "kind": {
         "type": "string",
@@ -29,7 +29,7 @@
         "metadata": {
           "description": "Sets the location of the resource."
         },
-        "defaultValue": ""
+        "defaultValue": "[resourceGroup().location]"
       },
       "tags": {
         "type": "object",
@@ -100,9 +100,7 @@
     },
     "variables": {
       "storageAccounts": {
-        "name": "[concat(parameters('name'), uniqueString(subscription().displayName))]",
-        "apiVersion": "[if(equals(parameters('apiVersion'), 'latest'), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0], parameters('apiVersion'))]",
-        "location": "[if(empty(parameters('location')), resourceGroup().location, parameters('location'))]"
+        "name": "[concat(parameters('name'), uniqueString(subscription().displayName))]"
       },
       "customDomain": {
         "name": "[parameters('customDomain')]",
@@ -112,9 +110,9 @@
     "resources": [
       {
         "type": "Microsoft.Storage/storageAccounts",
-        "apiVersion": "[variables('storageAccounts').apiVersion]",
+        "apiVersion": "[parameters('apiVersion')]",
         "name": "[variables('storageAccounts').name]",
-        "location": "[variables('storageAccounts').location]",
+        "location": "[parameters('location')]",
         "tags": "[parameters('tags')]",
         "sku": {
           "name": "[parameters('sku')]"
@@ -145,7 +143,7 @@
       },
       "apiVersion": {
         "type": "string",
-        "value": "[variables('storageAccounts').apiVersion]"
+        "value": "[parameters('apiVersion')]"
       },
       "resourceId": {
         "type": "string",
@@ -153,24 +151,24 @@
       },
       "blobEndpoint": {
         "type": "string",
-        "value": "[reference(variables('storageAccounts').name, variables('storageAccounts').apiVersion).primaryEndpoints.blob]"
+        "value": "[reference(variables('storageAccounts').name, parameters('apiVersion')).primaryEndpoints.blob]"
       },
       "tableEndpoint": {
         "type": "string",
-        "value": "[reference(variables('storageAccounts').name, variables('storageAccounts').apiVersion).primaryEndpoints.table]"
+        "value": "[reference(variables('storageAccounts').name, parameters('apiVersion')).primaryEndpoints.table]"
       },
       "key1": {
         "type": "secureObject",
         "value": {
           "name": "storagePrimaryKey",
-          "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts').name), variables('storageAccounts').apiVersion).keys[0].value]"
+          "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts').name), parameters('apiVersion')).keys[0].value]"
         }
       },
       "key2": {
         "type": "secureObject",
         "value": {
           "name": "storageSecondaryKey",
-          "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts').name), variables('storageAccounts').apiVersion).keys[1].value]"
+          "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts').name), parameters('apiVersion')).keys[1].value]"
         }
       }
     }

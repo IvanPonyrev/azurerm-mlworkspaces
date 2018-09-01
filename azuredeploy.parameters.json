@@ -2,8 +2,5 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "vaultAdminId": {
-            "value": "97176e03-f68a-40fa-bc43-0344df72b61c"
-        }
     }
 }

@@ -21,6 +21,83 @@
                     "addressPrefix": "192.168.2.0/24"
                 }
             ]
+        },
+        "networkSecurityGroup": {
+            "value": {
+                "name": "network-security",
+                "securityRules": [
+                    {
+                        "name": "enable_rdp",
+                        "properties": {
+                            "description": "Allow RDP",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "3389",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 110,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "enable_web",
+                        "properties": {
+                            "description": "Internet to web server.",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "80",
+                            "sourceAddressPrefix": "Internet",
+                            "destinationAddressPrefix": "192.168.1.5",
+                            "access": "Allow",
+                            "priority": 120,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "enable_app",
+                        "properties": {
+                            "description": "Enable web to app.",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "192.168.1.5",
+                            "destinationAddressPrefix": "192.168.2.5",
+                            "access": "Allow",
+                            "priority": 130,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "deny_internet",
+                        "properties": {
+                            "description": "Isolate network from internet.",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "Internet",
+                            "destinationAddressPrefix": "VirtualNetwork",
+                            "access": "Deny",
+                            "priority": 140,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "deny_frontend",
+                        "properties": {
+                            "description": "Isolate frontend from backend.",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "192.168.1.0/24",
+                            "destinationAddressPrefix": "192.168.2.0/24",
+                            "access": "Deny",
+                            "priority": 150,
+                            "direction": "Inbound"
+                        }
+                    }
+                ]
+            }
         }
     }
   }

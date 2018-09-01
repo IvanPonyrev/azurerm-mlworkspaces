@@ -14,7 +14,7 @@
             "metadata": {
                 "description": "The apiVersion of this resource. Value 'latest' will deploy using latest apiVersion."
             },
-            "defaultValue": "latest"
+            "defaultValue": "[providers('Microsoft.Automation', 'automationAccounts').apiVersions[0]]"
         },
         "location": {
             "type": "string",
@@ -36,14 +36,11 @@
         }
     },
     "variables": {
-        "automationAccounts": {
-            "apiVersion": "[if(equals(parameters('apiVersion'), 'latest'), providers('Microsoft.Automation', 'automationAccounts').apiVersions[0], parameters('apiVersion'))]"
-        }
     },
     "resources": [
         {
             "type": "Microsoft.Automation/automationAccounts",
-            "apiVersion": "[variables('automationAccounts').apiVersion]",
+            "apiVersion": "[parameters('apiVersion')]",
             "name": "[parameters('name')]",
             "location": "[parameters('location')]",
             "properties": {
@@ -60,7 +57,7 @@
         },
         "apiVersion": {
             "type": "string",
-            "value": "[variables('automationAccounts').apiVersion]"
+            "value": "[parameters('apiVersion')]"
         },
         "resourceId": {
             "type": "string",
@@ -68,11 +65,11 @@
         },
         "registrationUrl": {
             "type": "string",
-            "value": "[reference(resourceId('Microsoft.Automation/automationAccounts', parameters('name')), variables('automationAccounts').apiVersion).RegistrationUrl]"
+            "value": "[reference(resourceId('Microsoft.Automation/automationAccounts', parameters('name')), parameters('apiVersion')).RegistrationUrl]"
         },
         "primaryKey": {
             "type": "string",
-            "value": "[listKeys(resourceId('Microsoft.Automation/automationAccounts', parameters('name')), variables('automationAccounts').apiVersion).keys[0].value]"
+            "value": "[listKeys(resourceId('Microsoft.Automation/automationAccounts', parameters('name')), parameters('apiVersion')).keys[0].value]"
         }
     }
 }
