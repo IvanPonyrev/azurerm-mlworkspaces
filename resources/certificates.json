@@ -19,7 +19,7 @@
             "metadata": {
                 "description": "The apiVersion of this resource. Value 'latest' will deploy using latest apiVersion."
             },
-            "defaultValue": "latest"
+            "defaultValue": "[providers('Microsoft.Automation', 'automationAccounts').apiVersions[0]]"
         },
         "location": {
             "type": "string",
@@ -52,22 +52,17 @@
             "metadata": {
                 "description": "Sets the is exportable flag of the certificate."
             },
-            "defaultValue": true
+            "defaultValue": false
         }
     },
     "variables": {
-        "certificates": {
-            "apiVersion": "[if(equals(parameters('apiVersion'), 'latest'), providers('Microsoft.Automation', 'automationAccounts').apiVersions[0], parameters('apiVersion'))]",
-            "name": "[concat(parameters('automationAccountName'), '/', parameters('name'))]",
-            "location": "[if(empty(parameters('location')), resourceGroup().location, parameters('location'))]"
-        }
     },
     "resources": [
         {
             "type": "Microsoft.Automation/automationAccounts/certificates",
-            "apiVersion": "[variables('certificates').apiVersion]",
-            "name": "[variables('certificates').name]",
-            "location": "[variables('certificates').location]",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[concat(parameters('automationAccountName'), '/', parameters('name'))]",
+            "location": "[parameters('location')]",
             "properties": {
                 "base64Value": "[parameters('base64Value')]",
                 "description": "[parameters('description')]",
@@ -83,7 +78,7 @@
         },
         "apiVersion": {
             "type": "string",
-            "value": "[variables('certificates').apiVersion]"
+            "value": "[parameters('apiVersion')]"
         },
         "resourceId": {
             "type": "string",

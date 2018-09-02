@@ -3,8 +3,6 @@ class Certificate {
 
     hidden [string] $CertStoreLocation = "Cert:\CurrentUser\My"
 
-    hidden [string] $FilePath = "$($env:TEMP)~$([System.IO.Path]::GetRandomFileName().Split('.')[0])"
-
     hidden [string] $Password
 
     hidden [string] $Thumbprint
@@ -27,14 +25,8 @@ class Certificate {
             -Type CodeSigningCert `
             -CertStoreLocation $this.CertStoreLocation
 
-        New-Item -ItemType Directory -Path $this.FilePath
-        $cer = Export-Certificate -Cert $certificate `
-            -FilePath "$($this.Filepath)\$($this.Name).cer"
-
-        certutil.exe -encode $cer "$($this.Filepath)\$($this.Name)Encoded.cer"
-
-        $this.Base64Value = Get-Content "$($this.Filepath)\$($this.Name)Encoded.cer" -Encoding Ascii
-        $this.Thumbprint = $certificate.GetCertHash()
+        $this.Base64Value = [System.Convert]::ToBase64String($certificate.RawData)
+        $this.Thumbprint = $certificate.Thumbprint
     }
 
     <# .Description Returns certificate in object format. #>
@@ -57,6 +49,5 @@ class Certificate {
     <# .Description Removes the generated certificate. #>
     [void] RemoveCertificate() {
         Remove-Item "$($this.CertStoreLocation)\$($this.Thumbprint)"
-        Remove-Item $this.FilePath -Force -Recurse
     }
 }
