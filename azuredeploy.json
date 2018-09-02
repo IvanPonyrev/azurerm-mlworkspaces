@@ -100,6 +100,14 @@
                     "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'deployments/automation.json', parameters('deploymentsLocationSasToken'))]"
                 },
                 "parameters": {
+                    "deploymentsLocationSasToken": {
+                        "reference": {
+                            "keyVault": {
+                                "id": "[reference(resourceId('Microsoft.Resources/deployments', 'vaults'), parameters('apiVersion')).outputs.resourceId.value]"
+                            },
+                            "secretName": "deploymentsLocationSasToken"
+                        }
+                    },
                     "resourcesLocationSasToken": {
                         "reference": {
                             "keyVault": {

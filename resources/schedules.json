@@ -28,47 +28,71 @@
             },
             "defaultValue": "eastus2"
         },
-        "connectionType": {
-            "type": "string",
-            "metadata": {
-                "description": "Sets the type of connection."
-            },
-            "defaultValue": "AzureRunAsConnection",
-            "allowedValues": [
-                "Azure", 
-                "AzureServicePrincipal", 
-                "AzureClassicCertificate",
-                "AzureRunAsConnection"
-            ]
-        },
         "description": {
             "type": "string", 
             "metadata": {
-                "description": "Sets the description of the runbook."
+                "description": "Sets the description of the certificate."
             },
             "defaultValue": ""
         },
-        "fieldDefinitionValues": {
-            "type": "secureObject",
+        "startTime": {
+            "type": "string",
             "metadata": {
-                "description": "Sets the field definition properties of the connection."
+                "description": "Start time."
             }
+        },
+        "expiryTime": {
+            "type": "string",
+            "metadata": {
+                "description": "Expiry time."
+            }
+        },
+        "interval": {
+            "type": "object",
+            "metadata": {
+                "description": "Interval of this resource."
+            },
+            "defaultValue": { }
+        },
+        "frequency": {
+            "type": "string",
+            "metadata": {
+                "description": "Expiry time."
+            },
+            "allowedValues": [
+                "OneTime", 
+                "Day", 
+                "Hour", 
+                "Week"
+            ]
+        },
+        "timeZone": {
+            "type": "string",
+            "metadata": {
+                "description": "Sets the time zone of the schedule."
+            }
+        },
+        "advancedSchedule": {
+            "type": "object",
+            "metadata": {
+                "description": ""
+            },
+            "defaultValue": { }
         }
     },
     "variables": {
     },
     "resources": [
         {
-            "type": "Microsoft.Automation/automationAccounts/connections",
+            "type": "Microsoft.Automation/automationAccounts/certificates",
             "apiVersion": "[parameters('apiVersion')]",
             "name": "[concat(parameters('automationAccountName'), '/', parameters('name'))]",
             "location": "[parameters('location')]",
             "properties": {
+                "base64Value": "[parameters('base64Value')]",
                 "description": "[parameters('description')]",
-                "connectionType": {
-                    "name": "[parameters('connectionType')]"
-                },
-                "fieldDefinitionValues": "[parameters('fieldDefinitionValues')]"
+                "thumbprint": "[parameters('thumbprint')]",
+                "isExportable": "[parameters('isExportable')]"
             }
         }
     ],
@@ -83,7 +107,11 @@
         },
         "resourceId": {
             "type": "string",
-            "value": "[resourceId('Microsoft.Automation/automationAccounts/connections', parameters('automationAccountName'), parameters('name'))]"
+            "value": "[resourceId('Microsoft.Automation/automationAccounts/certificates', parameters('automationAccountName'), parameters('name'))]"
+        },
+        "thumbprint": {
+            "type": "securestring",
+            "value": "[parameters('thumbprint')]"
         }
     }
 }

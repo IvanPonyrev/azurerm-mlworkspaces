@@ -1,0 +1,119 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "resourcesLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Sas token to resources container."
+            },
+            "defaultValue": null
+        },
+        "apiVersion": {
+          "type": "string",
+          "metadata": {
+            "description": "The apiVersion of this resource. Value 'latest' will deploy using latest apiVersion."
+          },
+          "defaultValue": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
+        },
+        "automationAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name to be given to this automation account."
+            }
+        },
+        "certificate": {
+            "type": "secureObject", 
+            "metadata": {
+                "description": "A secureObject containing array of certificates objects containing name, base64Value, and thumbprint."
+            }
+        }
+    },
+    "variables": {
+        "deployments": {
+            "certificate": "[concat(parameters('certificate').name, 'Certificate')]",
+            "connection": "[concat(parameters('certificate').name, 'Connection')]"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[variables('deployments').certificate]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/certificates.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[variables('deployments').certificate]"
+                    },
+                    "automationAccountName": {
+                        "value": "[parameters('automationAccountName')]"
+                    },
+                    "base64Value": {
+                        "value": "[parameters('certificate').base64Value]"
+                    },
+                    "thumbprint": {
+                        "value": "[parameters('certificate').thumbprint]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[variables('deployments').connection]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', variables('deployments').certificate)]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/connections.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[variables('deployments').connection]"
+                    },
+                    "automationAccountName": {
+                        "value": "[parameters('automationAccountName')]"
+                    },
+                    "connectionType": {
+                        "value": "Azure"
+                    },
+                    "description": {
+                        "value": "Automation account certificate for runbooks and configurations."
+                    },
+                    "fieldDefinitionValues": {
+                        "value": {
+                            "AutomationCertificateName": "[parameters('certificate').name]",
+                            "SubscriptionId": "[subscription().subscriptionId]"
+                        }
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "apiVersion": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('deployments').connection), parameters('apiVersion')).outputs.apiVersion.value]"
+        },
+        "name": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('deployments').connection), parameters('apiVersion')).outputs.name.value]"
+        },
+        "resourceId": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('deployments').connection), parameters('apiVersion')).outputs.resourceId.value]"
+        }
+    }
+}
