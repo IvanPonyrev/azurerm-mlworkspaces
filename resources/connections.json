@@ -49,7 +49,7 @@
             "defaultValue": ""
         },
         "fieldDefinitionValues": {
-            "type": "secureObject",
+            "type": "object",
             "metadata": {
                 "description": "Sets the field definition properties of the connection."
             }
