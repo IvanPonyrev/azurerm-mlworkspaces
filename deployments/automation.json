@@ -2,6 +2,13 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "deploymentsLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Sas token to resources container."
+            },
+            "defaultValue": null
+        },
         "resourcesLocationSasToken": {
             "type": "securestring",
             "metadata": {
@@ -74,27 +81,29 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[parameters('apiVersion')]",
-            "name": "[parameters('certificates').certificates[copyIndex()].name]",
+            "name": "[concat(parameters('certificates').certificates[copyIndex()].name, 'ConnectionDeployment')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', 'automationAccount')]"
             ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/certificates.json', parameters('resourcesLocationSasToken'))]"
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'deployments/connections.json', parameters('deploymentsLocationSasToken'))]"
                 },
                 "parameters": {
-                    "name": {
-                        "value": "[parameters('certificates').certificates[copyIndex()].name]"
+                    "resourcesLocationSasToken": {
+                        "reference": {
+                            "keyVault": {
+                                "id": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'vaults'), parameters('apiVersion')).outputs.resourceId.value]"
+                            },
+                            "secretName": "resourcesLocationSasToken"
+                        }
                     },
                     "automationAccountName": {
-                        "value": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.name.value]"
+                        "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.name.value]"
                     },
-                    "base64Value": {
-                        "value": "[parameters('certificates').certificates[copyIndex()].base64Value]"
-                    },
-                    "thumbprint": {
-                        "value": "[parameters('certificates').certificates[copyIndex()].thumbprint]"
+                    "certificate": {
+                        "value": "[parameters('certificates').certificates[copyIndex()]]"
                     }
                 },
                 "debugSetting": {
@@ -106,7 +115,6 @@
                 "count": "[length(parameters('certificates').certificates)]"
             }
         }
-
     ],
     "outputs": {
         "apiVersion": {
