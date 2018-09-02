@@ -83,11 +83,9 @@ class Deployment {
                         $this.TemplateParametersFile.parameters.$_.value.certificates | ForEach-Object {
                             $certificate = [Certificate]::new($_.name)
                             $certificates.certificates += $certificate.GetCertificate()
-                            $this.Secrets.secrets += $certificate.GetPassword()
                             $certificate.RemoveCertificate()
                         }
                         $this.OptionalParameters[$_] = $certificates
-                        $this.OptionalParameters["secrets"] = $this.Secrets
                     }
                 }
             }

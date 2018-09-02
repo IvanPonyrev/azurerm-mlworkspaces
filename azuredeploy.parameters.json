@@ -6,7 +6,7 @@
             "value": {
                 "certificates": [
                     {
-                        "name": "automation"
+                        "name": "automationCertificate"
                     }
                 ]
             }
