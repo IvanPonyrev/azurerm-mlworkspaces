@@ -10,7 +10,7 @@
             "defaultValue": null
         },
         "certificates": {
-            "type": "secureObject", 
+            "type": "object", 
             "metadata": {
                 "description": "A secureObject containing array of certificates objects containing name, base64Value, and thumbprint."
             },
@@ -66,7 +66,43 @@
                     "detailLevel": "requestContent, responseContent"
                 }
             }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('deployments').apiVersion]",
+            "name": "[parameters('certificates').certificates[copyIndex()].name]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'automationAccount')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/certificates.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[parameters('certificates').certificates[copyIndex()].name]"
+                    },
+                    "automationAccountName": {
+                        "value": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'automationAccount'), variables('deployments').apiVersion).outputs.name.value]"
+                    },
+                    "base64Value": {
+                        "value": "[parameters('certificates').certificates[copyIndex()].base64Value]"
+                    },
+                    "thumbprint": {
+                        "value": "[parameters('certificates').certificates[copyIndex()].thumbprint]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            },
+            "copy": {
+                "name": "certificates",
+                "count": "[length(parameters('certificates').certificates)]"
+            }
         }
+
     ],
     "outputs": {
         "apiVersion": {
