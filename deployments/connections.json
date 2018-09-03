@@ -84,14 +84,16 @@
                         "value": "[parameters('automationAccountName')]"
                     },
                     "connectionType": {
-                        "value": "Azure"
+                        "value": "AzureServicePrincipal"
                     },
                     "description": {
-                        "value": "Automation account certificate for runbooks and configurations."
+                        "value": "Connection for runbooks and configurations."
                     },
                     "fieldDefinitionValues": {
                         "value": {
-                            "AutomationCertificateName": "[parameters('certificate').name]",
+                            "ApplicationId": "d93bac81-78e8-4544-b871-25971ebad363",
+                            "TenantId": "[subscription().tenantId]",
+                            "CertificateThumbprint": "[reference(resourceId('Microsoft.Resources/deployments', variables('deployments').certificate), parameters('apiVersion')).outputs.thumbprint.value]",
                             "SubscriptionId": "[subscription().subscriptionId]"
                         }
                     }
