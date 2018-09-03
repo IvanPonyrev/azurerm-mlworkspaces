@@ -59,6 +59,10 @@
             "type": "string",
             "value": "[parameters('apiVersion')]"
         },
+        "reference": {
+            "type": "object",
+            "value": "[reference(resourceId('Microsoft.Automation/automationAccounts', parameters('name')), parameters('apiVersion'))]"
+        },
         "resourceId": {
             "type": "string",
             "value": "[resourceId('Microsoft.Automation/automationAccounts', parameters('name'))]"

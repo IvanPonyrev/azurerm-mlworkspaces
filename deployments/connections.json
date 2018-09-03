@@ -22,7 +22,13 @@
                 "description": "The name to be given to this automation account."
             }
         },
-        "certificate": {
+        "applicationId": {
+            "type": "string",
+            "metadata": {
+                "description": "The application id the connection will use."
+            }
+        },
+        "certificates": {
             "type": "secureObject", 
             "metadata": {
                 "description": "A secureObject containing array of certificates objects containing name, base64Value, and thumbprint."
@@ -30,16 +36,12 @@
         }
     },
     "variables": {
-        "deployments": {
-            "certificate": "[concat(parameters('certificate').name, 'Certificate')]",
-            "connection": "[concat(parameters('certificate').name, 'Connection')]"
-        }
     },
     "resources": [
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[parameters('apiVersion')]",
-            "name": "[variables('deployments').certificate]",
+            "name": "[concat(parameters('certificates').certificates[copyIndex()].name, 'Certificate')]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -47,29 +49,33 @@
                 },
                 "parameters": {
                     "name": {
-                        "value": "[variables('deployments').certificate]"
+                        "value": "[parameters('certificates').certificates[copyIndex()].name]"
                     },
                     "automationAccountName": {
                         "value": "[parameters('automationAccountName')]"
                     },
                     "base64Value": {
-                        "value": "[parameters('certificate').base64Value]"
+                        "value": "[parameters('certificates').certificates[copyIndex()].base64Value]"
                     },
                     "thumbprint": {
-                        "value": "[parameters('certificate').thumbprint]"
+                        "value": "[parameters('certificates').certificates[copyIndex()].thumbprint]"
                     }
                 },
                 "debugSetting": {
                     "detailLevel": "requestContent, responseContent"
                 }
+            },
+            "copy": {
+                "name": "certificates",
+                "count": "[length(parameters('certificates').certificates)]"
             }
         },
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[parameters('apiVersion')]",
-            "name": "[variables('deployments').connection]",
+            "name": "automationConnection",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('deployments').certificate)]"
+                "[resourceId('Microsoft.Resources/deployments', 'automationCertificate')]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -78,20 +84,22 @@
                 },
                 "parameters": {
                     "connectionName": {
-                        "value": "[variables('deployments').connection]"
+                        "value": "automationConnection"
                     },
                     "automationAccountName": {
                         "value": "[parameters('automationAccountName')]"
                     },
                     "connectionType": {
-                        "value": "Azure"
+                        "value": "AzureServicePrincipal"
                     },
                     "description": {
                         "value": "Automation account certificate for runbooks and configurations."
                     },
                     "fieldDefinitionValues": {
                         "value": {
-                            "AutomationCertificateName": "[parameters('certificate').name]",
+                            "ApplicationId": "[parameters('applicationId')]",
+                            "TenantId": "[subscription().tenantId]",
+                            "CertificateThumbprint": "[reference(resourceId('Microsoft.Resources/deployments', 'automationCertificate'), parameters('apiVersion')).outputs.thumbprint.value]",
                             "SubscriptionId": "[subscription().subscriptionId]"
                         }
                     }
@@ -105,15 +113,15 @@
     "outputs": {
         "apiVersion": {
             "type": "string",
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('deployments').connection), parameters('apiVersion')).outputs.apiVersion.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationConnection'), parameters('apiVersion')).outputs.apiVersion.value]"
         },
         "name": {
             "type": "string",
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('deployments').connection), parameters('apiVersion')).outputs.name.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationConnection'), parameters('apiVersion')).outputs.name.value]"
         },
         "resourceId": {
             "type": "string",
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('deployments').connection), parameters('apiVersion')).outputs.resourceId.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationConnection'), parameters('apiVersion')).outputs.resourceId.value]"
         }
     }
 }

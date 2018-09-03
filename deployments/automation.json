@@ -23,6 +23,12 @@
           },
           "defaultValue": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
         },
+        "applicationId": {
+            "type": "string",
+            "metadata": {
+                "description": "The application id the connection will use."
+            }
+        },
         "certificates": {
             "type": "secureObject", 
             "metadata": {
@@ -81,7 +87,7 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[parameters('apiVersion')]",
-            "name": "[concat(parameters('certificates').certificates[copyIndex()].name, 'ConnectionDeployment')]",
+            "name": "certificates",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', 'automationAccount')]"
             ],
@@ -102,17 +108,16 @@
                     "automationAccountName": {
                         "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.name.value]"
                     },
-                    "certificate": {
-                        "value": "[parameters('certificates').certificates[copyIndex()]]"
+                    "applicationId": {
+                        "value": "[parameters('applicationId')]"
+                    },
+                    "certificates": {
+                        "value": "[parameters('certificates')]"
                     }
                 },
                 "debugSetting": {
                     "detailLevel": "requestContent, responseContent"
                 }
-            },
-            "copy": {
-                "name": "certificates",
-                "count": "[length(parameters('certificates').certificates)]"
             }
         }
     ],

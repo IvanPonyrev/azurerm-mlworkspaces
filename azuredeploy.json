@@ -23,6 +23,12 @@
           },
           "defaultValue": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
         },
+        "applicationId": {
+            "type": "string",
+            "metadata": {
+                "description": "The application id the connection will use."
+            }
+        },
         "vaultAdminId": {
             "type": "securestring",
             "metadata": {
@@ -115,6 +121,9 @@
                             },
                             "secretName": "resourcesLocationSasToken"
                         }
+                    },
+                    "applicationId": {
+                        "value": "[parameters('applicationId')]"
                     },
                     "certificates": {
                         "value": "[parameters('certificates')]"
