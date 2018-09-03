@@ -77,23 +77,21 @@
                     "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/connections.json', parameters('resourcesLocationSasToken'))]"
                 },
                 "parameters": {
-                    "name": {
+                    "connectionName": {
                         "value": "[variables('deployments').connection]"
                     },
                     "automationAccountName": {
                         "value": "[parameters('automationAccountName')]"
                     },
                     "connectionType": {
-                        "value": "AzureServicePrincipal"
+                        "value": "Azure"
                     },
                     "description": {
-                        "value": "Connection for runbooks and configurations."
+                        "value": "Automation account certificate for runbooks and configurations."
                     },
                     "fieldDefinitionValues": {
                         "value": {
-                            "ApplicationId": "d93bac81-78e8-4544-b871-25971ebad363",
-                            "TenantId": "[subscription().tenantId]",
-                            "CertificateThumbprint": "[reference(resourceId('Microsoft.Resources/deployments', variables('deployments').certificate), parameters('apiVersion')).outputs.thumbprint.value]",
+                            "AutomationCertificateName": "[parameters('certificate').name]",
                             "SubscriptionId": "[subscription().subscriptionId]"
                         }
                     }
