@@ -73,12 +73,12 @@ class Deployment {
 
         $servicePrincipal = Get-AzureRmADServicePrincipal -DisplayName $applicationName | select -First 1
         if ($null -ne $servicePrincipal) {
-            Remove-AzureRmADServicePrincipal -Id $servicePrincipal.Id
+            Remove-AzureRmADServicePrincipal -Id $servicePrincipal.Id -Force
         }
         New-AzureRmADServicePrincipal -ApplicationId $application.ApplicationId `
             -CertValue $certificate.GetCertificate().base64Value `
             -EndDate $certificate.GetEndDate() `
-            -StartDate $certificate.GetStartDate()
+            -StartDate ([System.DateTime]::Now)
 
         $certificate.RemoveCertificate()
 
