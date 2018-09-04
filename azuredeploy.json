@@ -23,6 +23,12 @@
           },
           "defaultValue": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
         },
+        "applicationId": {
+            "type": "string",
+            "metadata": {
+                "description": "The application id the connection will use."
+            }
+        },
         "vaultAdminId": {
             "type": "securestring",
             "metadata": {
@@ -30,7 +36,7 @@
             }
         },
         "certificates": {
-            "type": "secureObject",
+            "type": "object",
             "metadata": {
                 "description": "A secureObject containing array of certificates containing name, base64Value, and thumbprint."
             },
@@ -39,7 +45,7 @@
             }
         },
         "secrets": {
-            "type": "secureObject",
+            "type": "object",
             "metadata": {
                 "description": "A secureObject containing array of name value pairs."
             },
@@ -115,6 +121,9 @@
                             },
                             "secretName": "resourcesLocationSasToken"
                         }
+                    },
+                    "applicationId": {
+                        "value": "[parameters('applicationId')]"
                     },
                     "certificates": {
                         "value": "[parameters('certificates')]"

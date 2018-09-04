@@ -1,6 +1,8 @@
 class Certificate {
     [string] $Name
 
+    hidden [System.Security.Cryptography.X509Certificates.X509Certificate2] $Certificate
+
     hidden [string] $CertStoreLocation = "Cert:\CurrentUser\My"
 
     hidden [string] $Password
@@ -19,14 +21,14 @@ class Certificate {
     <# .Description Generates a certificate. #>
     hidden [void] GenerateCertificate() {
         # Create certificate, export to temp directory, store base64Value and thumbprint.
-        $certificate = New-SelfSignedCertificate -Subject "CN=$($this.Name)" `
+        $this.Certificate = New-SelfSignedCertificate -Subject "CN=$($this.Name)" `
             -KeyAlgorithm RSA `
             -KeyLength 2048 `
             -Type CodeSigningCert `
             -CertStoreLocation $this.CertStoreLocation
 
-        $this.Base64Value = [System.Convert]::ToBase64String($certificate.RawData)
-        $this.Thumbprint = $certificate.Thumbprint
+        $this.Base64Value = [System.Convert]::ToBase64String($this.Certificate.RawData)
+        $this.Thumbprint = $this.Certificate.Thumbprint
     }
 
     <# .Description Returns certificate in object format. #>
@@ -38,10 +40,18 @@ class Certificate {
         }
     }
 
+    [string] GetEndDate() {
+        return $this.Certificate.NotAfter
+    }
+
+    [string] GetStartDate() {
+        return $this.Certificate.NotBefore
+    }
+
     <# .Description Returns password in secret format. #>
     [object] GetPassword() {
         return @{
-            name = "$($this.Name)CertificatePassword"
+            name = "$($this.Name)Password"
             value = $this.Password
         }
     }

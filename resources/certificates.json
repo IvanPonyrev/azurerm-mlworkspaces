@@ -85,7 +85,7 @@
             "value": "[resourceId('Microsoft.Automation/automationAccounts/certificates', parameters('automationAccountName'), parameters('name'))]"
         },
         "thumbprint": {
-            "type": "securestring",
+            "type": "string",
             "value": "[parameters('thumbprint')]"
         }
     }
