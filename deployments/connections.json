@@ -41,7 +41,7 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[parameters('apiVersion')]",
-            "name": "[concat(parameters('certificates').certificates[copyIndex()].name, 'Certificate')]",
+            "name": "[parameters('certificates').certificates[copyIndex()].name]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
