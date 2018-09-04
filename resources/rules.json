@@ -1,0 +1,56 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "name": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of this resource."
+      }
+    },
+    "apiVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "The desired apiVersion of this resource. Default is latest."
+      },
+      "defaultValue": "latest"
+    },
+    "group": {
+      "type": "string",
+      "metadata": {
+        "description": "The network security group name to which rules will be applied."
+      }
+    },
+    "properties": {
+      "type": "object",
+      "metadata": {
+        "description": "The properties of this rule."
+      }
+    }
+  },
+  "variables": {
+    "rules": {
+      "apiVersion": "[if(equals(parameters('apiVersion'), 'latest'), providers('Microsoft.Network', 'networkSecurityGroups').apiVersions[0], parameters('apiVersion'))]",
+      "name": "[concat(parameters('group'), '/', parameters('name'))]"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+      "apiVersion": "[variables('rules').apiVersion]",
+      "name": "[variables('rules').name]",
+      "location": "[resourceGroup().location]",
+      "properties": "[parameters('properties')]"
+    }
+  ],
+  "outputs": {
+    "name": {
+      "type": "string",
+      "value": "[variables('rules').name]"
+    },
+    "resourceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/networkSecurityGroups/securityRules', parameters('group'), parameters('name'))]"
+    }
+  }
+}

@@ -1,0 +1,189 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "deploymentsLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Sas token to deployments container."
+            },
+            "defaultValue": null
+        },
+        "resourcesLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Sas token to resources container."
+            },
+            "defaultValue": null
+        },
+        "apiVersion": {
+          "type": "string",
+          "metadata": {
+            "description": "The apiVersion of this resource. Value 'latest' will deploy using latest apiVersion."
+          },
+          "defaultValue": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
+        },
+        "resourceGroup": {
+            "type": "string",
+            "metadata": {
+                "description": "The resourceGroup to which resources will be deployed."
+            },
+            "defaultValue": "network"
+        },
+        "name": {
+          "type": "string",
+          "metadata": {
+            "description": "The name of the virtualNetwork."
+          },
+          "defaultValue": "network"
+        },
+        "addressPrefixes": {
+          "type": "array",
+          "metadata": {
+            "description": "A list of address blocks reserved for this virtual network in CIDR notation."
+          },
+          "defaultValue": [ "192.168.0.0/16" ]
+        },
+        "dnsServers": {
+          "type": "array",
+          "metadata": {
+            "description": "The list of DNS servers IP addresses."
+          },
+          "defaultValue": [ ]
+        },
+        "subnets": {
+            "type": "array",
+            "metadata": {
+                "description": "Array of objects containing subnet name and addressPrefix."
+            },
+            "defaultValue": [
+                {
+                    "name": "frontend",
+                    "addressPrefix": "192.168.1.0/24"
+                },
+                {
+                    "name": "backend",
+                    "addressPrefix": "192.168.2.0/24"
+                }
+            ]
+        },
+        "networkSecurityGroup": {
+            "type": "object",
+            "metadata": {
+                "description": "An object containing networkSecurityGroup name and securityRules."
+            }
+        }
+    },
+    "variables": {
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "networkSecurityGroup",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'deployments/networkSecurityGroups.json', parameters('deploymentsLocationSasToken'))]"
+                },
+                "parameters": {
+                    "resourcesLocationSasToken": {
+                        "reference": {
+                            "keyVault": {
+                                "id": "[reference(resourceId('management', 'Microsoft.Resources/deployments', 'vaults'), parameters('apiVersion')).outputs.resourceId.value]"
+                            },
+                            "secretName": "resourcesLocationSasToken"
+                        }
+                    },
+                    "name": {
+                        "value": "[parameters('networkSecurityGroup').name]"
+                    },
+                    "securityRules": {
+                        "value": "[parameters('networkSecurityGroup').securityRules]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "virtualNetwork",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/virtualNetworks.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[parameters('name')]"
+                    },
+                    "addressPrefixes": {
+                        "value": "[parameters('addressPrefixes')]"
+                    },
+                    "dnsServers": {
+                        "value": "[parameters('dnsServers')]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[concat(parameters('subnets')[copyIndex()].name, 'deployment')]",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "dependsOn": [
+                "[resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'networkSecurityGroup')]",
+                "[resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'virtualNetwork')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/subnets.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[parameters('subnets')[copyIndex()].name]"
+                    },
+                    "virtualNetworkName": {
+                        "value": "[parameters('name')]"
+                    },
+                    "addressPrefix": {
+                        "value": "[parameters('subnets')[copyIndex()].addressPrefix]"
+                    },
+                    "networkSecurityGroupId": {
+                        "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'networkSecurityGroup'), parameters('apiVersion')).outputs.resourceId.value]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            },
+            "copy": {
+                "name": "subnets",
+                "count": "[length(parameters('subnets'))]"
+            }
+        }
+    ],
+    "outputs": {
+        "apiVersion": {
+            "type": "string",
+            "value": "[parameters('apiVersion')]"
+        },
+        "name": {
+            "type": "string",
+            "value": "[parameters('name')]"
+        },
+        "resourceId": {
+            "type": "string",
+            "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'virtualNetwork'), parameters('apiVersion')).outputs.resourceId.value]"
+        }
+    }
+}

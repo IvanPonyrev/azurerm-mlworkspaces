@@ -1,0 +1,117 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "name": {
+            "type": "string",
+            "metadata": {
+                "description": "The name to be given to this automation account."
+            }
+        },
+        "automationAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name to be given to this automation account."
+            }
+        },
+        "apiVersion": {
+            "type": "string",
+            "metadata": {
+                "description": "The apiVersion of this resource. Value 'latest' will deploy using latest apiVersion."
+            },
+            "defaultValue": "[providers('Microsoft.Automation', 'automationAccounts').apiVersions[0]]"
+        },
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource location."
+            },
+            "defaultValue": "eastus2"
+        },
+        "description": {
+            "type": "string", 
+            "metadata": {
+                "description": "Sets the description of the certificate."
+            },
+            "defaultValue": ""
+        },
+        "startTime": {
+            "type": "string",
+            "metadata": {
+                "description": "Start time."
+            }
+        },
+        "expiryTime": {
+            "type": "string",
+            "metadata": {
+                "description": "Expiry time."
+            }
+        },
+        "interval": {
+            "type": "object",
+            "metadata": {
+                "description": "Interval of this resource."
+            },
+            "defaultValue": { }
+        },
+        "frequency": {
+            "type": "string",
+            "metadata": {
+                "description": "Expiry time."
+            },
+            "allowedValues": [
+                "OneTime", 
+                "Day", 
+                "Hour", 
+                "Week"
+            ]
+        },
+        "timeZone": {
+            "type": "string",
+            "metadata": {
+                "description": "Sets the time zone of the schedule."
+            }
+        },
+        "advancedSchedule": {
+            "type": "object",
+            "metadata": {
+                "description": ""
+            },
+            "defaultValue": { }
+        }
+    },
+    "variables": {
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Automation/automationAccounts/certificates",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[concat(parameters('automationAccountName'), '/', parameters('name'))]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "base64Value": "[parameters('base64Value')]",
+                "description": "[parameters('description')]",
+                "thumbprint": "[parameters('thumbprint')]",
+                "isExportable": "[parameters('isExportable')]"
+            }
+        }
+    ],
+    "outputs": {
+        "name": {
+            "type": "string",
+            "value": "[parameters('name')]"
+        },
+        "apiVersion": {
+            "type": "string",
+            "value": "[parameters('apiVersion')]"
+        },
+        "resourceId": {
+            "type": "string",
+            "value": "[resourceId('Microsoft.Automation/automationAccounts/certificates', parameters('automationAccountName'), parameters('name'))]"
+        },
+        "thumbprint": {
+            "type": "securestring",
+            "value": "[parameters('thumbprint')]"
+        }
+    }
+}

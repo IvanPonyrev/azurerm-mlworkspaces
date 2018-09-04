@@ -1,0 +1,88 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "connectionName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name to be given to this automation account."
+            }
+        },
+        "automationAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name to be given to this automation account."
+            }
+        },
+        "apiVersion": {
+            "type": "string",
+            "metadata": {
+                "description": "The apiVersion of this resource. Value 'latest' will deploy using latest apiVersion."
+            },
+            "defaultValue": "[providers('Microsoft.Automation', 'automationAccounts').apiVersions[0]]"
+        },
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource location."
+            },
+            "defaultValue": "eastus2"
+        },
+        "connectionType": {
+            "type": "string",
+            "metadata": {
+                "description": "Sets the type of connection."
+            },
+            "defaultValue": "AzureServicePrincipal",
+            "allowedValues": [
+                "Azure", 
+                "AzureServicePrincipal", 
+                "AzureClassicCertificate"
+            ]
+        },
+        "description": {
+            "type": "string", 
+            "metadata": {
+                "description": "Sets the description of the runbook."
+            },
+            "defaultValue": ""
+        },
+        "fieldDefinitionValues": {
+            "type": "object",
+            "metadata": {
+                "description": "Sets the field definition properties of the connection."
+            }
+        }
+    },
+    "variables": {
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Automation/automationAccounts/connections",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[concat(parameters('automationAccountName'), '/', parameters('connectionName'))]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "description": "[parameters('description')]",
+                "connectionType": {
+                    "name": "[parameters('connectionType')]"
+                },
+                "fieldDefinitionValues": "[parameters('fieldDefinitionValues')]"
+            }
+        }
+    ],
+    "outputs": {
+        "name": {
+            "type": "string",
+            "value": "[parameters('connectionName')]"
+        },
+        "apiVersion": {
+            "type": "string",
+            "value": "[parameters('apiVersion')]"
+        },
+        "resourceId": {
+            "type": "string",
+            "value": "[resourceId('Microsoft.Automation/automationAccounts/connections', parameters('automationAccountName'), parameters('connectionName'))]"
+        }
+    }
+}

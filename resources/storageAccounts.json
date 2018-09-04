@@ -1,0 +1,176 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "name": {
+        "type": "string",
+        "metadata": {
+          "description": "The name of the resource."
+        },
+        "defaultValue": "storage"
+      },
+      "apiVersion": {
+        "type": "string",
+        "metadata": {
+          "description": "The desired apiVersion of this resource. Default is latest."
+        },
+        "defaultValue": "[providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]]"
+      },
+      "kind": {
+        "type": "string",
+        "metadata": {
+          "description": "Required. Indicates the type of storage account. - Storage, StorageV2, BlobStorage"
+        },
+        "allowedValues": [ "Storage", "StorageV2", "BlobStorage" ],
+        "defaultValue": "BlobStorage"
+      },
+      "location": {
+        "type": "string", 
+        "metadata": {
+          "description": "Sets the location of the resource."
+        },
+        "defaultValue": "[resourceGroup().location]"
+      },
+      "tags": {
+        "type": "object",
+        "metadata": {
+          "description": "Sets a list of key value pairs describing the resource."
+        },
+        "defaultValue": { }
+      },
+      "sku": {
+        "type": "string",
+        "metadata": {
+          "description": "Sets the sku name."
+        },
+        "allowedValues": [ "Standard_LRS", "Standard_GRS", "Standard_RAGRS", "Standard_ZRS", "Premium_LRS" ],
+        "defaultValue": "Standard_LRS"
+      },
+      "blobEncryption": {
+        "type": "bool",
+        "metadata": {
+          "description": "A boolean indicating whether or not the service encrypts the data as it is stored."
+        },
+        "defaultValue": true
+      },
+      "fileEncryption": {
+        "type": "bool",
+        "metadata": {
+          "description": "A boolean indicating whether or not the service encrypts the data as it is stored."
+        },
+        "defaultValue": true
+      },
+      "supportsHttpsTrafficOnly": {
+        "type": "bool",
+        "metadata": {
+          "description": "A boolean indicating whether or not the service encrypts the data as it is stored."
+        },
+        "defaultValue": true
+      },
+      "accessTier": {
+        "type": "string",
+        "metadata": {
+          "description": "Required for storage accounts where kind = BlobStorage. The access tier used for billing. - Hot or Cool"
+        },
+        "allowedValues": [ "Hot", "Cool" ],
+        "defaultValue": "Cool"
+      },
+      "customDomain": {
+        "type": "string", 
+        "metadata": {
+          "description": "Sets the custom domain name assigned to the storage account. Name is the CNAME source."
+        },
+        "defaultValue": ""
+      },
+      "useSubDomain": {
+        "type": "bool", 
+        "metadata": {
+          "description": "Indicates whether indirect CName validation is enabled. Default value is false. This should only be set on updates."
+        },
+        "defaultValue": false
+      },
+      "keySource": {
+        "type": "string",
+        "metadata": {
+          "description": "The encryption keySource (provider)."
+        },
+        "allowedValues": [ "Microsoft.Storage", "Microsoft.KeyVault" ],
+        "defaultValue": "Microsoft.Storage"
+      }
+    },
+    "variables": {
+      "storageAccounts": {
+        "name": "[concat(parameters('name'), uniqueString(subscription().displayName))]"
+      },
+      "customDomain": {
+        "name": "[parameters('customDomain')]",
+        "useSubDomain": "[parameters('useSubDomain')]"
+      }
+    },
+    "resources": [
+      {
+        "type": "Microsoft.Storage/storageAccounts",
+        "apiVersion": "[parameters('apiVersion')]",
+        "name": "[variables('storageAccounts').name]",
+        "location": "[parameters('location')]",
+        "tags": "[parameters('tags')]",
+        "sku": {
+          "name": "[parameters('sku')]"
+        },
+        "kind": "[parameters('kind')]",
+        "properties": {
+          "encryption": {
+            "services": {
+              "blob": {
+                "enabled": "[parameters('blobEncryption')]"
+              },
+              "file": {
+                "enabled": "[parameters('fileEncryption')]"
+              }
+            },
+            "keySource": "[parameters('keySource')]"
+          },
+          "accessTier": "[parameters('accessTier')]",
+          "supportsHttpsTrafficOnly": "[parameters('supportsHttpsTrafficOnly')]",
+          "customDomain": "[if(empty(parameters('customDomain')), json('null'), variables('customDomain'))]"
+        }
+      }
+    ],
+    "outputs": {
+      "name": {
+        "type": "string",
+        "value": "[variables('storageAccounts').name]"
+      },
+      "apiVersion": {
+        "type": "string",
+        "value": "[parameters('apiVersion')]"
+      },
+      "resourceId": {
+        "type": "string",
+        "value": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts').name)]"
+      },
+      "blobEndpoint": {
+        "type": "string",
+        "value": "[reference(variables('storageAccounts').name, parameters('apiVersion')).primaryEndpoints.blob]"
+      },
+      "tableEndpoint": {
+        "type": "string",
+        "value": "[reference(variables('storageAccounts').name, parameters('apiVersion')).primaryEndpoints.table]"
+      },
+      "key1": {
+        "type": "secureObject",
+        "value": {
+          "name": "storagePrimaryKey",
+          "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts').name), parameters('apiVersion')).keys[0].value]"
+        }
+      },
+      "key2": {
+        "type": "secureObject",
+        "value": {
+          "name": "storageSecondaryKey",
+          "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts').name), parameters('apiVersion')).keys[1].value]"
+        }
+      }
+    }
+}
+  

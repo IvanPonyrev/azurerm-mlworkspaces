@@ -1,0 +1,39 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "databases": {
+        "type": "array",
+        "metadata": {
+          "description": "Array of objects containing database name, sql name, and properties."
+        }
+      },
+      "sqlName": {
+        "type": "string",
+        "metadata": {
+          "description": "The name of the sql object to which databases will be deployed."
+        }
+      }
+    },
+    "variables": {
+      "databases": {
+        "apiVersion": "[providers('Microsoft.Sql', 'servers').apiVersions[0]]"
+      }
+    },
+    "resources": [
+      {
+        "type": "Microsoft.Sql/servers/databases",
+        "apiVersion": "[variables('databases').apiVersion]",
+        "name": "[concat(parameters('sqlName'), '/', parameters('databases')[copyIndex()].name]",
+        "location": "[resourceGroup().location]",
+        "properties": "[parameters('databases')[copyIndex()].properties]",
+        "copy": {
+          "name": "databases",
+          "count": "[length(parameters('databases'))]"
+        }
+      }
+    ],
+    "outputs": {
+    }
+  }
+  

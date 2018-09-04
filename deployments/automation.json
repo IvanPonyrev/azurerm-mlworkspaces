@@ -1,0 +1,138 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "deploymentsLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Sas token to resources container."
+            },
+            "defaultValue": null
+        },
+        "resourcesLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Sas token to resources container."
+            },
+            "defaultValue": null
+        },
+        "apiVersion": {
+          "type": "string",
+          "metadata": {
+            "description": "The apiVersion of this resource. Value 'latest' will deploy using latest apiVersion."
+          },
+          "defaultValue": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
+        },
+        "applicationId": {
+            "type": "string",
+            "metadata": {
+                "description": "The application id the connection will use."
+            }
+        },
+        "certificates": {
+            "type": "secureObject", 
+            "metadata": {
+                "description": "A secureObject containing array of certificates objects containing name, base64Value, and thumbprint."
+            },
+            "defaultValue": {
+                "certificates": [ ]
+            }
+        }
+    },
+    "variables": {
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "automationAccount",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/automationAccounts.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "automationPrimaryKey",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'automationAccount')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/secrets.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "automationPrimaryKey"
+                    },
+                    "vaultName": {
+                        "value": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'vaults'), parameters('apiVersion')).outputs.name.value]"
+                    },
+                    "value": {
+                        "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.primaryKey.value]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "certificates",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'automationAccount')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'deployments/connections.json', parameters('deploymentsLocationSasToken'))]"
+                },
+                "parameters": {
+                    "resourcesLocationSasToken": {
+                        "reference": {
+                            "keyVault": {
+                                "id": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'vaults'), parameters('apiVersion')).outputs.resourceId.value]"
+                            },
+                            "secretName": "resourcesLocationSasToken"
+                        }
+                    },
+                    "automationAccountName": {
+                        "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.name.value]"
+                    },
+                    "applicationId": {
+                        "value": "[parameters('applicationId')]"
+                    },
+                    "certificates": {
+                        "value": "[parameters('certificates')]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "apiVersion": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.apiVersion.value]"
+        },
+        "name": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.name.value]"
+        },
+        "resourceId": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.resourceId.value]"
+        }
+    }
+}
