@@ -12,7 +12,15 @@ class Deployment {
 
     [object] $StorageAccount
 
-    [object] $Secrets
+    [string] $ApplicationId
+
+    [object] $Secrets = @{
+        secrets = @()
+    }
+
+    [object] $Certificates = @{
+        certificates = @()
+    }
 
     Deployment([string] $ResourceGroupName, [string] $TemplateFile, [string] $TemplateParametersFile) {
         $this.ResourceGroupName = $ResourceGroupName
@@ -20,6 +28,7 @@ class Deployment {
         $this.TemplateParametersFile = Get-Content $TemplateParametersFile -Raw | ConvertFrom-Json
 
         $this.StorageAccount = Get-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName | Select-Object -First 1
+        $this.ApplicationId = $this.GetApplicationId("automation")
         $this.OptionalParameters = New-Object -TypeName Hashtable
     }
 
@@ -45,13 +54,35 @@ class Deployment {
     .Description Generates tokens for each container in storage.
     #>
     hidden [void] GetSasTokens() {
-        $this.Secrets = @{
-            secrets = @()
-        }
         Get-AzureStorageContainer -Context $this.StorageAccount.Context | ForEach-Object {
             $container = $_.Name
             $this.Secrets.secrets += [Token]::new("$($container)LocationSasToken", $container, $this.StorageAccount.Context).GetToken()
         }
+    }
+
+    hidden [guid] GetApplicationId([string] $applicationName) {
+        $application = Get-AzureRmADApplication -DisplayName $applicationName
+        if ($null -eq $application) {
+            $application = New-AzureRmADApplication -DisplayName $applicationName `
+                -IdentifierUris "https://localhost/$applicationName" `
+                -HomePage "https://localhost/$applicationName"
+        }
+
+        $certificate = [Certificate]::new("$($applicationName)Certificate")
+        $this.Certificates.certificates += $certificate.GetCertificate()
+
+        $servicePrincipal = Get-AzureRmADServicePrincipal -DisplayName $applicationName | select -First 1
+        if ($null -ne $servicePrincipal) {
+            Remove-AzureRmADServicePrincipal -Id $servicePrincipal.Id
+        }
+        New-AzureRmADServicePrincipal -ApplicationId $application.ApplicationId `
+            -CertValue $certificate.GetCertificate().base64Value `
+            -EndDate $certificate.GetEndDate() `
+            -StartDate $certificate.GetStartDate()
+
+        $certificate.RemoveCertificate()
+
+        return $application.ApplicationId
     }
 
     <#
@@ -73,19 +104,22 @@ class Deployment {
                         $this.OptionalParameters[$_] = ConvertTo-SecureString -AsPlainText -Force `
                             (Get-AzureRmADUser | ? UserPrincipalName -match (Get-AzureRmContext).Account.Id.ToLower().Replace("@", "_") | select -First 1 Id).Id.ToString()
                     }
+                    "applicationId" {
+                        $this.OptionalParameters[$_] = $this.ApplicationId
+                    }
+                    "certificates" {
+                        $this.OptionalParameters[$_] = $this.Certificates
+                    }
                 }
             } else {
                 switch ($_) {
                     "certificates" {
-                        $certificates = @{
-                            certificates = @()
-                        }
                         $this.TemplateParametersFile.parameters.$_.value.certificates | ForEach-Object {
                             $certificate = [Certificate]::new($_.name)
-                            $certificates.certificates += $certificate.GetCertificate()
+                            $this.Certificates.certificates += $certificate.GetCertificate()
                             $certificate.RemoveCertificate()
                         }
-                        $this.OptionalParameters[$_] = $certificates
+                        $this.OptionalParameters[$_] = $this.Certificates
                     }
                 }
             }

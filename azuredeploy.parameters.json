@@ -2,17 +2,5 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "applicationId": {
-            "value": "333e3549-fa47-4424-8566-7378745b4a9b"
-        },
-        "certificates": {
-            "value": {
-                "certificates": [
-                    {
-                        "name": "automation"
-                    }
-                ]
-            }
-        }
     }
 }

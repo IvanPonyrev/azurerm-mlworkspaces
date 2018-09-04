@@ -33,12 +33,11 @@
             "metadata": {
                 "description": "Sets the type of connection."
             },
-            "defaultValue": "AzureRunAsConnection",
+            "defaultValue": "AzureServicePrincipal",
             "allowedValues": [
                 "Azure", 
                 "AzureServicePrincipal", 
-                "AzureClassicCertificate",
-                "AzureRunAsConnection"
+                "AzureClassicCertificate"
             ]
         },
         "description": {
