@@ -22,7 +22,7 @@
       },
       "defaultValue": "[resourceGroup().location]"
     },
-    "addressPrefixes": {
+    "ipConfigurations": {
       "type": "array",
       "metadata": {
         "description": "A list of address blocks reserved for this virtual network in CIDR notation."
