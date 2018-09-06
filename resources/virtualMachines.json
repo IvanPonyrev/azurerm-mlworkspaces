@@ -1,0 +1,252 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "name": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the virtual machine."
+      }
+    },
+    "apiVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "The apiVersion of this resource. Value 'latest' will deploy using latest apiVersion."
+      },
+      "defaultValue": "[providers('Microsoft.Compute', 'virtualMachines').apiVersions[0]]"
+    },
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource location."
+      },
+      "defaultValue": "[resourceGroup().location]"
+    },
+    "tags": {
+      "type": "array",
+      "metadata": {
+        "description": "Tags applied to this resource."
+      },
+      "defaultValue": [ ]
+    },
+    "vmSize": {
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the size of the virtual machine."
+      },
+      "defaultValue": "Standard_DS1_v2"
+    },
+    "publisher": {
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the size of the virtual machine."
+      }
+    },
+    "offer": {
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the size of the virtual machine."
+      }
+    },
+    "sku": {
+      "type": "string",
+      "metadata": {
+        "description": "The image SKU."
+      }
+    },
+    "version": {
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the version of the platform image or marketplace image used to create the virtual machine. The allowed formats are Major.Minor.Build or 'latest'."
+      },
+      "defaultValue": "latest"
+    },
+    "osType": {
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the type of OS."
+      },
+      "allowedValues": [ "Windows", "Linux" ],
+      "defaultValue": "Windows"
+    },
+    "encryptionSettings": {
+      "type": "object",
+      "metadata": {
+        "description": "Specifies the encryption settings for the OS Disk."
+      },
+      "defaultValue": { }
+    },
+    "createOption": {
+      "type": "string",
+      "metadata": {
+        "description": "Specifies how the virtual machine should be created."
+      },
+      "allowedValues": [ "Attach", "FromImage" ],
+      "defaultValue": "FromImage"
+    },
+    "diskSizeGB": {
+      "type": "integer",
+      "metadata": {
+        "description": "Specifies the size of an empty data disk in gigabytes."
+      },
+      "maxValue": 1023
+    },
+    "dataDisks": {
+      "type": "array",
+      "metadata": {
+        "description": "Specifies the parameters that are used to add a data disk to a virtual machine."
+      }
+    },
+    "computerName": {
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the host OS name of the virtual machine."
+      },
+      "maxLength": 15
+    },
+    "adminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the name of the administrator account."
+      },
+      "maxLength": 20
+    },
+    "adminPassword": {
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the password of the administrator account."
+      },
+      "maxLength": 72
+    },
+    "windowsConfiguration": {
+      "type": "object",
+      "metadata": {
+        "description": "Specifies Windows operating system settings on the virtual machine."
+      },
+      "defaultValue": { }
+    },
+    "linuxConfiguration": {
+      "type": "object",
+      "metadata": {
+        "description": "Specifies the Linux operating system settings on the virtual machine."
+      },
+      "defaultValue": { }
+    },
+    "secrets": {
+      "type": "array",
+      "metadata": {
+        "description": "Specifies set of certificates that should be installed onto the virtual machine."
+      },
+      "defaultValue": [ ]
+    },
+    "allowExtensionOperations": {
+      "type": "boolean",
+      "metadata": {
+        "description": "Specifies whether extension operations should be allowed on the virtual machine."
+      },
+      "defaultValue": true
+    },
+    "networkInterfaces": {
+      "type": "array",
+      "metadata": {
+        "description": "Specifies the list of resource Ids for the network interfaces associated with the virtual machine."
+      }
+    },
+    "bootDiagnosticsEnabled": {
+      "type": "boolean",
+      "metadata": {
+        "description": "Indicates whether bootdiagnostics are enabled."
+      },
+      "defaultValue": false
+    },
+    "storageUri": {
+      "type": "string",
+      "metadata": {
+        "description": "Boot diagnostics storage uri."
+      }
+    },
+    "availabilitySetId": {
+      "type": "string",
+      "metadata": {
+        "description": "The resourceId of the availabilitySet."
+      },
+      "defaultValue": ""
+    }
+  },
+  "variables": {
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "[parameters('apiVersion')]",
+      "name": "[parameters('name')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[parameters('publisher')]",
+            "offer": "[parameters('offer')]",
+            "sku": "[parameters('sku')]",
+            "version": "[parameters('version')]"
+          },
+          "osDisk": {
+            "osType": "[parameters('osType')]",
+            "encryptionSettings": "[if(empty(parameters('encryptionSettings')), json('null'), parameters('encryptionSettings'))]",
+            "createOption": "[parameters('createOption')]",
+            "diskSizeGB": "[parameters('diskSizeGB')]"
+          },
+          "dataDisks": "[parameters('dataDisks')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('computerName')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]",
+          "windowsConfiguration": "[if(empty(parameters('windowsConfiguration')), json('null'), parameters('windowsConfiguration'))]",
+          "linuxConfiguration": "[if(empty(parameters('linuxConfiguration')), json('null'), parameters('linuxConfiguration'))]",
+          "secrets": "[parameters('secrets')]",
+          "allowExtensionOperations": "[parameters('allowExtensionOperations')]"
+        },
+        "networkProfile": {
+          "copy": [{
+            "name": "networkInterfaces",
+            "count": "[length(parameters('networkInterfaces'))]",
+            "input": {
+              "id": "[resourceId('network', 'Microsoft.Resources/deployments', parameters('networkInterfaces')[copyIndex('networkInterfaces')].name)]",
+              "properties": {
+                "primary": "[parameters('networkInterfaces')[copyIndex('networkInterfaces')].primary]"
+              }
+            }
+          }]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": "[parameters('bootDiagnosticsEnabled')]",
+            "storageUri": "[parameters('storageUri')]"
+          }
+        },
+        "availabilitySet": "[if(empty(parameters('availabilitySetId')), variables('availabilitySet'), json('null'))]"
+      }
+    }
+  ],
+  "outputs": {
+    "name": {
+      "type": "string",
+      "value": "[parameters('name')]"
+    },
+    "apiVersion": {
+      "type": "string",
+      "value": "[parameters('apiVersion')]"
+    },
+    "resourceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Compute/virtualMachines', parameters('name'))]"
+    },
+    "reference": {
+      "type": "object",
+      "value": "[reference(resourceId('Microsoft.Compute/virtualMachines', parameters('name')), parameters('apiVersion'), 'Full')]"
+    }
+  }
+}

@@ -1,0 +1,79 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "name": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the virtualNetwork."
+      }
+    },
+    "apiVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "The apiVersion of this resource. Value 'latest' will deploy using latest apiVersion."
+      },
+      "defaultValue": "[providers('Microsoft.Network', 'virtualNetworks').apiVersions[0]]"
+    },
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource location."
+      },
+      "defaultValue": "[resourceGroup().location]"
+    },
+    "ipConfigurations": {
+      "type": "array",
+      "metadata": {
+        "description": "A list of address blocks reserved for this virtual network in CIDR notation."
+      }
+    },
+    "dnsServers": {
+      "type": "array",
+      "metadata": {
+        "description": "The list of DNS servers IP addresses."
+      },
+      "defaultValue": [ ]
+    },
+    "enableVmProtection": {
+      "type": "bool",
+      "metadata": {
+        "description": "Indicates if Vm protection is enabled for all the subnets in a Virtual Network."
+      },
+      "defaultValue": true
+    }
+  },
+  "variables": {
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "[parameters('apiVersion')]",
+      "name": "[parameters('name')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": "[parameters('addressPrefixes')]"
+        },
+        "dhcpOptions": {
+          "dnsServers": "[parameters('dnsServers')]"
+        },
+        "enableVmProtection": "[parameters('enableVmProtection')]"
+      }
+    }
+  ],
+  "outputs": {
+    "name": {
+      "type": "string",
+      "value": "[parameters('name')]"
+    },
+    "resourceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/virtualNetworks', parameters('name'))]"
+    },
+    "reference": {
+      "type": "object",
+      "value": "[reference(resourceId('Microsoft.Network/virtualNetworks', parameters('name')), parameters('apiVersion'), 'Full')]"
+    }
+  }
+}
