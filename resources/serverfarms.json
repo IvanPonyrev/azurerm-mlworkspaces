@@ -2,10 +2,42 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "serverfarms": {
-      "type": "array",
+    "name": {
+      "type": "string",
       "metadata": {
-        "description": "Array of objects containing serverfarms name, properties, and sku."
+        "description": "The name of the resource."
+      }
+    },
+    "apiVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "The apiVersion of this resource. "
+      },
+      "defaultValue": "[providers('Microsoft.Web', 'serverfarms').apiVersions[0]]"
+    },
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource location."
+      },
+      "defaultValue": "[resourceGroup().location]"
+    },
+    "sku": {
+      "type": "string", 
+      "metadata": {
+        "description": "The name of the SKU."
+      }
+    },
+    "capacity": {
+      "type": "integer", 
+      "metadata": {
+        "description": "Current number of instances assigned to the resource."
+      }
+    },
+    "appServicePlan": {
+      "type": "string", 
+      "metadata": {
+        "description": "The name for the app service plan."
       }
     }
   },
@@ -20,14 +52,27 @@
       "apiVersion": "[variables('serverfarms').apiVersion]",
       "name": "[parameters('serverfarms')[copyIndex()].name]",
       "location": "[resourceGroup().location]",
-      "properties": "[parameters('serverfarms')[copyIndex()].properties]",
-      "sku": "[parameters('serverfarms')[copyIndex()].sku]",
-      "copy": {
-        "name": "serverfarms",
-        "count": "[length(parameters('serverfarms'))]"
+      "properties": {
+        "name": "[parameters('appServicePlan')]"
+      },
+      "sku": {
+        "name": "[parameters('sku')]",
+        "capacity": "[parameters('capacity')]"
       }
     }
   ],
   "outputs": {
+    "name": {
+      "type": "string",
+      "value": "[parameters('name')]"
+    },
+    "apiVersion": {
+      "type": "string",
+      "value": "[parameters('apiVersion')]"
+    },
+    "resourceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Web/sites', parameters('name'))]"
+    }
   }
 }
