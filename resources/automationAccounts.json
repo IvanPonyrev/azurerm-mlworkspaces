@@ -12,7 +12,7 @@
         "apiVersion": {
             "type": "string",
             "metadata": {
-                "description": "The apiVersion of this resource. Value 'latest' will deploy using latest apiVersion."
+                "description": "The apiVersion of this resource."
             },
             "defaultValue": "[providers('Microsoft.Automation', 'automationAccounts').apiVersions[0]]"
         },

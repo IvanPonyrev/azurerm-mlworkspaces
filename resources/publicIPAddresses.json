@@ -1,0 +1,108 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "name": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the virtualNetwork."
+      }
+    },
+    "apiVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "The apiVersion of this resource."
+      },
+      "defaultValue": "[providers('Microsoft.Network', 'publicIPAddresses').apiVersions[0]]"
+    },
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource location."
+      },
+      "defaultValue": "[resourceGroup().location]"
+    },
+    "sku": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of a public IP address SKU."
+      },
+      "defaultValue": "Standard",
+      "allowedValues": [ "Standard", "Basic" ]
+    },
+    "publicIPAllocationMethod": {
+      "type": "string",
+      "metadata": {
+        "description": "The public IP allocation method."
+      },
+      "defaultValue": "Static",
+      "allowedValues": [ "Static", "Dynamic" ]
+    },
+    "publicIPAddressVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "The public IP address version."
+      },
+      "defaultValue": "IPv4",
+      "allowedValues": [ "IPv4", "IPv6" ]
+    },
+    "dnsSettings": {
+      "type": "object",
+      "metadata": {
+        "description": "The FQDN of the DNS record associated with the resource."
+      },
+      "defaultValue": { }
+    },
+    "ipAddress": {
+      "type": "string", 
+      "metadata": {
+        "description": "The IP address associated with the public IP address resource."
+      }
+    },
+    "idleTimeoutInMinutes": {
+      "type": "integer",
+      "metadata": {
+        "description": "The idle timeout of the public IP address."
+      },
+      "defaultValue": 4
+    }
+  },
+  "variables": {
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "[parameters('apiVersion')]",
+      "name": "[parameters('name')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[parameters('sku')]"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "[parameters('publicIPAllocationMethod')]",
+        "publicIPAddressVersion": "[parameters('publicIPAddressVersion')]",
+        "dnsSettings": "[if(empty(parameters('dnsSettings')), json('null'), parameters('dnsSettings'))]",
+        "ipAddress": "[parameters('ipAddress')]",
+        "idleTimeoutInMinutes": "[parameters('idleTimeoutInMinutes')]"
+      }
+    }
+  ],
+  "outputs": {
+    "name": {
+      "type": "string",
+      "value": "[parameters('name')]"
+    },
+    "resourceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('name'))]"
+    },
+    "ipAddress": {
+      "type": "string",
+      "value": "[parameters('ipAddress')]"
+    },
+    "reference": {
+      "type": "object",
+      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', parameters('name')), parameters('apiVersion'), 'Full')]"
+    }
+  }
+}
