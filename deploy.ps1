@@ -1,4 +1,5 @@
 #Requires -Version 5.0
+#Requires -Modules PKI
 using module .\Deployment.psm1
 
 Param(
