@@ -1,0 +1,122 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "deploymentsLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Sas token to resources container."
+            },
+            "defaultValue": null
+        },
+        "resourcesLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Sas token to resources container."
+            },
+            "defaultValue": null
+        },
+        "apiVersion": {
+          "type": "string",
+          "metadata": {
+            "description": "The apiVersion of this resource."
+          },
+          "defaultValue": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
+        },
+        "resourceGroup": {
+            "type": "string",
+            "metadata": {
+                "description": "The resourceGroup to which resources will be deployed."
+            },
+            "defaultValue": "[resourceGroup().name]"
+        },
+        "name": {
+          "type": "string",
+          "metadata": {
+            "description": "The name of this web site."
+          },
+          "defaultValue": "[concat('site', uniqueString(resourceGroup().id))]"
+        },
+        "sku": {
+          "type": "string",
+          "metadata": {
+            "description": "The site sku."
+          },
+          "defaultValue": "F1"
+        },
+        "capacity": {
+          "type": "int",
+          "metadata": {
+            "description": "Worker capacity."
+          },
+          "allowedValues": [ 0, 1, 2 ],
+          "defaultValue": 0
+        }
+    },
+    "variables": {
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "serverfarm",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/serverfarms.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[concat(parameters('name'), '-serverfarm')]"
+                    },
+                    "sku": {
+                        "value": "[parameters('sku')]"
+                    },
+                    "capacity": {
+                        "value": "[parameters('capacity')]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "site",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "dependsOn": [
+                "[resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'serverfarm')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/sites.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[concat(parameters('name'))]"
+                    },
+                    "serverFarmId": {
+                        "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'serverfarm'), parameters('apiVersion')).outputs.resourceId.value]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "serverFarmId": {
+            "type": "string",
+            "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'serverfarm'), parameters('apiVersion')).outputs.resourceId.value]"
+        },
+        "siteId": {
+            "type": "string",
+            "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'site'), parameters('apiVersion')).outputs.resourceId.value]"
+        }
+    }
+}

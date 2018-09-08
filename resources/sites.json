@@ -8,12 +8,6 @@
         "description": "The name to be given to this web."
       }
     },
-    "sitesName": {
-      "type": "string",
-      "metadata": {
-        "description": "The name to be given to this web."
-      }
-    },
     "apiVersion": {
       "type": "string",
       "metadata": {
@@ -38,12 +32,12 @@
   "variables": {},
   "resources": [
     {
-      "type": "Microsoft.Web/sites/web",
+      "type": "Microsoft.Web/sites",
       "apiVersion": "[parameters('apiVersion')]",
       "name": "[parameters('name')]",
       "location": "[parameters('location')]",
       "properties": {
-        
+        "serverFarmId": "[parameters('serverFarmId')]"
       }
     }
   ],
