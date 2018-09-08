@@ -26,34 +26,27 @@
       "type": "string", 
       "metadata": {
         "description": "The name of the SKU."
-      }
+      },
+      "defaultValue": "F1"
     },
     "capacity": {
-      "type": "integer", 
+      "type": "int", 
       "metadata": {
         "description": "Current number of instances assigned to the resource."
-      }
-    },
-    "appServicePlan": {
-      "type": "string", 
-      "metadata": {
-        "description": "The name for the app service plan."
-      }
+      },
+      "defaultValue": 0
     }
   },
   "variables": {
-    "serverfarms": {
-      "apiVersion": "[providers('Microsoft.Web', 'serverfarms').apiVersions[0]]"
-    }
   },
   "resources": [
     {
       "type": "Microsoft.Web/serverfarms",
-      "apiVersion": "[variables('serverfarms').apiVersion]",
-      "name": "[parameters('serverfarms')[copyIndex()].name]",
-      "location": "[resourceGroup().location]",
+      "apiVersion": "[parameters('apiVersion')]",
+      "name": "[parameters('name')]",
+      "location": "[parameters('location')]",
       "properties": {
-        "name": "[parameters('appServicePlan')]"
+        "name": "[parameters('name')]"
       },
       "sku": {
         "name": "[parameters('sku')]",
@@ -72,7 +65,7 @@
     },
     "resourceId": {
       "type": "string",
-      "value": "[resourceId('Microsoft.Web/sites', parameters('name'))]"
+      "value": "[resourceId('Microsoft.Web/serverfarms', parameters('name'))]"
     }
   }
 }

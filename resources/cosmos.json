@@ -1,0 +1,108 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "name": {
+            "type": "string",
+            "metadata": {
+                "description": "The name to be given to this automation account."
+            },
+            "defaultValue": "[concat('cosmos', uniqueString(subscription().subscriptionId))]"
+        },
+        "apiVersion": {
+            "type": "string",
+            "metadata": {
+                "description": "The apiVersion of this resource."
+            },
+            "defaultValue": "[providers('Microsoft.DocumentDB', 'databaseAccounts').apiVersions[0]]"
+        },
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource location."
+            },
+            "defaultValue": "[resourceGroup().location]"
+        },
+        "kind": {
+            "type": "string",
+            "metadata": {
+                "description": "The kind of resource."
+            },
+            "defaultValue": "GlobalDocumentDB"
+        },
+        "offer": {
+            "type": "string",
+            "metadata": {
+                "description": "The kind of resource."
+            },
+            "defaultValue": "Standard"
+        },
+        "capabilities": {
+            "type": "array",
+            "metadata": {
+                "description": "List of Cosmos DB capabilities for the account."
+            },
+            "defaultValue": [
+                {
+                    "name": "EnableTable"
+                }
+            ]
+        }
+    },
+    "variables": {
+    },
+    "resources": [
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[parameters('name')]",
+            "location": "[parameters('location')]",
+            "kind": "[parameters('kind')]",
+            "properties": {
+                "name": "[parameters('name')]",
+                "databaseAccountOfferType": "[parameters('offer')]",
+                "locations": [
+                    {
+                        "locationName": "[parameters('location')]",
+                        "failoverPriority": 0
+                    },
+                    {
+                        "locationName": "[parameters('location')]",
+                        "failoverPriority": 1
+                    }
+                ],
+                "capabilities": "[parameters('capabilities')]"
+            }
+        }
+    ],
+    "outputs": {
+        "name": {
+            "type": "string",
+            "value": "[parameters('name')]"
+        },
+        "apiVersion": {
+            "type": "string",
+            "value": "[parameters('apiVersion')]"
+        },
+        "documentEndpoint": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name')), parameters('apiVersion')).documentEndpoint]"
+        },
+        "tableEndpoint": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name')), parameters('apiVersion')).documentEndpoint]"
+        },
+        "keys": {
+            "type": "object",
+            "value": "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name')), parameters('apiVersion'))]"
+        },
+        "connectionStrings": {
+            "type": "object",
+            "value": "[listConnectionStrings(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name')), parameters('apiVersion'))]"
+        },
+        "reference": {
+            "type": "object",
+            "value": "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name')), parameters('apiVersion'))]"
+        }
+    }
+}

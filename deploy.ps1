@@ -4,7 +4,7 @@ using module .\Deployment.psm1
 Param(
     [string] [Parameter(Mandatory=$false)] $ResourceGroupLocation = 'eastus',
     [string] $ResourceGroupName = 'management',
-	[array] $LinkedResourceGroups = @('network', 'machines', 'web', 'workspaces', 'sql'),
+	[array] $LinkedResourceGroups = @('network', 'machines', 'web', 'workspaces', 'sql', 'cosmos'),
     [switch] $UploadArtifacts,
     [switch] $DeployStorage,
 	[string] [ValidateSet("Complete", "Incremental")] $Mode = 'Incremental',
