@@ -1,0 +1,119 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "deploymentsLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Sas token to resources container."
+            },
+            "defaultValue": null
+        },
+        "resourcesLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Sas token to resources container."
+            },
+            "defaultValue": null
+        },
+        "apiVersion": {
+          "type": "string",
+          "metadata": {
+            "description": "The apiVersion of this resource."
+          },
+          "defaultValue": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
+        },
+        "name": {
+          "type": "string",
+          "metadata": {
+            "description": "The name of this web site."
+          },
+          "defaultValue": "[concat('site', uniqueString(resourceGroup().id))]"
+        },
+        "sku": {
+          "type": "string",
+          "metadata": {
+            "description": "The site sku."
+          },
+          "defaultValue": "F1"
+        },
+        "capacity": {
+          "type": "int",
+          "metadata": {
+            "description": "Worker capacity."
+          },
+          "allowedValues": [ 0, 1, 2 ],
+          "defaultValue": 0
+        }
+    },
+    "variables": {
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "cosmos",
+            "resourceGroup": "cosmos",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/cosmos.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "sites",
+            "resourceGroup": "web",
+            "dependsOn": [
+                "[resourceId('cosmos', 'Microsoft.Resources/deployments', 'cosmos')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'deployments/sites.json', parameters('deploymentsLocationSasToken'))]"
+                },
+                "parameters": {
+                    "deploymentsLocationSasToken": {
+                        "reference": {
+                            "keyVault": {
+                                "id": "[reference(resourceId('management', 'Microsoft.Resources/deployments', 'vaults'), parameters('apiVersion')).outputs.resourceId.value]"
+                            },
+                            "secretName": "deploymentsLocationSasToken"
+                        }
+                    },
+                    "resourcesLocationSasToken": {
+                        "reference": {
+                            "keyVault": {
+                                "id": "[reference(resourceId('management', 'Microsoft.Resources/deployments', 'vaults'), parameters('apiVersion')).outputs.resourceId.value]"
+                            },
+                            "secretName": "resourcesLocationSasToken"
+                        }
+                    },
+                    "name": {
+                        "value": "[parameters('name')]"
+                    },
+                    "sku": {
+                        "value": "[parameters('sku')]"
+                    },
+                    "capacity": {
+                        "value": "[parameters('capacity')]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "documentDB": {
+            "type": "object",
+            "value": "[reference(resourceId('cosmos', 'Microsoft.Resources/deployments', 'cosmos'), parameters('apiVersion')).outputs.reference.value]"
+        }
+    }
+}
