@@ -5,7 +5,7 @@
         "name": {
             "type": "string",
             "metadata": {
-                "description": "The name to be given to this automation account."
+                "description": "The name to be given to this runbook."
             }
         },
         "automationAccountName": {
@@ -19,7 +19,7 @@
             "metadata": {
                 "description": "The apiVersion of this resource."
             },
-            "defaultValue": "latest"
+            "defaultValue": "[providers('Microsoft.Automation', 'automationAccounts').apiVersions[0]]"
         },
         "location": {
             "type": "string",
@@ -47,7 +47,7 @@
             "metadata": {
                 "description": "Sets the type of runbook."
             },
-            "defaultValue": "PowerShell",
+            "defaultValue": "PowerShellWorkflow",
             "allowedValues": [
                 "Script",
                 "Graph",
@@ -72,18 +72,13 @@
         }
     },
     "variables": {
-        "runbooks": {
-            "apiVersion": "[if(equals(parameters('apiVersion'), 'latest'), providers('Microsoft.Automation', 'automationAccounts/runbooks').apiVersions[0], parameters('apiVersion'))]",
-            "name": "[concat(parameters('automationAccountName'), '/', parameters('name'))]",
-            "location": "[if(empty(parameters('location')), resourceGroup().location, parameters('location'))]"
-        }
     },
     "resources": [
         {
             "type": "Microsoft.Automation/automationAccounts/runbooks",
-            "apiVersion": "[variables('runbooks').apiVersion]",
-            "name": "[variables('runbooks').name]",
-            "location": "[variables('runbooks').location]",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[concat(parameters('automationAccountName'), '/', parameters('name'))]",
+            "location": "[parameters('location')]",
             "properties": {
                 "logVerbose": "[parameters('logVerbose')]",
                 "logProgress": "[parameters('logProgress')]",
@@ -102,7 +97,7 @@
         },
         "apiVersion": {
             "type": "string",
-            "value": "[variables('runbooks').apiVersion]"
+            "value": "[parameters('apiVersion')]"
         },
         "resourceId": {
             "type": "string",

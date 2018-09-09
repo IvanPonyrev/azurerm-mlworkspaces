@@ -9,12 +9,31 @@
             },
             "defaultValue": null
         },
+        "runbooksLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Sas token to runbooks container."
+            },
+            "defaultValue": null
+        },
         "apiVersion": {
           "type": "string",
           "metadata": {
             "description": "The apiVersion of this resource."
           },
           "defaultValue": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
+        },
+        "name": {
+            "type": "string",
+            "metadata": {
+                "description": "The name to be given to this runbook."
+            }
+        },
+        "automationAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name to be given to this automation account."
+            }
         }
     },
     "variables": {
@@ -23,11 +42,22 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[parameters('apiVersion')]",
-            "name": "automationAccount",
+            "name": "[parameters('name')]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/automationAccounts.json', parameters('resourcesLocationSasToken'))]"
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/runbooks.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[parameters('name')]"
+                    },
+                    "automationAccountName": {
+                        "value": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.name.value]"
+                    },
+                    "uri": {
+                        "value": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'runbooks/', parameters('name'), parameters('runbooksLocationSasToken'))]"
+                    }
                 },
                 "debugSetting": {
                     "detailLevel": "requestContent, responseContent"
@@ -36,13 +66,13 @@
         }
     ],
     "outputs": {
-        "apiVersion": {
-            "type": "string",
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', parameters('name')), parameters('apiVersion')).outputs.apiVersion.value]"
-        },
         "name": {
             "type": "string",
             "value": "[reference(resourceId('Microsoft.Resources/deployments', parameters('name')), parameters('apiVersion')).outputs.name.value]"
+        },
+        "apiVersion": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', parameters('name')), parameters('apiVersion')).outputs.apiVersion.value]"
         },
         "resourceId": {
             "type": "string",

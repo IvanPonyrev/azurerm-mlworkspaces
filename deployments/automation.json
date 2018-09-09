@@ -37,9 +37,20 @@
             "defaultValue": {
                 "certificates": [ ]
             }
+        },
+        "runbooks": {
+            "type": "array", 
+            "metadata": {
+                "description": "An object containing runbook basenames."
+            },
+            "defaultValue": [ ]
         }
     },
     "variables": {
+        "defaultRunbooks": [
+            "refresh-tokens"
+        ],
+        "runbooks": "[concat(parameters('runbooks'), variables('defaultRunbooks'))]"
     },
     "resources": [
         {
@@ -118,6 +129,51 @@
                 "debugSetting": {
                     "detailLevel": "requestContent, responseContent"
                 }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[concat(variables('runbooks')[copyIndex()], '-deployment')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'automationAccount')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'deployments/runbooks.json', parameters('deploymentsLocationSasToken'))]"
+                },
+                "parameters": {
+                    "resourcesLocationSasToken": {
+                        "reference": {
+                            "keyVault": {
+                                "id": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'vaults'), parameters('apiVersion')).outputs.resourceId.value]"
+                            },
+                            "secretName": "resourcesLocationSasToken"
+                        }
+                    },
+                    "runbooksLocationSasToken": {
+                        "reference": {
+                            "keyVault": {
+                                "id": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'vaults'), parameters('apiVersion')).outputs.resourceId.value]"
+                            },
+                            "secretName": "runbooksLocationSasToken"
+                        }
+                    },
+                    "name": {
+                        "value": "[variables('runbooks')[copyIndex()]]"
+                    },
+                    "automationAccountName": {
+                        "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.name.value]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            },
+            "copy": {
+                "name": "runbooks",
+                "count": "[length(variables('runbooks'))]"
             }
         }
     ],
