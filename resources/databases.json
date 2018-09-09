@@ -2,38 +2,89 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-      "databases": {
-        "type": "array",
-        "metadata": {
-          "description": "Array of objects containing database name, sql name, and properties."
-        }
-      },
-      "sqlName": {
+      "name": {
         "type": "string",
         "metadata": {
-          "description": "The name of the sql object to which databases will be deployed."
+          "description": "The name to be given to this web."
         }
+      },
+      "sqlServerName": {
+        "type": "string",
+        "metadata": {
+          "description": "The name of sql server."
+        }
+      },
+      "apiVersion": {
+        "type": "string",
+        "metadata": {
+          "description": "The apiVersion of this resource. "
+        },
+        "defaultValue": "[providers('Microsoft.Sql', 'servers').apiVersions[0]]"
+      },
+      "location": {
+        "type": "string",
+        "metadata": {
+          "description": "Resource location."
+        },
+        "defaultValue": "[resourceGroup().location]"
+      },
+      "edition": {
+        "type": "string",
+        "metadata": {
+          "description": ""
+        },
+        "defaultValue": "Free"
+      },
+      "collation": {
+        "type": "string",
+        "metadata": {
+          "description": "The collation of the database."
+        }
+      },
+      "maxSizeBytes": {
+        "type": "string",
+        "metadata": {
+          "description": "The max size of the database expressed in bytes."
+        },
+        "defaultValue": "104857600"
+      },
+      "requestedServiceObjectiveName": {
+        "type": "string",
+        "metadata": {
+          "description": "The name of the configured service level objective of the database."
+        },
+        "defaultValue": "Free"
       }
     },
     "variables": {
-      "databases": {
-        "apiVersion": "[providers('Microsoft.Sql', 'servers').apiVersions[0]]"
-      }
     },
     "resources": [
       {
         "type": "Microsoft.Sql/servers/databases",
-        "apiVersion": "[variables('databases').apiVersion]",
-        "name": "[concat(parameters('sqlName'), '/', parameters('databases')[copyIndex()].name]",
-        "location": "[resourceGroup().location]",
-        "properties": "[parameters('databases')[copyIndex()].properties]",
-        "copy": {
-          "name": "databases",
-          "count": "[length(parameters('databases'))]"
+        "apiVersion": "[parameters('apiVersion')]",
+        "name": "[concat(parameters('sqlServer'), '/', parameters('name'))]",
+        "location": "[parameters('location')]",
+        "properties": {
+          "edition": "[parameters('edition')]",
+          "collation": "[parameters('collation')]",
+          "maxSizeBytes": "[parameters('maxSizeBytes')]",
+          "requestedServiceObjectiveName": "[parameters('requestedServiceObjectiveName')]"
         }
       }
     ],
     "outputs": {
+      "name": {
+        "type": "string",
+        "value": "[parameters('name')]"
+      },
+      "apiVersion": {
+        "type": "string",
+        "value": "[parameters('apiVersion')]"
+      },
+      "resourceId": {
+        "type": "string",
+        "value": "[resourceId('Microsoft.Sql/servers/databases', parameters('sqlServerName'), parameters('name'))]"
+      }
     }
   }
   

@@ -99,10 +99,6 @@
         "connectionStrings": {
             "type": "object",
             "value": "[listConnectionStrings(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name')), parameters('apiVersion'))]"
-        },
-        "reference": {
-            "type": "object",
-            "value": "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name')), parameters('apiVersion'))]"
         }
     }
 }

@@ -1,48 +1,69 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
-      "servers": {
-        "type": "array",
-        "metadata": {
-          "description": "Array of objects containing server name and properties."
-        }
-      },
-      "administratorLogin": {
-          "type": "securestring",
-          "metadata": {
-            "description": "Sql administrator login."
-          }
-      },
-      "administratorLoginPassword": {
-          "type": "securestring",
-          "metadata": {
-            "description": "Sql administrator login password."
-          }
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "name": {
+      "type": "string",
+      "metadata": {
+        "description": "The name to be given to this web."
       }
     },
-    "variables": {
-      "servers": {
-        "apiVersion": "[providers('Microsoft.Sql', 'servers').apiVersions[0]]"
+    "apiVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "The apiVersion of this resource. "
+      },
+      "defaultValue": "[providers('Microsoft.Sql', 'servers').apiVersions[0]]"
+    },
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource location."
+      },
+      "defaultValue": "[resourceGroup().location]"
+    },
+    "administratorLogin": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Sql administrator login."
       }
     },
-    "resources": [
-      {
-        "type": "Microsoft.Sql/servers",
-        "apiVersion": "[variables('servers').apiVersion]",
-        "name": "[parameters('servers')[copyIndex()].name]",
-        "location": "[resourceGroup().location]",
-        "properties": {
-            "administratorLogin": "[parameters('administratorLogin')]",
-            "administratorLoginPassword": "[parameters('administratorLoginPassword')]"
-        },
-        "copy": {
-          "name": "servers",
-          "count": "[length(parameters('servers'))]"
-        }
+    "administratorLoginPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Sql administrator login password."
       }
-    ],
-    "outputs": {
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "type": "Microsoft.Sql/servers",
+      "apiVersion": "[parameters('apiVersion')]",
+      "name": "[parameters('name')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "administratorLogin": "[parameters('administratorLogin')]",
+        "administratorLoginPassword": "[parameters('administratorLoginPassword')]"
+      }
+    }
+  ],
+  "outputs": {
+    "name": {
+      "type": "string",
+      "value": "[parameters('name')]"
+    },
+    "apiVersion": {
+      "type": "string",
+      "value": "[parameters('apiVersion')]"
+    },
+    "resourceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Sql/servers', parameters('name'))]"
+    },
+    "reference": {
+      "type": "object",
+      "value": "[reference(resourceId('Microsoft.Sql/servers', parameters('name')), parameters('apiVersion'))]"
     }
   }
-  
+}
