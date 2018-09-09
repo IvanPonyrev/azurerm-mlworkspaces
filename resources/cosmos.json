@@ -84,6 +84,10 @@
             "type": "string",
             "value": "[parameters('apiVersion')]"
         },
+        "resourceId": {
+            "type": "string",
+            "value": "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name'))]"
+        },
         "documentEndpoint": {
             "type": "string",
             "value": "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name')), parameters('apiVersion')).documentEndpoint]"

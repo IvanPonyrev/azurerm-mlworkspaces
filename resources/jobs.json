@@ -1,0 +1,112 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "name": {
+            "type": "string",
+            "metadata": {
+                "description": "The name to be given to this automation account."
+            }
+        },
+        "automationAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name to be given to this automation account."
+            }
+        },
+        "apiVersion": {
+            "type": "string",
+            "metadata": {
+                "description": "The apiVersion of this resource."
+            },
+            "defaultValue": "latest"
+        },
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource location."
+            },
+            "defaultValue": "eastus2"
+        },
+        "logVerbose": {
+            "type": "bool",
+            "metadata": {
+                "description": "Sets verbose log option."
+            },
+            "defaultValue": false
+        },
+        "logProgress": {
+            "type": "bool",
+            "metadata": {
+                "description": "Sets verbose log option."
+            },
+            "defaultValue": false
+        },
+        "runbookType": {
+            "type": "string",
+            "metadata": {
+                "description": "Sets the type of runbook."
+            },
+            "defaultValue": "PowerShell",
+            "allowedValues": [
+                "Script",
+                "Graph",
+                "PowerShellWorkflow",
+                "PowerShell", 
+                "GraphPowerShellWorkflow", 
+                "GraphPowerShell"
+            ]
+        },
+        "uri": {
+            "type": "string",
+            "metadata": {
+                "description": "Sets the uri of the runbook content."
+            }
+        },
+        "description": {
+            "type": "string", 
+            "metadata": {
+                "description": "Sets the description of the runbook."
+            },
+            "defaultValue": ""
+        }
+    },
+    "variables": {
+        "runbooks": {
+            "apiVersion": "[if(equals(parameters('apiVersion'), 'latest'), providers('Microsoft.Automation', 'automationAccounts/runbooks').apiVersions[0], parameters('apiVersion'))]",
+            "name": "[concat(parameters('automationAccountName'), '/', parameters('name'))]",
+            "location": "[if(empty(parameters('location')), resourceGroup().location, parameters('location'))]"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Automation/automationAccounts/runbooks",
+            "apiVersion": "[variables('runbooks').apiVersion]",
+            "name": "[variables('runbooks').name]",
+            "location": "[variables('runbooks').location]",
+            "properties": {
+                "logVerbose": "[parameters('logVerbose')]",
+                "logProgress": "[parameters('logProgress')]",
+                "runbookType": "[parameters('runbookType')]",
+                "publishContentLink": {
+                    "uri": "[parameters('uri')]"
+                },
+                "description": "[parameters('description')]"
+            }
+        }
+    ],
+    "outputs": {
+        "name": {
+            "type": "string",
+            "value": "[parameters('name')]"
+        },
+        "apiVersion": {
+            "type": "string",
+            "value": "[variables('runbooks').apiVersion]"
+        },
+        "resourceId": {
+            "type": "string",
+            "value": "[resourceId('Microsoft.Automation/automationAccounts/runbooks', parameters('automationAccountName'), parameters('name'))]"
+        }
+    }
+}
