@@ -21,7 +21,7 @@
             "metadata": {
                 "description": "The resourceGroup to which resources will be deployed."
             },
-            "defaultValue": "app"
+            "defaultValue": "[resourceGroup().name]"
         },
         "apiVersion": {
             "type": "string",
@@ -123,7 +123,8 @@
             "name": "sites",
             "resourceGroup": "[parameters('resourceGroup')]",
             "dependsOn": [
-                "[resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'cosmos')]"
+                "[resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'cosmos')]",
+                "[resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'sql')]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -164,9 +165,5 @@
         }
     ],
     "outputs": {
-        "documentDB": {
-            "type": "object",
-            "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'cosmos'), parameters('apiVersion')).outputs.reference.value]"
-        }
     }
 }
