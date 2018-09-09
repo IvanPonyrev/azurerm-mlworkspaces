@@ -1,0 +1,78 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "name": {
+      "type": "string",
+      "metadata": {
+        "description": "The name to be given to this firewall."
+      },
+      "defaultValue": "firewall"
+    },
+    "sqlServerName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of sql server."
+      }
+    },
+    "apiVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "The apiVersion of this resource. "
+      },
+      "defaultValue": "[providers('Microsoft.Sql', 'servers').apiVersions[0]]"
+    },
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource location."
+      },
+      "defaultValue": "[resourceGroup().location]"
+    },
+    "startIpAddress": {
+      "type": "string",
+      "metadata": {
+        "description": "The start IP address of the firewall rule. Must be IPv4 format. Use value '0.0.0.0' for all Azure-internal IP addresses."
+      },
+      "defaultValue": "0.0.0.0"
+    },
+    "endIpAddress": {
+      "type": "string",
+      "metadata": {
+        "description": "The end IP address of the firewall rule. Must be IPv4 format. Must be greater than or equal to startIpAddress. Use value '0.0.0.0' for all Azure-internal IP addresses."
+      },
+      "defaultValue": "0.0.0.0"
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "type": "Microsoft.Sql/servers/firewallRules",
+      "apiVersion": "[parameters('apiVersion')]",
+      "name": "[concat(parameters('sqlServerName'), '/', parameters('name'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "startIpAddress": "[parameters('startIpAddress')]",
+        "endIpAddress": "[parameters('endIpAddress')]"
+      }
+    }
+  ],
+  "outputs": {
+    "name": {
+      "type": "string",
+      "value": "[parameters('name')]"
+    },
+    "apiVersion": {
+      "type": "string",
+      "value": "[parameters('apiVersion')]"
+    },
+    "resourceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Sql/servers/firewallRules', parameters('sqlServerName'), parameters('name'))]"
+    },
+    "reference": {
+      "type": "object",
+      "value": "[reference(resourceId('Microsoft.Sql/servers/firewallRules', parameters('sqlServerName'), parameters('name')), parameters('apiVersion'))]"
+    }
+  }
+}
