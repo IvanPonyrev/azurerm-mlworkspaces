@@ -75,10 +75,13 @@ class Deployment {
         if ($null -ne $servicePrincipal) {
             Remove-AzureRmADServicePrincipal -Id $servicePrincipal.Id -Force
         }
-        New-AzureRmADServicePrincipal -ApplicationId $application.ApplicationId `
+        $servicePrincipal = New-AzureRmADServicePrincipal -ApplicationId $application.ApplicationId `
             -CertValue $certificate.GetCertificate().base64Value `
             -EndDate $certificate.GetEndDate() `
             -StartDate ([System.DateTime]::Now)
+
+        New-AzureRmRoleAssignment -ServicePrincipalName $application.ApplicationId `
+            -RoleDefinitionName Contributor
 
         $certificate.RemoveCertificate()
 

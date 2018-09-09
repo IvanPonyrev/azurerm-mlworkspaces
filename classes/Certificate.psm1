@@ -21,7 +21,7 @@ class Certificate {
     <# .Description Generates a certificate. #>
     hidden [void] GenerateCertificate() {
         # Create certificate, export to temp directory, store base64Value and thumbprint.
-        $this.Certificate = New-SelfSignedCertificate -DnsName "$this.Name" `
+        $this.Certificate = New-SelfSignedCertificate -Subject "CN=$($this.Name)" `
             -KeyAlgorithm RSA `
             -KeyLength 2048 `
             -Type CodeSigningCert `
