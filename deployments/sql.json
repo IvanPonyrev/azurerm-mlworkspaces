@@ -150,6 +150,11 @@
                 "templateLink": {
                     "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/firewallRules.json', parameters('resourcesLocationSasToken'))]"
                 },
+                "parameters": {
+                    "sqlServerName": {
+                        "value": "[reference(resourceId('Microsoft.Resources/deployments', 'server'), parameters('apiVersion')).outputs.name.value]"
+                    }
+                },
                 "debugSetting": {
                     "detailLevel": "requestContent, responseContent"
                 }
