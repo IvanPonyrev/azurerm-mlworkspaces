@@ -80,13 +80,13 @@ class Deployment {
         }
         
         # Create service principal, wait for completion, then create role assignment.
-        # Start-Job -Name ServicePrincipalCreation -ScriptBlock {
-            New-AzureRmADServicePrincipal -ApplicationId $application.ApplicationId `
-                -CertValue $certificate.GetCertificate().base64Value `
-                -EndDate $certificate.GetEndDate() `
-                -StartDate ([System.DateTime]::Now)
-        # }
-        # Wait-Job -Name ServicePrincipalCreation
+        New-AzureRmADServicePrincipal -ApplicationId $application.ApplicationId `
+            -CertValue $certificate.GetCertificate().base64Value `
+            -EndDate $certificate.GetEndDate() `
+            -StartDate ([System.DateTime]::Now)
+        
+        # Wait a few seconds for the service principal to be ready.
+        Start-Sleep -Seconds 10
         New-AzureRmRoleAssignment -ApplicationId $application.ApplicationId `
             -RoleDefinitionName Contributor
 
