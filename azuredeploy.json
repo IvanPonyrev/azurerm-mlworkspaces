@@ -58,7 +58,7 @@
         "defaultSecrets": [
             {
                 "name": "defaultPassword",
-                "value": "[replace(guid(subscription().subscriptionId), '-', '')]"
+                "value": "[guid(subscription().subscriptionId)]"
             }
         ],
         "secrets": {

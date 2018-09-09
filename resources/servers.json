@@ -39,7 +39,7 @@
   "resources": [
     {
       "type": "Microsoft.Sql/servers",
-      "apiVersion": "[variables('apiVersion')]",
+      "apiVersion": "[parameters('apiVersion')]",
       "name": "[parameters('name')]",
       "location": "[parameters('location')]",
       "properties": {

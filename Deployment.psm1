@@ -75,12 +75,16 @@ class Deployment {
         if ($null -ne $servicePrincipal) {
             Remove-AzureRmADServicePrincipal -Id $servicePrincipal.Id -Force
         }
-        $servicePrincipal = New-AzureRmADServicePrincipal -ApplicationId $application.ApplicationId `
-            -CertValue $certificate.GetCertificate().base64Value `
-            -EndDate $certificate.GetEndDate() `
-            -StartDate ([System.DateTime]::Now)
-
-        New-AzureRmRoleAssignment -ServicePrincipalName $application.ApplicationId `
+        
+        # Create service principal, wait for completion, then create role assignment.
+        Start-Job -Name ServicePrincipalCreation -ScriptBlock {
+            New-AzureRmADServicePrincipal -ApplicationId $application.ApplicationId `
+                -CertValue $certificate.GetCertificate().base64Value `
+                -EndDate $certificate.GetEndDate() `
+                -StartDate ([System.DateTime]::Now)
+        }
+        Wait-Job -Name ServicePrincipalCreation
+        New-AzureRmRoleAssignment -ApplicationId $application.ApplicationId `
             -RoleDefinitionName Contributor
 
         $certificate.RemoveCertificate()

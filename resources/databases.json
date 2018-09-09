@@ -41,17 +41,19 @@
           "description": "The collation of the database."
         }
       },
-      "maxSizeGB": {
+      "maxSizeBytes": {
         "type": "string",
         "metadata": {
-          "description": ""
-        }
+          "description": "The max size of the database expressed in bytes."
+        },
+        "defaultValue": "104857600"
       },
       "requestedServiceObjectiveName": {
         "type": "string",
         "metadata": {
-          "description": ""
-        }
+          "description": "The name of the configured service level objective of the database."
+        },
+        "defaultValue": "Free"
       }
     },
     "variables": {
@@ -62,7 +64,12 @@
         "apiVersion": "[parameters('apiVersion')]",
         "name": "[concat(parameters('sqlServer'), '/', parameters('name'))]",
         "location": "[parameters('location')]",
-        "properties": "[parameters('databases')[copyIndex()].properties]"
+        "properties": {
+          "edition": "[parameters('edition')]",
+          "collation": "[parameters('collation')]",
+          "maxSizeBytes": "[parameters('maxSizeBytes')]",
+          "requestedServiceObjectiveName": "[parameters('requestedServiceObjectiveName')]"
+        }
       }
     ],
     "outputs": {

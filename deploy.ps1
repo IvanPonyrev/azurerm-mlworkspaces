@@ -5,7 +5,7 @@ using module .\Deployment.psm1
 Param(
     [string] [Parameter(Mandatory=$false)] $ResourceGroupLocation = 'eastus',
     [string] $ResourceGroupName = 'management',
-	[array] $LinkedResourceGroups = @('network', 'machines', 'web', 'workspaces', 'sql', 'cosmos'),
+	[array] $LinkedResourceGroups = @('network', 'web', 'workspaces', 'sql', 'cosmos'),
     [switch] $UploadArtifacts,
     [switch] $DeployStorage,
 	[string] [ValidateSet("Complete", "Incremental")] $Mode = 'Incremental',
@@ -37,7 +37,7 @@ $OptionalParameters = New-Object -TypeName Hashtable
 $TemplateFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $TemplateFile))
 $TemplateParametersFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $TemplateParametersFile))
 
-# Update storage if flagged.
+# Deploy or update storage if flagged.
 if ($DeployStorage) {
 	New-AzureRmResourceGroupDeployment -Name "storageAccounts" -ResourceGroupName $ResourceGroupName -TemplateFile ".\resources\storageAccounts.json"
 }
@@ -62,7 +62,6 @@ if ($ValidateOnly) {
 	}
 }
 else {
-	#((Get-ChildItem $TemplateFile).BaseName + '-' + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')) `
 	New-AzureRmResourceGroupDeployment -Name (Get-ChildItem $TemplateFile).BaseName `
 										-ResourceGroupName $ResourceGroupName `
 										-Mode $Mode `
