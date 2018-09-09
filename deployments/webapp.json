@@ -21,7 +21,7 @@
             "metadata": {
                 "description": "The resourceGroup to which resources will be deployed."
             },
-            "defaultValue": "[resourceGroup().name]"
+            "defaultValue": "app"
         },
         "apiVersion": {
             "type": "string",
