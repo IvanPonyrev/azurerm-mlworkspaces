@@ -48,7 +48,12 @@
     },
     "variables": {
         "defaultRunbooks": [
-            "refresh-tokens"
+            {
+                "name": "refresh-tokens",
+                "jobParameters": {
+                    "ConnectionName": "automationConnection"
+                }
+            }
         ],
         "runbooks": "[concat(parameters('runbooks'), variables('defaultRunbooks'))]"
     },
@@ -134,7 +139,7 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[parameters('apiVersion')]",
-            "name": "[concat(variables('runbooks')[copyIndex()], '-deployment')]",
+            "name": "[concat(variables('runbooks')[copyIndex()].name, '-deployment')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', 'automationAccount')]"
             ],
@@ -161,10 +166,13 @@
                         }
                     },
                     "name": {
-                        "value": "[variables('runbooks')[copyIndex()]]"
+                        "value": "[variables('runbooks')[copyIndex()].name]"
                     },
                     "automationAccountName": {
                         "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.name.value]"
+                    },
+                    "jobParameters": {
+                        "value": "[variables('runbooks')[copyIndex()].jobParameters]"
                     }
                 },
                 "debugSetting": {

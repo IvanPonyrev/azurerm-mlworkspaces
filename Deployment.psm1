@@ -86,7 +86,7 @@ class Deployment {
             -StartDate ([System.DateTime]::Now)
         
         # Wait a few seconds for the service principal to be ready.
-        Start-Sleep -Seconds 10
+        Start-Sleep -Seconds 5
         New-AzureRmRoleAssignment -ApplicationId $application.ApplicationId `
             -RoleDefinitionName Contributor
 

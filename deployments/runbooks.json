@@ -34,6 +34,13 @@
             "metadata": {
                 "description": "The name to be given to this automation account."
             }
+        },
+        "jobParameters": {
+            "type": "object",
+            "metadata": {
+                "description": "Job parameters for this runbook."
+            },
+            "defaultValue": { }
         }
     },
     "variables": {
@@ -71,7 +78,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/runbooks.json', parameters('resourcesLocationSasToken'))]"
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/jobs.json', parameters('resourcesLocationSasToken'))]"
                 },
                 "parameters": {
                     "name": {
@@ -80,8 +87,11 @@
                     "automationAccountName": {
                         "value": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.name.value]"
                     },
-                    "uri": {
-                        "value": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'runbooks/', parameters('name'), parameters('runbooksLocationSasToken'))]"
+                    "runbook": {
+                        "value": "[parameters('name')]"
+                    },
+                    "jobParameters": {
+                        "value": "[parameters('jobParameters')]"
                     }
                 },
                 "debugSetting": {
