@@ -102,11 +102,11 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/runbooks.json', parameters('resourcesLocationSasToken'))]"
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/schedules.json', parameters('resourcesLocationSasToken'))]"
                 },
                 "parameters": {
                     "name": {
-                        "value": "[parameters('name')]"
+                        "value": "[concat(parameters('name'), '-schedule')]"
                     },
                     "automationAccountName": {
                         "value": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.name.value]"

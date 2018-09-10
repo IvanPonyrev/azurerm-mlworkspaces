@@ -58,7 +58,7 @@
                 "name": "refresh-tokens",
                 "frequency": "Hour",
                 "interval": 4,
-                "timeZone": "Eastern Standard Time",
+                "timeZone": "UTC",
                 "jobParameters": {
                     "ConnectionName": "automationConnection"
                 }
@@ -180,7 +180,7 @@
                     "automationAccountName": {
                         "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.name.value]"
                     },
-                    "startTime": {
+                    "runbooksStartTime": {
                         "value": "[parameters('runbooksStartTime')]"
                     },
                     "timeZone": {

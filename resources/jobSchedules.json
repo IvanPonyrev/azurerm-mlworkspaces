@@ -34,6 +34,12 @@
                 "description": "The name of the runbook this job applies to."
             }
         },
+        "schedule": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the schedule this job applies to."
+            }
+        },
         "jobParameters": {
             "type": "object",
             "metadata": {
