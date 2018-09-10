@@ -19,7 +19,7 @@
             "metadata": {
                 "description": "The apiVersion of this resource."
             },
-            "defaultValue": "latest"
+            "defaultValue": "[providers('Microsoft.Automation', 'automationAccounts').apiVersions[0]]"
         },
         "location": {
             "type": "string",
@@ -44,11 +44,14 @@
     "variables": {},
     "resources": [
         {
-            "type": "Microsoft.Automation/automationAccounts/jobs",
+            "type": "Microsoft.Automation/automationAccounts/jobSchedules",
             "apiVersion": "[parameters('apiVersion')]",
             "name": "[concat(parameters('automationAccountName'), '/', parameters('name'))]",
             "location": "[parameters('location')]",
             "properties": {
+                "schedule": {
+                    "name": "[parameters('schedule')]"
+                },
                 "runbook": {
                     "name": "[parameters('runbook')]"
                 },
@@ -67,7 +70,7 @@
         },
         "resourceId": {
             "type": "string",
-            "value": "[resourceId('Microsoft.Automation/automationAccounts/jobs', parameters('automationAccountName'), parameters('name'))]"
+            "value": "[resourceId('Microsoft.Automation/automationAccounts/jobSchedules', parameters('automationAccountName'), parameters('name'))]"
         }
     }
 }

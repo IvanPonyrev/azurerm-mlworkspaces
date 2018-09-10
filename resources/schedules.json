@@ -31,28 +31,22 @@
         "description": {
             "type": "string", 
             "metadata": {
-                "description": "Sets the description of the certificate."
+                "description": "Sets the description."
             },
             "defaultValue": ""
         },
         "startTime": {
             "type": "string",
             "metadata": {
-                "description": "Start time."
-            }
-        },
-        "expiryTime": {
-            "type": "string",
-            "metadata": {
-                "description": "Expiry time."
+                "description": "The start time of the schedule."
             }
         },
         "interval": {
-            "type": "object",
+            "type": "int",
             "metadata": {
-                "description": "Interval of this resource."
+                "description": "The interval of the schedule."
             },
-            "defaultValue": { }
+            "defaultValue": 4
         },
         "frequency": {
             "type": "string",
@@ -64,13 +58,15 @@
                 "Day", 
                 "Hour", 
                 "Week"
-            ]
+            ],
+            "defaultValue": "Hour"
         },
         "timeZone": {
             "type": "string",
             "metadata": {
                 "description": "Sets the time zone of the schedule."
-            }
+            },
+            "defaultValue": "Eastern Standard Time"
         },
         "advancedSchedule": {
             "type": "object",
@@ -84,15 +80,16 @@
     },
     "resources": [
         {
-            "type": "Microsoft.Automation/automationAccounts/certificates",
+            "type": "Microsoft.Automation/automationAccounts/schedules",
             "apiVersion": "[parameters('apiVersion')]",
             "name": "[concat(parameters('automationAccountName'), '/', parameters('name'))]",
             "location": "[parameters('location')]",
             "properties": {
-                "base64Value": "[parameters('base64Value')]",
                 "description": "[parameters('description')]",
-                "thumbprint": "[parameters('thumbprint')]",
-                "isExportable": "[parameters('isExportable')]"
+                "startTime": "[parameters('startTime')]",
+                "frequency": "[parameters('frequency')]",
+                "interval": "[parameters('interval')]",
+                "timeZone": "[parameters('timeZone')]"
             }
         }
     ],
@@ -107,11 +104,7 @@
         },
         "resourceId": {
             "type": "string",
-            "value": "[resourceId('Microsoft.Automation/automationAccounts/certificates', parameters('automationAccountName'), parameters('name'))]"
-        },
-        "thumbprint": {
-            "type": "securestring",
-            "value": "[parameters('thumbprint')]"
+            "value": "[resourceId('Microsoft.Automation/automationAccounts/schedules', parameters('automationAccountName'), parameters('name'))]"
         }
     }
 }

@@ -44,12 +44,21 @@
                 "description": "An object containing runbook basenames."
             },
             "defaultValue": [ ]
+        },
+        "runbooksStartTime": {
+            "type": "string",
+            "metadata": {
+                "description": "The time to start the schedule."
+            }
         }
     },
     "variables": {
         "defaultRunbooks": [
             {
                 "name": "refresh-tokens",
+                "frequency": "Hour",
+                "interval": 4,
+                "timeZone": "Eastern Standard Time",
                 "jobParameters": {
                     "ConnectionName": "automationConnection"
                 }
@@ -139,7 +148,7 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[parameters('apiVersion')]",
-            "name": "[concat(variables('runbooks')[copyIndex()].name, '-deployment')]",
+            "name": "[concat(variables('runbooks')[copyIndex()].name, '-runbook')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', 'automationAccount')]"
             ],
@@ -170,6 +179,18 @@
                     },
                     "automationAccountName": {
                         "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.name.value]"
+                    },
+                    "startTime": {
+                        "value": "[parameters('runbooksStartTime')]"
+                    },
+                    "timeZone": {
+                        "value": "[variables('runbooks')[copyIndex()].timeZone]"
+                    },
+                    "frequency": {
+                        "value": "[variables('runbooks')[copyIndex()].frequency]"
+                    },
+                    "interval": {
+                        "value": "[variables('runbooks')[copyIndex()].interval]"
                     },
                     "jobParameters": {
                         "value": "[variables('runbooks')[copyIndex()].jobParameters]"

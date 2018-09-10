@@ -120,6 +120,9 @@ class Deployment {
                     "certificates" {
                         $this.OptionalParameters[$_] = $this.Certificates
                     }
+                    "runbooksStartTime" {
+                        $this.OptionalParameters[$_] = (Get-Date).AddMinutes(15).ToString("MM/dd/yyyy hh:mm:ss")
+                    }
                 }
             } else {
                 switch ($_) {
