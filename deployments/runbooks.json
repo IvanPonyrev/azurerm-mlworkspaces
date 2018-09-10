@@ -63,6 +63,31 @@
                     "detailLevel": "requestContent, responseContent"
                 }
             }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[concat(parameters('name'), '-job')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/runbooks.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[parameters('name')]"
+                    },
+                    "automationAccountName": {
+                        "value": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.name.value]"
+                    },
+                    "uri": {
+                        "value": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'runbooks/', parameters('name'), parameters('runbooksLocationSasToken'))]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
         }
     ],
     "outputs": {
