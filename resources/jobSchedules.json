@@ -11,7 +11,7 @@
         "automationAccountName": {
             "type": "string",
             "metadata": {
-                "description": "The name to be given to this automation account."
+                "description": "The job name."
             }
         },
         "apiVersion": {
@@ -28,68 +28,40 @@
             },
             "defaultValue": "eastus2"
         },
-        "description": {
-            "type": "string", 
-            "metadata": {
-                "description": "Sets the description."
-            },
-            "defaultValue": ""
-        },
-        "startTime": {
+        "runbook": {
             "type": "string",
             "metadata": {
-                "description": "The start time of the schedule."
+                "description": "The name of the runbook this job applies to."
             }
         },
-        "interval": {
-            "type": "int",
-            "metadata": {
-                "description": "The interval of the schedule."
-            },
-            "defaultValue": 4
-        },
-        "frequency": {
+        "schedule": {
             "type": "string",
             "metadata": {
-                "description": "Expiry time."
-            },
-            "allowedValues": [
-                "OneTime", 
-                "Day", 
-                "Hour", 
-                "Week"
-            ],
-            "defaultValue": "Hour"
+                "description": "The name of the schedule this job applies to."
+            }
         },
-        "timeZone": {
-            "type": "string",
-            "metadata": {
-                "description": "Sets the time zone of the schedule."
-            },
-            "defaultValue": "Eastern Standard Time"
-        },
-        "advancedSchedule": {
+        "jobParameters": {
             "type": "object",
             "metadata": {
-                "description": ""
-            },
-            "defaultValue": { }
+                "description": "Parameters of the job."
+            }
         }
     },
-    "variables": {
-    },
+    "variables": {},
     "resources": [
         {
-            "type": "Microsoft.Automation/automationAccounts/schedules",
+            "type": "Microsoft.Automation/automationAccounts/jobSchedules",
             "apiVersion": "[parameters('apiVersion')]",
             "name": "[concat(parameters('automationAccountName'), '/', parameters('name'))]",
             "location": "[parameters('location')]",
             "properties": {
-                "description": "[parameters('description')]",
-                "startTime": "[parameters('startTime')]",
-                "frequency": "[parameters('frequency')]",
-                "interval": "[parameters('interval')]",
-                "timeZone": "[parameters('timeZone')]"
+                "schedule": {
+                    "name": "[parameters('schedule')]"
+                },
+                "runbook": {
+                    "name": "[parameters('runbook')]"
+                },
+                "parameters": "[parameters('jobParameters')]"
             }
         }
     ],
@@ -104,7 +76,7 @@
         },
         "resourceId": {
             "type": "string",
-            "value": "[resourceId('Microsoft.Automation/automationAccounts/schedules', parameters('automationAccountName'), parameters('name'))]"
+            "value": "[resourceId('Microsoft.Automation/automationAccounts/jobSchedules', parameters('automationAccountName'), parameters('name'))]"
         }
     }
 }

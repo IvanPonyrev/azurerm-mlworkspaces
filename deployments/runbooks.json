@@ -34,6 +34,37 @@
             "metadata": {
                 "description": "The name to be given to this automation account."
             }
+        },
+        "jobParameters": {
+            "type": "object",
+            "metadata": {
+                "description": "Job parameters for this runbook."
+            },
+            "defaultValue": { }
+        },
+        "runbooksStartTime": {
+            "type": "string",
+            "metadata": {
+                "description": "The start time of the schedule."
+            }
+        },
+        "interval": {
+            "type": "int",
+            "metadata": {
+                "description": "The interval of the schedule."
+            }
+        },
+        "frequency": {
+            "type": "string",
+            "metadata": {
+                "description": "Expiry time."
+            }
+        },
+        "timeZone": {
+            "type": "string",
+            "metadata": {
+                "description": "Sets the time zone of the schedule."
+            }
         }
     },
     "variables": {
@@ -57,6 +88,74 @@
                     },
                     "uri": {
                         "value": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'runbooks/', parameters('name'), parameters('runbooksLocationSasToken'))]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[concat(parameters('name'), '-schedule')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/schedules.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[concat(parameters('name'), '-schedule')]"
+                    },
+                    "automationAccountName": {
+                        "value": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.name.value]"
+                    },
+                    "startTime": {
+                        "value": "[parameters('runbooksStartTime')]"
+                    },
+                    "timeZone": {
+                        "value": "[parameters('timeZone')]"
+                    },
+                    "frequency": {
+                        "value": "[parameters('frequency')]"
+                    },
+                    "interval": {
+                        "value": "[parameters('interval')]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[concat(parameters('name'), '-jobSchedule')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', concat(parameters('name'), '-schedule'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/jobSchedules.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[guid(parameters('name'))]"
+                    },
+                    "automationAccountName": {
+                        "value": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.name.value]"
+                    },
+                    "runbook": {
+                        "value": "[parameters('name')]"
+                    },
+                    "schedule": {
+                        "value": "[concat(parameters('name'), '-schedule')]"
+                    },
+                    "jobParameters": {
+                        "value": "[parameters('jobParameters')]"
                     }
                 },
                 "debugSetting": {

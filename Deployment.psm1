@@ -86,7 +86,7 @@ class Deployment {
             -StartDate ([System.DateTime]::Now)
         
         # Wait a few seconds for the service principal to be ready.
-        Start-Sleep -Seconds 10
+        Start-Sleep -Seconds 5
         New-AzureRmRoleAssignment -ApplicationId $application.ApplicationId `
             -RoleDefinitionName Contributor
 
@@ -119,6 +119,9 @@ class Deployment {
                     }
                     "certificates" {
                         $this.OptionalParameters[$_] = $this.Certificates
+                    }
+                    "runbooksStartTime" {
+                        $this.OptionalParameters[$_] = (Get-Date).ToUniversalTime().AddMinutes(15).ToString("MM/dd/yyyy hh:mm:ss")
                     }
                 }
             } else {
