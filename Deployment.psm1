@@ -1,5 +1,6 @@
 using module .\classes\Token.psm1
 using module .\classes\Certificate.psm1
+using module .\classes\Runbook.psm1
 
 class Deployment {
     [string] $ResourceGroupName
@@ -121,7 +122,14 @@ class Deployment {
                         $this.OptionalParameters[$_] = $this.Certificates
                     }
                     "runbooksStartTime" {
-                        $this.OptionalParameters[$_] = (Get-Date).ToUniversalTime().AddMinutes(15).ToString("MM/dd/yyyy hh:mm:ss")
+                        $this.OptionalParameters[$_] = (Get-Date).ToUniversalTime().AddMinutes(15).ToString("MM/dd/yyyy HH:mm:ss")
+                    }
+                    "runbooks" {
+                        $runbooks = @()
+                        Get-ChildItem -File .\runbooks | % { 
+                            $runbooks += [Runbook]::new($_.BaseName, "Hour", 4, @{ ConnectionName = "automationConnection" }).GetRunbook()
+                        }
+                        $this.OptionalParameters[$_] = $runbooks
                     }
                 }
             } else {

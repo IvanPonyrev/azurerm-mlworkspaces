@@ -65,6 +65,12 @@
             "metadata": {
                 "description": "Sets the time zone of the schedule."
             }
+        },
+        "jobScheduleId": {
+            "type": "string",
+            "metadata": {
+                "description": "Sets the jobScheduleId."
+            }
         }
     },
     "variables": {
@@ -143,7 +149,7 @@
                 },
                 "parameters": {
                     "name": {
-                        "value": "[guid(parameters('name'))]"
+                        "value": "[parameters('jobScheduleId')]"
                     },
                     "automationAccountName": {
                         "value": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.name.value]"

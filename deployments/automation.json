@@ -48,23 +48,11 @@
         "runbooksStartTime": {
             "type": "string",
             "metadata": {
-                "description": "The time to start the schedule."
+                "description": "The start time of the schedule."
             }
         }
     },
     "variables": {
-        "defaultRunbooks": [
-            {
-                "name": "refresh-tokens",
-                "frequency": "Hour",
-                "interval": 4,
-                "timeZone": "UTC",
-                "jobParameters": {
-                    "ConnectionName": "automationConnection"
-                }
-            }
-        ],
-        "runbooks": "[concat(parameters('runbooks'), variables('defaultRunbooks'))]"
     },
     "resources": [
         {
@@ -148,7 +136,7 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[parameters('apiVersion')]",
-            "name": "[concat(variables('runbooks')[copyIndex()].name, '-runbook')]",
+            "name": "[concat(parameters('runbooks')[copyIndex()].name, '-runbook')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', 'automationAccount')]"
             ],
@@ -175,7 +163,7 @@
                         }
                     },
                     "name": {
-                        "value": "[variables('runbooks')[copyIndex()].name]"
+                        "value": "[parameters('runbooks')[copyIndex()].name]"
                     },
                     "automationAccountName": {
                         "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.name.value]"
@@ -184,16 +172,19 @@
                         "value": "[parameters('runbooksStartTime')]"
                     },
                     "timeZone": {
-                        "value": "[variables('runbooks')[copyIndex()].timeZone]"
+                        "value": "[parameters('runbooks')[copyIndex()].timeZone]"
                     },
                     "frequency": {
-                        "value": "[variables('runbooks')[copyIndex()].frequency]"
+                        "value": "[parameters('runbooks')[copyIndex()].frequency]"
                     },
                     "interval": {
-                        "value": "[variables('runbooks')[copyIndex()].interval]"
+                        "value": "[parameters('runbooks')[copyIndex()].interval]"
+                    },
+                    "jobScheduleId": {
+                        "value": "[parameters('runbooks')[copyIndex()].jobScheduleId]"
                     },
                     "jobParameters": {
-                        "value": "[variables('runbooks')[copyIndex()].jobParameters]"
+                        "value": "[parameters('runbooks')[copyIndex()].jobParameters]"
                     }
                 },
                 "debugSetting": {
@@ -202,7 +193,7 @@
             },
             "copy": {
                 "name": "runbooks",
-                "count": "[length(variables('runbooks'))]"
+                "count": "[length(parameters('runbooks'))]"
             }
         }
     ],
