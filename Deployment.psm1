@@ -45,7 +45,7 @@ class Deployment {
             }[ $null -eq (Get-AzureStorageContainer -Name $_.BaseName -Context $this.StorageAccount.Context) ]
 
             # Upload to blobs.
-            Get-ChildItem "$($_.FullName)\*.json", "$($_.FullName)\*.ps1" -File | % {
+            Get-ChildItem "$($_.FullName)\*.json", "$($_.FullName)\*.ps1", "$($_.FullName)\*.psm1" -File | % {
                 Set-AzureStorageBlobContent -File "$($_.FullName)" `
                     -Blob @{ $true = "$($_.Name)"; $false = "$($_.BaseName)" }[ $_.Extension -eq ".json" ] `
                     -Container $storageContainer.Name `

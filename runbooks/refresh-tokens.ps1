@@ -6,7 +6,7 @@ workflow Refresh-Tokens {
     )
 
     $Connection = Get-AutomationConnection -Name $ConnectionName
-    Connect-AzureRmAccount -ServicePrincipal `
+    Add-AzureRmAccount -ServicePrincipal `
         -TenantId $Connection.TenantId `
         -ApplicationId $Connection.ApplicationId `
         -CertificateThumbprint $Connection.CertificateThumbprint
