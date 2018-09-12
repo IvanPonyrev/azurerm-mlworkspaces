@@ -202,38 +202,6 @@
                 "name": "runbooks",
                 "count": "[length(parameters('runbooks'))]"
             }
-        },
-        {
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[parameters('apiVersion')]",
-            "name": "[parameters('modules')[copyIndex()]]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', 'automationAccount')]"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/modules.json', parameters('deploymentsLocationSasToken'))]"
-                },
-                "parameters": {
-                    "name": {
-                        "value": "[parameters('modules')[copyIndex()]]"
-                    },
-                    "automationAccountName": {
-                        "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.name.value]"
-                    },
-                    "uri": {
-                        "value": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'modules/', parameters('modules')[copyIndex()], parameters('deploymentsLocationSasToken'))]"
-                    }
-                },
-                "debugSetting": {
-                    "detailLevel": "requestContent, responseContent"
-                }
-            },
-            "copy": {
-                "name": "modules",
-                "count": "[length(parameters('modules'))]"
-            }
         }
     ],
     "outputs": {

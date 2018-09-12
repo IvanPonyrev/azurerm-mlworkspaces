@@ -127,7 +127,7 @@ class Deployment {
                     "runbooks" {
                         $runbooks = @()
                         Get-ChildItem -File .\runbooks | % { 
-                            $runbooks += [Runbook]::new($_.BaseName, "Hour", 4, @{ ConnectionName = "automationConnection" }).GetRunbook()
+                            $runbooks += [Runbook]::new($_.BaseName, "Hour", 8, @{ ConnectionName = "automationConnection" }).GetRunbook()
                         }
                         $this.OptionalParameters[$_] = $runbooks
                     }
