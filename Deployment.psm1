@@ -65,15 +65,15 @@ class Deployment {
     }
 
     hidden [guid] GetApplicationId([string] $applicationName) {
+        $certificate = [Certificate]::new("$($applicationName)Certificate")
+        $this.Certificates.certificates += $certificate.GetCertificate()
+
         $application = Get-AzureRmADApplication -DisplayName $applicationName
         if ($null -eq $application) {
             $application = New-AzureRmADApplication -DisplayName $applicationName `
                 -IdentifierUris "https://localhost/$applicationName" `
                 -HomePage "https://localhost/$applicationName"
         }
-
-        $certificate = [Certificate]::new("$($applicationName)Certificate")
-        $this.Certificates.certificates += $certificate.GetCertificate()
 
         $servicePrincipal = Get-AzureRmADServicePrincipal -DisplayName $applicationName | select -First 1
         if ($null -ne $servicePrincipal) {
