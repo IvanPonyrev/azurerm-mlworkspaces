@@ -1,6 +1,8 @@
 using module .\classes\Token.psm1
 using module .\classes\Certificate.psm1
+using module .\classes\Pfx.psm1
 using module .\classes\Runbook.psm1
+using module .\classes\AdApplication.psm1
 
 class Deployment {
     [string] $ResourceGroupName
@@ -13,7 +15,7 @@ class Deployment {
 
     [object] $StorageAccount
 
-    [string] $ApplicationId
+    [AdApplication] $AutomationApplication
 
     [object] $Secrets = @{
         secrets = @()
@@ -29,7 +31,7 @@ class Deployment {
         $this.TemplateParametersFile = Get-Content $TemplateParametersFile -Raw | ConvertFrom-Json
 
         $this.StorageAccount = Get-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName | Select-Object -First 1
-        $this.ApplicationId = $this.GetApplicationId("automation")
+        $this.AutomationApplication = [AdApplication]::new("automation")
         $this.OptionalParameters = New-Object -TypeName Hashtable
     }
 
@@ -65,7 +67,7 @@ class Deployment {
     }
 
     hidden [guid] GetApplicationId([string] $applicationName) {
-        $certificate = [Certificate]::new("$($applicationName)Certificate")
+        $certificate = [Pfx]::new("$($applicationName)Certificate")
         $this.Certificates.certificates += $certificate.GetCertificate()
 
         $application = Get-AzureRmADApplication -DisplayName $applicationName
