@@ -56,9 +56,23 @@ class Deployment {
         }
     }
 
-    <#
-    .Description Generates tokens for each container in storage.
-    #>
+    <# .Description Creates a service principal and passes certificate and secret. #>
+    hidden [void] SetServicePrincipal() {
+        $this.AutomationApplication.CreateServicePrincipal()
+        $this.Certificates.certificates += $this.AutomationApplication.Certificate.GetCertificate()
+        $this.Secrets.secrets += $this.AutomationApplication.Certificate.GetPassword()
+    }
+
+    <# .Description Updates the automation certificate. #>
+    [void] SetAutomationCertificate() {
+        Set-AzureRmAutomationCertificate -AutomationAccountName automation `
+            -ResourceGroupName $this.ResourceGroupName `
+            -Name $this.AutomationApplication.Certificate.Name `
+            -Path $this.AutomationApplication.Certificate.GetPath() `
+            -Password (ConvertTo-SecureString -AsPlainText -Force $this.AutomationApplication.Certificate.GetPassword().value)
+    }
+
+    <# .Description Generates tokens for each container in storage. #>
     hidden [void] GetSasTokens() {
         Get-AzureStorageContainer -Context $this.StorageAccount.Context | ForEach-Object {
             $container = $_.Name
@@ -66,41 +80,7 @@ class Deployment {
         }
     }
 
-    hidden [guid] GetApplicationId([string] $applicationName) {
-        $certificate = [Pfx]::new("$($applicationName)Certificate")
-        $this.Certificates.certificates += $certificate.GetCertificate()
-
-        $application = Get-AzureRmADApplication -DisplayName $applicationName
-        if ($null -eq $application) {
-            $application = New-AzureRmADApplication -DisplayName $applicationName `
-                -IdentifierUris "https://localhost/$applicationName" `
-                -HomePage "https://localhost/$applicationName"
-        }
-
-        $servicePrincipal = Get-AzureRmADServicePrincipal -DisplayName $applicationName | select -First 1
-        if ($null -ne $servicePrincipal) {
-            Remove-AzureRmADServicePrincipal -Id $servicePrincipal.Id -Force
-        }
-        
-        # Create service principal, wait for completion, then create role assignment.
-        New-AzureRmADServicePrincipal -ApplicationId $application.ApplicationId `
-            -CertValue $certificate.GetCertificate().base64Value `
-            -EndDate $certificate.GetEndDate() `
-            -StartDate ([System.DateTime]::Now)
-        
-        # Wait a few seconds for the service principal to be ready.
-        Start-Sleep -Seconds 5
-        New-AzureRmRoleAssignment -ApplicationId $application.ApplicationId `
-            -RoleDefinitionName Contributor
-
-        $certificate.RemoveCertificate()
-
-        return $application.ApplicationId
-    }
-
-    <#
-    .Description Returns hashtable of optional parameters.
-    #>
+    <# .Description Returns hashtable of optional parameters. #>
     [hashtable] GetOptionalParameters() {
         $this.GetSasTokens()
         $this.TemplateFile.parameters.PSObject.Properties.Name | ForEach-Object {
@@ -118,7 +98,7 @@ class Deployment {
                             (Get-AzureRmADUser | ? UserPrincipalName -match (Get-AzureRmContext).Account.Id.ToLower().Replace("@", "_") | select -First 1 Id).Id.ToString()
                     }
                     "applicationId" {
-                        $this.OptionalParameters[$_] = $this.ApplicationId
+                        $this.OptionalParameters[$_] = $this.AutomationApplication.GetApplicationId()
                     }
                     "certificates" {
                         $this.OptionalParameters[$_] = $this.Certificates

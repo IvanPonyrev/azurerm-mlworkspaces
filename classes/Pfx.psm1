@@ -4,8 +4,7 @@ class Pfx: Certificate {
 
     hidden [string] $Password
 
-    Pfx([string] $Name) {
-        ([Certificate]$this)::new($Name)
+    Pfx([string] $Name): base($Name) {
         $this.Password = (New-Guid).ToString("N")
         $this.ExportPfx()
     }
