@@ -4,12 +4,6 @@ The following command will deploy storageAccounts and vaults with secrets. Deplo
 
 .\deploy.ps1 -UploadArtifacts -DeployStorage
 
-# Deploy virtualNetwork
-
-Deployment of virtual network has been broken out to separate deployment to keep parameters files from becoming gigantic.
-
-.\deploy.ps1 -TemplateFile .\deployments\network.json -TemplateParametersFile .\params\network.parameters.json -LinkedResourceGroups @()
-
 # Deploy webapp
 
 Deployment of a web application.
