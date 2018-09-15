@@ -79,5 +79,6 @@ else {
 
 	if ($DeployStorage) {
 		$Deployment.SetAutomationCertificate()
+		$Deployment.AutomationApplication.Certificate.RemoveCertificate()
 	}
 }
