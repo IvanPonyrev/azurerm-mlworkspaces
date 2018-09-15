@@ -8,7 +8,7 @@ class Token {
         $this.SASToken = New-AzureStorageContainerSASToken -Context $Context `
                 -Container $Container `
                 -Permission r `
-                -ExpiryTime (Get-Date).AddHours(4) `
+                -ExpiryTime (Get-Date).AddHours(8) `
                 -Verbose;
     }
 

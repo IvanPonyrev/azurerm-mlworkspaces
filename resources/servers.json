@@ -61,9 +61,9 @@
       "type": "string",
       "value": "[resourceId('Microsoft.Sql/servers', parameters('name'))]"
     },
-    "reference": {
-      "type": "object",
-      "value": "[reference(resourceId('Microsoft.Sql/servers', parameters('name')), parameters('apiVersion'))]"
+    "fullyQualifiedDomainName": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Sql/servers', parameters('name')), parameters('apiVersion')).fullyQualifiedDomainName]"
     }
   }
 }

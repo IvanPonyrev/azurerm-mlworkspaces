@@ -37,6 +37,26 @@
             "defaultValue": {
                 "certificates": [ ]
             }
+        },
+        "runbooks": {
+            "type": "array", 
+            "metadata": {
+                "description": "An object containing runbook basenames."
+            },
+            "defaultValue": [ ]
+        },
+        "runbooksStartTime": {
+            "type": "string",
+            "metadata": {
+                "description": "The start time of the schedule."
+            }
+        },
+        "modules": {
+            "type": "array", 
+            "metadata": {
+                "description": "An object containing modules basenames."
+            },
+            "defaultValue": [ ]
         }
     },
     "variables": {
@@ -118,6 +138,69 @@
                 "debugSetting": {
                     "detailLevel": "requestContent, responseContent"
                 }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[concat(parameters('runbooks')[copyIndex()].name, '-runbook')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'automationAccount')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'deployments/runbooks.json', parameters('deploymentsLocationSasToken'))]"
+                },
+                "parameters": {
+                    "resourcesLocationSasToken": {
+                        "reference": {
+                            "keyVault": {
+                                "id": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'vaults'), parameters('apiVersion')).outputs.resourceId.value]"
+                            },
+                            "secretName": "resourcesLocationSasToken"
+                        }
+                    },
+                    "runbooksLocationSasToken": {
+                        "reference": {
+                            "keyVault": {
+                                "id": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'vaults'), parameters('apiVersion')).outputs.resourceId.value]"
+                            },
+                            "secretName": "runbooksLocationSasToken"
+                        }
+                    },
+                    "name": {
+                        "value": "[parameters('runbooks')[copyIndex()].name]"
+                    },
+                    "automationAccountName": {
+                        "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.name.value]"
+                    },
+                    "runbooksStartTime": {
+                        "value": "[parameters('runbooksStartTime')]"
+                    },
+                    "timeZone": {
+                        "value": "[parameters('runbooks')[copyIndex()].timeZone]"
+                    },
+                    "frequency": {
+                        "value": "[parameters('runbooks')[copyIndex()].frequency]"
+                    },
+                    "interval": {
+                        "value": "[parameters('runbooks')[copyIndex()].interval]"
+                    },
+                    "jobScheduleId": {
+                        "value": "[parameters('runbooks')[copyIndex()].jobScheduleId]"
+                    },
+                    "jobParameters": {
+                        "value": "[parameters('runbooks')[copyIndex()].jobParameters]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            },
+            "copy": {
+                "name": "runbooks",
+                "count": "[length(parameters('runbooks'))]"
             }
         }
     ],

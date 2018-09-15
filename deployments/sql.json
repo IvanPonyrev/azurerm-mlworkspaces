@@ -10,11 +10,11 @@
             "defaultValue": null
         },
         "apiVersion": {
-          "type": "string",
-          "metadata": {
-            "description": "The apiVersion of this resource."
-          },
-          "defaultValue": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
+            "type": "string",
+            "metadata": {
+                "description": "The apiVersion of this resource."
+            },
+            "defaultValue": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
         },
         "resourceGroup": {
             "type": "string",
@@ -24,32 +24,59 @@
             "defaultValue": "[resourceGroup().name]"
         },
         "name": {
-          "type": "string",
-          "metadata": {
-            "description": "The name of this web site."
-          },
-          "defaultValue": "[concat('sql', uniqueString(resourceGroup().id))]"
+            "type": "string",
+            "metadata": {
+                "description": "The name of this web site."
+            },
+            "defaultValue": "[concat('sql', uniqueString(resourceGroup().id))]"
         },
         "administratorLogin": {
-          "type": "string",
-          "metadata": {
-            "description": "The admin login."
-          }
+            "type": "string",
+            "metadata": {
+                "description": "The admin login."
+            }
         },
         "administratorLoginPassword": {
-          "type": "securestring",
-          "metadata": {
-            "description": "The admin login password."
-          }
+            "type": "securestring",
+            "metadata": {
+                "description": "The admin login password."
+            }
+        },
+        "edition": {
+            "type": "string",
+            "metadata": {
+                "description": ""
+            },
+            "defaultValue": "Basic"
+        },
+        "collation": {
+            "type": "string",
+            "metadata": {
+                "description": "The collation of the database."
+            },
+            "defaultValue": "SQL_Latin1_General_CP1_CI_AS"
+        },
+        "maxSizeBytes": {
+            "type": "string",
+            "metadata": {
+                "description": "The max size of the database expressed in bytes."
+            },
+            "defaultValue": "104857600"
+        },
+        "requestedServiceObjectiveName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the configured service level objective of the database."
+            },
+            "defaultValue": "Free"
         }
     },
-    "variables": {
-    },
+    "variables": {},
     "resources": [
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[parameters('apiVersion')]",
-            "name": "sql-server",
+            "name": "server",
             "resourceGroup": "[parameters('resourceGroup')]",
             "properties": {
                 "mode": "Incremental",
@@ -58,7 +85,7 @@
                 },
                 "parameters": {
                     "name": {
-                        "value": "[concat(parameters('name'), '-server')]"
+                        "value": "[parameters('name')]"
                     },
                     "administratorLogin": {
                         "value": "[parameters('administratorLogin')]"
@@ -71,12 +98,77 @@
                     "detailLevel": "requestContent, responseContent"
                 }
             }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "database",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'server')]"
+            ],
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/databases.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[concat(parameters('name'), '-database')]"
+                    },
+                    "sqlServerName": {
+                        "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'server'), parameters('apiVersion')).outputs.name.value]"
+                    },
+                    "edition": {
+                        "value": "[parameters('edition')]"
+                    },
+                    "collation": {
+                        "value": "[parameters('collation')]"
+                    },
+                    "maxSizeBytes": {
+                        "value": "[parameters('maxSizeBytes')]"
+                    },
+                    "requestedServiceObjectiveName": {
+                        "value": "[parameters('requestedServiceObjectiveName')]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "firewall",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'server')]"
+            ],
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/firewallRules.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "sqlServerName": {
+                        "value": "[reference(resourceId('Microsoft.Resources/deployments', 'server'), parameters('apiVersion')).outputs.name.value]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
         }
     ],
     "outputs": {
-        "sqlServerId": {
+        "resourceId": {
             "type": "string",
-            "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'sql'), parameters('apiVersion')).outputs.resourceId.value]"
+            "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'server'), parameters('apiVersion')).outputs.resourceId.value]"
+        },
+        "fullyQualifiedDomainName": {
+            "type": "string",
+            "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'server'), parameters('apiVersion')).outputs.fullyQualifiedDomainName.value]"
         }
     }
 }

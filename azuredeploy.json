@@ -52,6 +52,26 @@
             "defaultValue": {
                 "secrets": [ ]
             }
+        },
+        "runbooks": {
+            "type": "array", 
+            "metadata": {
+                "description": "An object containing runbook basenames."
+            },
+            "defaultValue": [ ]
+        },
+        "runbooksStartTime": {
+            "type": "string",
+            "metadata": {
+                "description": "The time to start the schedule."
+            }
+        },
+        "modules": {
+            "type": "array", 
+            "metadata": {
+                "description": "An object containing modules basenames."
+            },
+            "defaultValue": [ ]
         }
     },
     "variables": {
@@ -127,6 +147,12 @@
                     },
                     "certificates": {
                         "value": "[parameters('certificates')]"
+                    },
+                    "runbooks": {
+                        "value": "[parameters('runbooks')]"
+                    },
+                    "runbooksStartTime": {
+                        "value": "[parameters('runbooksStartTime')]"
                     }
                 },
                 "debugSetting": {
