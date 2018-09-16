@@ -104,7 +104,7 @@ class Deployment {
                         $this.OptionalParameters[$_] = $this.Certificates
                     }
                     "runbooksStartTime" {
-                        $this.OptionalParameters[$_] = (Get-Date).ToUniversalTime().AddMinutes(15).ToString("MM/dd/yyyy HH:mm:ss")
+                        $this.OptionalParameters[$_] = (Get-Date).ToUniversalTime().AddHours(1).ToString("MM/dd/yyyy HH:mm:ss")
                     }
                 }
             } else {
