@@ -106,13 +106,6 @@ class Deployment {
                     "runbooksStartTime" {
                         $this.OptionalParameters[$_] = (Get-Date).ToUniversalTime().AddMinutes(15).ToString("MM/dd/yyyy HH:mm:ss")
                     }
-                    "runbooks" {
-                        $runbooks = @()
-                        Get-ChildItem -File .\runbooks | % { 
-                            $runbooks += [Runbook]::new($_.BaseName, "Hour", 8, @{ ConnectionName = "automationConnection" }).GetRunbook()
-                        }
-                        $this.OptionalParameters[$_] = $runbooks
-                    }
                 }
             } else {
                 switch ($_) {
