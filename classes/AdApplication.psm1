@@ -40,6 +40,7 @@ class AdApplication {
             -StartDate ([System.DateTime]::Now)
         
         # Wait a moment for the service principal, then set role assignment.
+        Get-AzureRmRoleAssignment | ? DisplayName -eq $null | Remove-AzureRmRoleAssignment
         Start-Sleep -Seconds 8
         New-AzureRmRoleAssignment -ApplicationId $this.ApplicationId `
             -RoleDefinitionName Contributor

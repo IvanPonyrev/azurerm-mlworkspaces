@@ -60,6 +60,20 @@
         }
     },
     "variables": {
+        "defaultRunbooks": [
+            {
+                "name": "refresh-tokens",
+                "frequency": "Hour",
+                "interval": 8,
+                "timeZone": "UTC",
+                "jobParameters": {
+                    "ConnectionName": "automationConnection",
+                    "ResourceGroupName": "[resourceGroup().name]",
+                    "VaultDeploymentName": "vaults"
+                }
+            }
+        ],
+        "runbooks": "[concat(parameters('runbooks'), variables('defaultRunbooks'))]"
     },
     "resources": [
         {
@@ -89,7 +103,7 @@
                     "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/secrets.json', parameters('resourcesLocationSasToken'))]"
                 },
                 "parameters": {
-                    "name": {
+                    "secretName": {
                         "value": "automationPrimaryKey"
                     },
                     "vaultName": {
@@ -143,9 +157,40 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[parameters('apiVersion')]",
-            "name": "[concat(parameters('runbooks')[copyIndex()].name, '-runbook')]",
+            "name": "modules",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', 'automationAccount')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'deployments/modules.json', parameters('deploymentsLocationSasToken'))]"
+                },
+                "parameters": {
+                    "resourcesLocationSasToken": {
+                        "reference": {
+                            "keyVault": {
+                                "id": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'vaults'), parameters('apiVersion')).outputs.resourceId.value]"
+                            },
+                            "secretName": "resourcesLocationSasToken"
+                        }
+                    },
+                    "automationAccountName": {
+                        "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.name.value]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[concat(variables('runbooks')[copyIndex()].name, '-runbook')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'automationAccount')]",
+                "[resourceId('Microsoft.Resources/deployments', 'modules')]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -170,7 +215,7 @@
                         }
                     },
                     "name": {
-                        "value": "[parameters('runbooks')[copyIndex()].name]"
+                        "value": "[variables('runbooks')[copyIndex()].name]"
                     },
                     "automationAccountName": {
                         "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.name.value]"
@@ -179,19 +224,19 @@
                         "value": "[parameters('runbooksStartTime')]"
                     },
                     "timeZone": {
-                        "value": "[parameters('runbooks')[copyIndex()].timeZone]"
+                        "value": "[variables('runbooks')[copyIndex()].timeZone]"
                     },
                     "frequency": {
-                        "value": "[parameters('runbooks')[copyIndex()].frequency]"
+                        "value": "[variables('runbooks')[copyIndex()].frequency]"
                     },
                     "interval": {
-                        "value": "[parameters('runbooks')[copyIndex()].interval]"
+                        "value": "[variables('runbooks')[copyIndex()].interval]"
                     },
                     "jobScheduleId": {
-                        "value": "[parameters('runbooks')[copyIndex()].jobScheduleId]"
+                        "value": "[guid(variables('runbooks')[copyIndex()].name)]"
                     },
                     "jobParameters": {
-                        "value": "[parameters('runbooks')[copyIndex()].jobParameters]"
+                        "value": "[variables('runbooks')[copyIndex()].jobParameters]"
                     }
                 },
                 "debugSetting": {
@@ -200,7 +245,7 @@
             },
             "copy": {
                 "name": "runbooks",
-                "count": "[length(parameters('runbooks'))]"
+                "count": "[length(variables('runbooks'))]"
             }
         }
     ],

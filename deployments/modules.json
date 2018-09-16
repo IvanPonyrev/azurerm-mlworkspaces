@@ -1,0 +1,174 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "resourcesLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Sas token to resources container."
+            },
+            "defaultValue": null
+        },
+        "automationAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "The apiVersion of this resource."
+            }
+        },
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource location."
+            },
+            "defaultValue": "[resourceGroup().location]"
+        },
+        "apiVersion": {
+            "type": "string",
+            "metadata": {
+                "description": "The apiVersion of this resource."
+            },
+            "defaultValue": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
+        },
+        "modules": {
+            "type": "array",
+            "metadata": {
+                "description": "An object containing modules basenames."
+            },
+            "defaultValue": []
+        }
+    },
+    "variables": {
+        "Level2": [
+            {
+                "name": "AzureRm.Profile",
+                "uri": "https://devopsgallerystorage.blob.core.windows.net/packages/azurerm.profile.5.5.1.nupkg"
+            }
+        ],
+        "Level1": [
+            {
+                "Name": "Azure.Storage",
+                "Uri": "https://devopsgallerystorage.blob.core.windows.net:443/packages/azure.storage.4.5.0.nupkg"
+            },
+            {
+                "Name": "AzureRM.Automation",
+                "Uri": "https://devopsgallerystorage.blob.core.windows.net:443/packages/azurerm.automation.5.1.1.nupkg"
+            },
+            {
+                "Name": "AzureRM.Resources",
+                "Uri": "https://devopsgallerystorage.blob.core.windows.net:443/packages/azurerm.resources.6.4.2.nupkg"
+            },
+            {
+                "Name": "AzureRM.MachineLearning",
+                "Uri": "https://devopsgallerystorage.blob.core.windows.net:443/packages/azurerm.machinelearning.0.18.5.nupkg"
+            }
+        ],
+        "Level0": [
+            {
+                "Name": "Azure",
+                "Uri": "https://devopsgallerystorage.blob.core.windows.net:443/packages/azure.5.3.0.nupkg"
+            },
+            {
+                "Name": "AzureRM.Storage",
+                "Uri": "https://devopsgallerystorage.blob.core.windows.net:443/packages/azurerm.storage.5.0.4.nupkg"
+            }
+        ]
+    },
+    "resources": [
+        {
+            "name": "[variables('Level2')[copyIndex()].Name]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/modules.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "moduleName": {
+                        "value": "[variables('Level2')[copyIndex()].Name]"
+                    },
+                    "automationAccountName": {
+                        "value": "[parameters('automationAccountName')]"
+                    },
+                    "uri": {
+                        "value": "[variables('Level2')[copyIndex()].Uri]"
+                    }
+                }
+            },
+            "copy": {
+                "name": "Level2ModulesInstall",
+                "count": "[length(variables('Level2'))]",
+                "mode": "Serial",
+                "batchSize": 1
+            }
+        },
+        {
+            "name": "[variables('Level1')[copyIndex()].Name]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "dependsOn": [
+                "Level2ModulesInstall"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/modules.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "moduleName": {
+                        "value": "[variables('Level1')[copyIndex()].Name]"
+                    },
+                    "automationAccountName": {
+                        "value": "[parameters('automationAccountName')]"
+                    },
+                    "uri": {
+                        "value": "[variables('Level1')[copyIndex()].Uri]"
+                    }
+                }
+            },
+            "copy": {
+                "name": "Level1ModulesInstall",
+                "count": "[length(variables('Level1'))]",
+                "mode": "Serial",
+                "batchSize": 1
+            }
+        },
+        {
+            "name": "[variables('Level0')[copyIndex()].Name]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "dependsOn": [
+                "Level1ModulesInstall"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/modules.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "moduleName": {
+                        "value": "[variables('Level0')[copyIndex()].Name]"
+                    },
+                    "automationAccountName": {
+                        "value": "[parameters('automationAccountName')]"
+                    },
+                    "uri": {
+                        "value": "[variables('Level0')[copyIndex()].Uri]"
+                    }
+                }
+            },
+            "copy": {
+                "name": "Level0ModulesInstall",
+                "count": "[length(variables('Level0'))]",
+                "mode": "Serial",
+                "batchSize": 1
+            }
+        }
+    ],
+    "outputs": {
+        "apiVersion": {
+            "type": "string",
+            "value": "[parameters('apiVersion')]"
+        }
+    }
+}
