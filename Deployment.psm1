@@ -68,7 +68,7 @@ class Deployment {
         Set-AzureRmAutomationCertificate -AutomationAccountName automation `
             -ResourceGroupName $this.ResourceGroupName `
             -Name $this.AutomationApplication.Certificate.Name `
-            -Path $this.AutomationApplication.Certificate.GetPath() `
+            -Path "$($this.AutomationApplication.Certificate.GetPath())\$($this.AutomationApplication.Certificate.Name).pfx" `
             -Password (ConvertTo-SecureString -AsPlainText -Force $this.AutomationApplication.Certificate.GetPassword().value)
     }
 
@@ -104,14 +104,7 @@ class Deployment {
                         $this.OptionalParameters[$_] = $this.Certificates
                     }
                     "runbooksStartTime" {
-                        $this.OptionalParameters[$_] = (Get-Date).ToUniversalTime().AddMinutes(15).ToString("MM/dd/yyyy HH:mm:ss")
-                    }
-                    "runbooks" {
-                        $runbooks = @()
-                        Get-ChildItem -File .\runbooks | % { 
-                            $runbooks += [Runbook]::new($_.BaseName, "Hour", 8, @{ ConnectionName = "automationConnection" }).GetRunbook()
-                        }
-                        $this.OptionalParameters[$_] = $runbooks
+                        $this.OptionalParameters[$_] = (Get-Date).ToUniversalTime().AddHours(1).ToString("MM/dd/yyyy HH:mm:ss")
                     }
                 }
             } else {

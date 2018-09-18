@@ -94,7 +94,7 @@
                     "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/secrets.json', parameters('resourcesLocationSasToken'))]"
                 },
                 "parameters": {
-                    "name": {
+                    "secretName": {
                         "value": "[parameters('secrets').secrets[copyIndex()].name]"
                     },
                     "vaultName": {

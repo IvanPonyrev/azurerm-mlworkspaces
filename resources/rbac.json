@@ -1,0 +1,80 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "roleNameGuid": {
+            "type": "string",
+            "metadata": {
+                "description": "A new guid used to identify the role assignment."
+            },
+            "defaultValue": "[guid(deployment().name, subscription().subscriptionId)]"
+        },
+        "apiVersion": {
+            "type": "string",
+            "metadata": {
+                "description": "The apiVersion of this resource."
+            },
+            "defaultValue": "[providers('Microsoft.Authorization', 'roleAssignments').apiVersions[0]]"
+        },
+        "principalId": {
+            "type": "string",
+            "metadata": {
+                "description": "The principal to assign the role to."
+            }
+        },
+        "builtInRoleType": {
+            "type": "string",
+            "metadata": {
+                "description": "The kind of resource."
+            },
+            "defaultValue": "Contributor",
+            "allowedValues": [
+                "Contributor",
+                "Reader",
+                "Owner"
+            ]
+        },
+        "scope": {
+            "type": "string",
+            "metadata": {
+                "description": "The scope of this role."
+            },
+            "defaultValue": "[resourceGroup().id]"
+        }
+    },
+    "variables": {
+        "Owner": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', '8e3af657-a8ff-443c-a75c-2fe8c4bcb635')]",
+        "Contributor": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+        "Reader": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[parameters('roleNameGuid')]",
+            "properties": {
+                "scope": "[parameters('scope')]",
+                "principalId": "[parameters('principalId')]",
+                "roleDefinitionId": "[variables(parameters('builtInRoleType'))]"
+            }
+        }
+    ],
+    "outputs": {
+        "name": {
+            "type": "string",
+            "value": "[parameters('roleNameGuid')]"
+        },
+        "apiVersion": {
+            "type": "string",
+            "value": "[parameters('apiVersion')]"
+        },
+        "resourceId": {
+            "type": "string",
+            "value": "[resourceId('Microsoft.Authorization/roleAssignments', parameters('roleNameGuid'))]"
+        },
+        "reference": {
+            "type": "object",
+            "value": "[reference(resourceId('Microsoft.Authorization/roleAssignments', parameters('roleNameGuid')), parameters('apiVersion'))]"
+        }
+    }
+}

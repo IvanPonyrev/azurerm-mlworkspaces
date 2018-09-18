@@ -1,17 +1,11 @@
-# Deploy storageAccounts and vaults.
+# Deploy management resources, web application, sql, and cosmos db.
 
-The following command will deploy storageAccounts and vaults with secrets. Deployment parameters must be updated with the id of AzureADUser or AzureADUserGroup to which vault access will be given.
+The following command will deploy all resources including storageAccounts, vaults, automation, secrets, runbooks, updated automation modules from Azure gallery, sql with database, cosmos db, and a web application. If you wish to deploy or update individual deployments, please see below.
 
 .\deploy.ps1 -UploadArtifacts -DeployStorage
 
-# Deploy virtualNetwork
+# Deploy individual deployments or resources.
 
-Deployment of virtual network has been broken out to separate deployment to keep parameters files from becoming gigantic.
+To deploy an individual deployment, after management resources have been deployed. In this example, we will deploy the automation deployment.
 
-.\deploy.ps1 -TemplateFile .\deployments\network.json -TemplateParametersFile .\params\network.parameters.json -LinkedResourceGroups @()
-
-# Deploy webapp
-
-Deployment of a web application.
-
-.\deploy.ps1 -TemplateFile .\deployments\webapp.json -LinkedResourceGroups @()
+.\deploy.ps1 -LinkedResourceGroups @() -TemplateFile .\deployments\automation.json 
