@@ -68,7 +68,7 @@ class Deployment {
         Set-AzureRmAutomationCertificate -AutomationAccountName automation `
             -ResourceGroupName $this.ResourceGroupName `
             -Name $this.AutomationApplication.Certificate.Name `
-            -Path $this.AutomationApplication.Certificate.GetPath() `
+            -Path "$($this.AutomationApplication.Certificate.GetPath())\$($this.AutomationApplication.Certificate.Name).pfx" `
             -Password (ConvertTo-SecureString -AsPlainText -Force $this.AutomationApplication.Certificate.GetPassword().value)
     }
 

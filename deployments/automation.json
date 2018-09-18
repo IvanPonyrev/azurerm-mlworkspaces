@@ -233,7 +233,7 @@
                         "value": "[variables('runbooks')[copyIndex()].interval]"
                     },
                     "jobScheduleId": {
-                        "value": "[guid(variables('runbooks')[copyIndex()].name)]"
+                        "value": "[guid(variables('runbooks')[copyIndex()].name, resourceGroup().id, subscription().subscriptionId)]"
                     },
                     "jobParameters": {
                         "value": "[variables('runbooks')[copyIndex()].jobParameters]"

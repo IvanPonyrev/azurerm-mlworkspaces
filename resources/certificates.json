@@ -2,7 +2,7 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "name": {
+        "certificateName": {
             "type": "string",
             "metadata": {
                 "description": "The name to be given to this automation account."
@@ -61,7 +61,7 @@
         {
             "type": "Microsoft.Automation/automationAccounts/certificates",
             "apiVersion": "[parameters('apiVersion')]",
-            "name": "[concat(parameters('automationAccountName'), '/', parameters('name'))]",
+            "name": "[concat(parameters('automationAccountName'), '/', parameters('certificateName'))]",
             "location": "[parameters('location')]",
             "properties": {
                 "base64Value": "[parameters('base64Value')]",
@@ -74,7 +74,7 @@
     "outputs": {
         "name": {
             "type": "string",
-            "value": "[parameters('name')]"
+            "value": "[parameters('certificateName')]"
         },
         "apiVersion": {
             "type": "string",
@@ -82,7 +82,7 @@
         },
         "resourceId": {
             "type": "string",
-            "value": "[resourceId('Microsoft.Automation/automationAccounts/certificates', parameters('automationAccountName'), parameters('name'))]"
+            "value": "[resourceId('Microsoft.Automation/automationAccounts/certificates', parameters('automationAccountName'), parameters('certificateName'))]"
         },
         "thumbprint": {
             "type": "string",
