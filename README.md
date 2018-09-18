@@ -9,3 +9,16 @@ The following command will deploy all resources including storageAccounts, vault
 To deploy an individual deployment, after management resources have been deployed. In this example, we will deploy the automation deployment.
 
 .\deploy.ps1 -LinkedResourceGroups @() -TemplateFile .\deployments\automation.json 
+
+In this example, an individual resource template is deployed to automation.
+
+New-AzureRmResourceGroupDeployment -ResourceGroupName management `
+    -Name scheduletest `
+    -Mode Incremental `
+    -TemplateParameterObject @{ 
+        scheduleName = "testing"; 
+        automationAccountName = "automation";
+        startTime = (Get-Date).AddMinutes(15); 
+        interval = 1; 
+        frequency = "Day" } `
+    -TemplateFile .\resources\schedules.json
