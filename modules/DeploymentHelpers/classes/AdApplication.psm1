@@ -1,4 +1,3 @@
-using module .\Pfx.psm1
 class AdApplication {
 
     hidden [string] $Name

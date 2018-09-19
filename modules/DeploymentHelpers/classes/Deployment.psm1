@@ -1,9 +1,3 @@
-using module .\classes\Token.psm1
-using module .\classes\Certificate.psm1
-using module .\classes\Pfx.psm1
-using module .\classes\Runbook.psm1
-using module .\classes\AdApplication.psm1
-
 class Deployment {
     [string] $ResourceGroupName
 
@@ -46,8 +40,13 @@ class Deployment {
                 $false = Get-AzureStorageContainer -Name $_.BaseName -Context $this.StorageAccount.Context;
             }[ $null -eq (Get-AzureStorageContainer -Name $_.BaseName -Context $this.StorageAccount.Context) ]
 
+            $extensions = @{ 
+                $true = @("$($_.FullName)\*.json", "$($_.FullName)\*.ps1", "$($_.FullName)\*.psm1")
+                $false = "$($_.FullName)\*.zip"
+            }[ $_.BaseName -eq "modules" ]
+
             # Upload to blobs.
-            Get-ChildItem "$($_.FullName)\*.json", "$($_.FullName)\*.ps1", "$($_.FullName)\*.psm1" -File | % {
+            Get-ChildItem $extensions -File | % {
                 Set-AzureStorageBlobContent -File "$($_.FullName)" `
                     -Blob @{ $true = "$($_.Name)"; $false = "$($_.BaseName)" }[ $_.Extension -eq ".json" ] `
                     -Container $storageContainer.Name `
