@@ -113,7 +113,7 @@
                     "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/databases.json', parameters('resourcesLocationSasToken'))]"
                 },
                 "parameters": {
-                    "name": {
+                    "databaseName": {
                         "value": "[concat(parameters('name'), '-database')]"
                     },
                     "sqlServerName": {
