@@ -1,0 +1,148 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "budgetName": {
+      "type": "string",
+      "metadata": {
+        "description": "Budget name."
+      },
+      "defaultValue": "[concat('budget', subscription().displayName)]"
+    },
+    "apiVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "The desired apiVersion of this resource. Default is latest."
+      },
+      "defaultValue": "[providers('Microsoft.Consumption', 'budgets').apiVersions[0]]"
+    },
+    "category": {
+      "type": "string",
+      "metadata": {
+        "description": "The category of the budget, whether the budget tracks cost or usage."
+      },
+      "allowedValues": [
+        "Cost",
+        "Usage"
+      ],
+      "defaultValue": "Cost"
+    },
+    "amount": {
+      "type": "int",
+      "metadata": {
+        "description": "The total amount of cost to track with the budget."
+      },
+      "defaultValue": 40
+    },
+    "timeGrain": {
+      "type": "string",
+      "metadata": {
+        "description": "The time covered by a budget. Tracking of the amount will be reset based on the time grain."
+      },
+      "allowedValues": [
+        "Monthly",
+        "Quarterly",
+        "Annually"
+      ],
+      "defaultValue": "Monthly"
+    },
+    "startDate": {
+      "type": "string",
+      "metadata": {
+        "description": "The start date for the budget."
+      },
+      "defaultValue": "01/01/2018 01:01:01"
+    },
+    "endDate": {
+      "type": "string",
+      "metadata": {
+        "description": "The end date for the budget. Default is ten years from start date."
+      },
+      "defaultValue": "01/01/2020 01:01:01"
+    },
+    "filters": {
+      "type": "object",
+      "metadata": {
+        "description": "A boolean indicating whether or not the service encrypts the data as it is stored."
+      },
+      "defaultValue": { }
+    },
+    "notificationsEnabled": {
+      "type": "bool",
+      "metadata": {
+        "description": "Indicates whether notification is enabled."
+      },
+      "defaultValue": true
+    },
+    "notificationsOperator": {
+      "type": "string",
+      "metadata": {
+        "description": "The comparison operator."
+      },
+      "allowedValues": [
+        "EqualTo",
+        "GreaterThan",
+        "GreaterThanOrEqualTo"
+      ],
+      "defaultValue": "GreaterThanOrEqualTo"
+    },
+    "contactEmails": {
+      "type": "array",
+      "metadata": {
+        "description": "Email addresses to send budget notifications when threshold is exceeded."
+      }
+    },
+    "threshold": {
+      "type": "int",
+      "metadata": {
+        "description": "Threshold value associated with notification. Notification sent when cost exceeds threshold, always a percent 0 to 1000."
+      },
+      "minValue": 0,
+      "maxValue": 1000,
+      "defaultValue": 200
+    }
+  },
+  "variables": {
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Consumption/budgets",
+      "apiVersion": "[parameters('apiVersion')]",
+      "name": "[parameters('budgetName')]",
+      "properties": {
+        "amount": "[parameters('amount')]",
+        "category": "[parameters('category')]",
+        "filters": "[parameters('filters')]",
+        "notifications": {
+          "enabled": "[parameters('notificationsEnabled')]",
+          "operator": "[parameters('notificationsOperator')]",
+          "threshold": "[parameters('threshold')]",
+          "contactEmails": "[parameters('contactEmails')]"
+        },
+        "timePeriod": {
+          "startDate": "[parameters('startDate')]",
+          "endDate": "[parameters('endDate')]"
+        },
+        "timeGrain": "[parameters('timeGrain')]"
+      }
+    }
+  ],
+  "outputs": {
+    "name": {
+      "type": "string",
+      "value": "[parameters('budgetName')]"
+    },
+    "apiVersion": {
+      "type": "string",
+      "value": "[parameters('apiVersion')]"
+    },
+    "resourceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Consumption/budgets', parameters('budgetName'))]"
+    },
+    "reference": {
+      "type": "object",
+      "value": "[reference(resourceId('Microsoft.Consumption/budgets', parameters('budgetName')), parameters('apiVersion'))]"
+    }
+  }
+}
