@@ -177,6 +177,9 @@
                     },
                     "automationAccountName": {
                         "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.name.value]"
+                    },
+                    "modules": {
+                        "value": "[parameters('modules')]"
                     }
                 },
                 "debugSetting": {

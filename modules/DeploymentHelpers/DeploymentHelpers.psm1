@@ -1,3 +1,10 @@
+using module .\classes\AdApplication.psm1
+using module .\classes\Certificate.psm1
+using module .\classes\Deployment.psm1
+using module .\classes\Pfx.psm1
+using module .\classes\Token.psm1
+using module .\classes\Runbook.psm1
+
 function New-AdApplication {
     Param(
         [string] [Parameter(Mandatory=$true)] $Name

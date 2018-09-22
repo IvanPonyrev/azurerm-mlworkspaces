@@ -1,3 +1,4 @@
+using module .\Certificate.psm1
 class Pfx: Certificate {
 
     hidden [string] $Password

@@ -42,8 +42,11 @@ $TemplateParametersFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combin
 if ($DeployStorage) {
 	New-AzureRmResourceGroupDeployment -Name "storageAccounts" -ResourceGroupName $ResourceGroupName -TemplateFile ".\resources\storageAccounts.json"
 }
+Get-ChildItem modules -Directory | ForEach-Object { 
+	Compress-Archive -Path $_.FullName -DestinationPath "$($_.FullName).zip" -Update
+}
 
-$Deployment = New-TemplateDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $TemplateFile -TemplateParameterFile $TemplateParametersFile
+$Deployment = New-TemplateDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $TemplateFile -TemplateParametersFile $TemplateParametersFile
 if ($UploadArtifacts) {
 	$Deployment.UploadArtifacts()
 }
