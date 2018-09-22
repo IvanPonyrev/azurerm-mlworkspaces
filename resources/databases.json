@@ -58,7 +58,7 @@
     {
       "type": "Microsoft.Sql/servers/databases",
       "apiVersion": "[parameters('apiVersion')]",
-      "name": "[concat(parameters('sqlServerName'), '/', parameters('name'))]",
+      "name": "[concat(parameters('sqlServerName'), '/', parameters('databaseName'))]",
       "location": "[parameters('location')]",
       "properties": {
         "edition": "[parameters('edition')]",
@@ -71,7 +71,7 @@
   "outputs": {
     "name": {
       "type": "string",
-      "value": "[parameters('name')]"
+      "value": "[parameters('databaseName')]"
     },
     "apiVersion": {
       "type": "string",
@@ -79,11 +79,11 @@
     },
     "resourceId": {
       "type": "string",
-      "value": "[resourceId('Microsoft.Sql/servers/databases', parameters('sqlServerName'), parameters('name'))]"
+      "value": "[resourceId('Microsoft.Sql/servers/databases', parameters('sqlServerName'), parameters('databaseName'))]"
     },
     "reference": {
       "type": "object",
-      "value": "[reference(resourceId('Microsoft.Sql/servers/databases', parameters('sqlServerName'), parameters('name')), parameters('apiVersion'))]"
+      "value": "[reference(resourceId('Microsoft.Sql/servers/databases', parameters('sqlServerName'), parameters('databaseName')), parameters('apiVersion'))]"
     }
   }
 }
