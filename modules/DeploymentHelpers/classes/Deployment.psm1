@@ -1,9 +1,6 @@
-using module .\classes\Token.psm1
-using module .\classes\Certificate.psm1
-using module .\classes\Pfx.psm1
-using module .\classes\Runbook.psm1
-using module .\classes\AdApplication.psm1
-
+using module .\AdApplication.psm1
+using module .\Token.psm1
+using module .\Certificate.psm1
 class Deployment {
     [string] $ResourceGroupName
 
@@ -25,6 +22,8 @@ class Deployment {
         certificates = @()
     }
 
+    [array] $Modules = @()
+
     Deployment([string] $ResourceGroupName, [string] $TemplateFile, [string] $TemplateParametersFile) {
         $this.ResourceGroupName = $ResourceGroupName
         $this.TemplateFile = Get-Content $TemplateFile -Raw | ConvertFrom-Json
@@ -39,15 +38,21 @@ class Deployment {
     .Description Uploads all artifacts in child directories of PSScriptRoot.
     #>
     [void] UploadArtifacts() {
-        Get-ChildItem $PSScriptRoot -Directory | ForEach-Object {
+        Get-ChildItem $PWD -Directory | ForEach-Object {
             # Create or get containers.
             $storageContainer = @{
                 $true = New-AzureStorageContainer -Name $_.BaseName -Context $this.StorageAccount.Context -ErrorAction SilentlyContinue;
                 $false = Get-AzureStorageContainer -Name $_.BaseName -Context $this.StorageAccount.Context;
             }[ $null -eq (Get-AzureStorageContainer -Name $_.BaseName -Context $this.StorageAccount.Context) ]
 
+            # modules directory needs to have zipped modules.
+            $extensions = @{ 
+                $true = @("$($_.FullName)\*.json", "$($_.FullName)\*.ps1", "$($_.FullName)\*.psm1")
+                $false = "$($_.FullName)\*.zip"
+            }[ $_.BaseName -ne "modules" ]
+
             # Upload to blobs.
-            Get-ChildItem "$($_.FullName)\*.json", "$($_.FullName)\*.ps1", "$($_.FullName)\*.psm1" -File | % {
+            Get-ChildItem $extensions -File | ForEach-Object {
                 Set-AzureStorageBlobContent -File "$($_.FullName)" `
                     -Blob @{ $true = "$($_.Name)"; $false = "$($_.BaseName)" }[ $_.Extension -eq ".json" ] `
                     -Container $storageContainer.Name `
@@ -68,7 +73,7 @@ class Deployment {
         Set-AzureRmAutomationCertificate -AutomationAccountName automation `
             -ResourceGroupName $this.ResourceGroupName `
             -Name $this.AutomationApplication.Certificate.Name `
-            -Path $this.AutomationApplication.Certificate.GetPath() `
+            -Path "$($this.AutomationApplication.Certificate.GetPath())\$($this.AutomationApplication.Certificate.Name).pfx" `
             -Password (ConvertTo-SecureString -AsPlainText -Force $this.AutomationApplication.Certificate.GetPassword().value)
     }
 
@@ -81,7 +86,7 @@ class Deployment {
     }
 
     <# .Description Returns hashtable of optional parameters. #>
-    [hashtable] GetOptionalParameters() {
+    [hashtable] GetOptionalParameters() {                                       # Tidy this stuff up.
         $this.GetSasTokens()
         $this.TemplateFile.parameters.PSObject.Properties.Name | ForEach-Object {
             if ($this.TemplateParametersFile.parameters.PSObject.Properties.Name -notcontains $_) {
@@ -95,7 +100,7 @@ class Deployment {
                     }
                     "vaultAdminId" {
                         $this.OptionalParameters[$_] = ConvertTo-SecureString -AsPlainText -Force `
-                            (Get-AzureRmADUser | ? UserPrincipalName -match (Get-AzureRmContext).Account.Id.ToLower().Replace("@", "_") | select -First 1 Id).Id.ToString()
+                            (Get-AzureRmADUser | Where-Object UserPrincipalName -match (Get-AzureRmContext).Account.Id.ToLower().Replace("@", "_") | select -First 1 Id).Id.ToString()
                     }
                     "applicationId" {
                         $this.OptionalParameters[$_] = $this.AutomationApplication.GetApplicationId()
@@ -104,14 +109,17 @@ class Deployment {
                         $this.OptionalParameters[$_] = $this.Certificates
                     }
                     "runbooksStartTime" {
-                        $this.OptionalParameters[$_] = (Get-Date).ToUniversalTime().AddMinutes(15).ToString("MM/dd/yyyy HH:mm:ss")
+                        $this.OptionalParameters[$_] = (Get-Date).ToUniversalTime().AddHours(1).ToString("MM/dd/yyyy HH:mm:ss")
                     }
-                    "runbooks" {
-                        $runbooks = @()
-                        Get-ChildItem -File .\runbooks | % { 
-                            $runbooks += [Runbook]::new($_.BaseName, "Hour", 8, @{ ConnectionName = "automationConnection" }).GetRunbook()
+                    "modules" {
+                        $modulesLocationSasToken = $this.Secrets.secrets | ? Name -eq modulesLocationSasToken
+                        Get-ChildItem "$PWD\modules\*.zip" -File | ForEach-Object {
+                            $this.Modules += @{
+                                Name = $_.BaseName.ToString() 
+                                Uri = "$($this.StorageAccount.Context.BlobEndpoint)modules/$($_.BaseName)$($modulesLocationSasToken.value)" 
+                            }
                         }
-                        $this.OptionalParameters[$_] = $runbooks
+                        $this.OptionalParameters[$_] = $this.Modules
                     }
                 }
             } else {

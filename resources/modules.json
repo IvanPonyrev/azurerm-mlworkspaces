@@ -1,0 +1,71 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "moduleName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name to be given this module."
+            }
+        },
+        "automationAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the automation account."
+            }
+        },
+        "apiVersion": {
+            "type": "string",
+            "metadata": {
+                "description": "The apiVersion of this resource."
+            },
+            "defaultValue": "[providers('Microsoft.Automation', 'automationAccounts').apiVersions[0]]"
+        },
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource location."
+            },
+            "defaultValue": "eastus2"
+        },
+        "uri": {
+            "type": "string",
+            "metadata": {
+                "description": "Sets the uri of the runbook content."
+            }
+        }
+    },
+    "variables": {
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Automation/automationAccounts/modules",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[concat(parameters('automationAccountName'), '/', parameters('moduleName'))]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "contentLink": {
+                    "uri": "[parameters('uri')]"
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "name": {
+            "type": "string",
+            "value": "[parameters('moduleName')]"
+        },
+        "apiVersion": {
+            "type": "string",
+            "value": "[parameters('apiVersion')]"
+        },
+        "resourceId": {
+            "type": "string",
+            "value": "[resourceId('Microsoft.Automation/automationAccounts/modules', parameters('automationAccountName'), parameters('moduleName'))]"
+        },
+        "reference": {
+            "type": "object",
+            "value": "[reference(resourceId('Microsoft.Automation/automationAccounts/modules', parameters('automationAccountName'), parameters('moduleName')), parameters('apiVersion'))]"
+        }
+    }
+}

@@ -111,7 +111,7 @@
                     "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/schedules.json', parameters('resourcesLocationSasToken'))]"
                 },
                 "parameters": {
-                    "name": {
+                    "scheduleName": {
                         "value": "[concat(parameters('name'), '-schedule')]"
                     },
                     "automationAccountName": {

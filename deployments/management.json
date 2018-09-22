@@ -75,45 +75,36 @@
         }
     },
     "variables": {
+        "defaultSecrets": [
+            {
+                "name": "defaultPassword",
+                "value": "[guid(subscription().subscriptionId)]"
+            }
+        ],
+        "secrets": {
+            "secrets": "[concat(parameters('secrets').secrets, variables('defaultSecrets'))]"
+        }
     },
     "resources": [
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[parameters('apiVersion')]",
-            "name": "managementResources",
+            "name": "vaults",
             "resourceGroup": "management",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'deployments/management.json', parameters('deploymentsLocationSasToken'))]"
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'deployments/vault.json', parameters('deploymentsLocationSasToken'))]"
                 },
                 "parameters": {
-                    "deploymentsLocationSasToken": {
-                        "value": "[parameters('deploymentsLocationSasToken')]"
+                    "secrets": {
+                        "value": "[variables('secrets')]"
                     },
                     "resourcesLocationSasToken": {
                         "value": "[parameters('resourcesLocationSasToken')]"
                     },
-                    "applicationId": {
-                        "value": "[parameters('applicationId')]"
-                    },
                     "vaultAdminId": {
                         "value": "[parameters('vaultAdminId')]"
-                    },
-                    "certificates": {
-                        "value": "[parameters('certificates')]"
-                    },
-                    "secrets": {
-                        "value": "[parameters('secrets')]"
-                    },
-                    "runbooks": {
-                        "value": "[parameters('runbooks')]"
-                    },
-                    "runbooksStartTime": {
-                        "value": "[parameters('runbooksStartTime')]"
-                    },
-                    "modules": {
-                        "value": "[parameters('modules')]"
                     }
                 },
                 "debugSetting": {
@@ -124,22 +115,47 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[parameters('apiVersion')]",
-            "name": "appResources",
-            "resourceGroup": "app",
+            "name": "automationAccounts",
+            "resourceGroup": "management",
             "dependsOn": [
-                "[resourceId('management', 'Microsoft.Resources/deployments', 'managementResources')]"
+                "[resourceId('Microsoft.Resources/deployments', 'vaults')]"
             ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'deployments/webapp.json', parameters('deploymentsLocationSasToken'))]"
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'deployments/automation.json', parameters('deploymentsLocationSasToken'))]"
                 },
                 "parameters": {
                     "deploymentsLocationSasToken": {
-                        "value": "[parameters('deploymentsLocationSasToken')]"
+                        "reference": {
+                            "keyVault": {
+                                "id": "[reference(resourceId('Microsoft.Resources/deployments', 'vaults'), parameters('apiVersion')).outputs.resourceId.value]"
+                            },
+                            "secretName": "deploymentsLocationSasToken"
+                        }
                     },
                     "resourcesLocationSasToken": {
-                        "value": "[parameters('resourcesLocationSasToken')]"
+                        "reference": {
+                            "keyVault": {
+                                "id": "[reference(resourceId('Microsoft.Resources/deployments', 'vaults'), parameters('apiVersion')).outputs.resourceId.value]"
+                            },
+                            "secretName": "resourcesLocationSasToken"
+                        }
+                    },
+                    "applicationId": {
+                        "value": "[parameters('applicationId')]"
+                    },
+                    "certificates": {
+                        "value": "[parameters('certificates')]"
+                    },
+                    "runbooks": {
+                        "value": "[parameters('runbooks')]"
+                    },
+                    "runbooksStartTime": {
+                        "value": "[parameters('runbooksStartTime')]"
+                    },
+                    "modules": {
+                        "value": "[parameters('modules')]"
                     }
                 },
                 "debugSetting": {

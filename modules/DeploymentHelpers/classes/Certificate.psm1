@@ -1,8 +1,10 @@
 class Certificate {
     [string] $Name
-
+    
     hidden [System.Security.Cryptography.X509Certificates.X509Certificate2] $Certificate
-
+    
+    hidden [string] $Temp = "$($env:TEMP)\~$([System.IO.Path]::GetRandomFileName().Split('.')[0])"
+    
     hidden [string] $CertStoreLocation = "Cert:\CurrentUser\My"
 
     hidden [string] $Thumbprint
@@ -12,6 +14,7 @@ class Certificate {
     Certificate([string] $Name) {
         $this.Name = $Name
         $this.GenerateCertificate()
+        New-Item -Type Directory -Path $this.Temp
     }
 
     <# .Description Generates a certificate. #>
@@ -36,16 +39,29 @@ class Certificate {
         }
     }
 
+    <# .Description Returns certificate in object format. #>
+    [void] ExportCertificate() {
+        Export-Certificate -Cert $this.Certificate `
+            -FilePath "$($this.Temp)\$($this.Name).cer"
+    }
+
+    <# .Description Returns certificate in object format. #>
     [string] GetEndDate() {
         return $this.Certificate.NotAfter
     }
 
+    <# .Description Returns the certificate start date. #>
     [string] GetStartDate() {
         return $this.Certificate.NotBefore
+    }
+
+    [string] GetPath() {
+        return $this.Temp
     }
 
     <# .Description Removes the generated certificate. #>
     [void] RemoveCertificate() {
         Remove-Item $this.Certificate.PSPath
+        Remove-Item $this.Temp -Recurse
     }
 }

@@ -1,6 +1,5 @@
 #Requires -Version 5.0
 #Requires -Modules PKI
-using module .\Deployment.psm1
 
 Param(
     [string] [Parameter(Mandatory=$false)] $ResourceGroupLocation = 'eastus',
@@ -20,6 +19,8 @@ try {
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 5
+
+Import-Module .\modules\DeploymentHelpers
 
 function Format-ValidationOutput {
     param ($ValidationOutput, [int] $Depth = 0)
@@ -41,8 +42,11 @@ $TemplateParametersFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combin
 if ($DeployStorage) {
 	New-AzureRmResourceGroupDeployment -Name "storageAccounts" -ResourceGroupName $ResourceGroupName -TemplateFile ".\resources\storageAccounts.json"
 }
+Get-ChildItem modules -Directory | ForEach-Object { 
+	Compress-Archive -Path "$($_.FullName)\*" -DestinationPath "$($_.FullName).zip" -Update
+}
 
-$Deployment = [Deployment]::new($ResourceGroupName, $TemplateFile, $TemplateParametersFile)
+$Deployment = New-TemplateDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $TemplateFile -TemplateParametersFile $TemplateParametersFile
 if ($UploadArtifacts) {
 	$Deployment.UploadArtifacts()
 }
