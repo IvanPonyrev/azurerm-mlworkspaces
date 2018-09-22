@@ -175,8 +175,19 @@
                             "secretName": "resourcesLocationSasToken"
                         }
                     },
+                    "modulesLocationSasToken": {
+                        "reference": {
+                            "keyVault": {
+                                "id": "[reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'vaults'), parameters('apiVersion')).outputs.resourceId.value]"
+                            },
+                            "secretName": "modulesLocationSasToken"
+                        }
+                    },
                     "automationAccountName": {
                         "value": "[reference(resourceId('Microsoft.Resources/deployments', 'automationAccount'), parameters('apiVersion')).outputs.name.value]"
+                    },
+                    "modules": {
+                        "value": "[parameters('modules')]"
                     }
                 },
                 "debugSetting": {

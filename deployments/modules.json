@@ -9,6 +9,13 @@
             },
             "defaultValue": null
         },
+        "modulesLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Sas token to modules container."
+            },
+            "defaultValue": null
+        },
         "automationAccountName": {
             "type": "string",
             "metadata": {
@@ -71,7 +78,8 @@
                 "Name": "AzureRM.Storage",
                 "Uri": "https://devopsgallerystorage.blob.core.windows.net:443/packages/azurerm.storage.5.0.4.nupkg"
             }
-        ]
+        ],
+        "LowestPriority": "[concat(variables('Level0'), parameters('modules'))]"
     },
     "resources": [
         {
@@ -134,7 +142,7 @@
             }
         },
         {
-            "name": "[variables('Level0')[copyIndex()].Name]",
+            "name": "[variables('LowestPriority')[copyIndex()].Name]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[parameters('apiVersion')]",
             "dependsOn": [
@@ -147,19 +155,19 @@
                 },
                 "parameters": {
                     "moduleName": {
-                        "value": "[variables('Level0')[copyIndex()].Name]"
+                        "value": "[variables('LowestPriority')[copyIndex()].Name]"
                     },
                     "automationAccountName": {
                         "value": "[parameters('automationAccountName')]"
                     },
                     "uri": {
-                        "value": "[variables('Level0')[copyIndex()].Uri]"
+                        "value": "[variables('LowestPriority')[copyIndex()].Uri]"
                     }
                 }
             },
             "copy": {
                 "name": "Level0ModulesInstall",
-                "count": "[length(variables('Level0'))]",
+                "count": "[length(variables('LowestPriority'))]",
                 "mode": "Serial",
                 "batchSize": 1
             }

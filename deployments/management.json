@@ -153,6 +153,9 @@
                     },
                     "runbooksStartTime": {
                         "value": "[parameters('runbooksStartTime')]"
+                    },
+                    "modules": {
+                        "value": "[parameters('modules')]"
                     }
                 },
                 "debugSetting": {
