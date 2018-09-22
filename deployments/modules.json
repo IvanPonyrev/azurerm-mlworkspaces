@@ -9,6 +9,13 @@
             },
             "defaultValue": null
         },
+        "modulesLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Sas token to modules container."
+            },
+            "defaultValue": null
+        },
         "automationAccountName": {
             "type": "string",
             "metadata": {

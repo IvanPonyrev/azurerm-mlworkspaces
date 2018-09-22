@@ -36,7 +36,7 @@
             }
         },
         "certificates": {
-            "type": "object",
+            "type": "secureObject",
             "metadata": {
                 "description": "A secureObject containing array of certificates containing name, base64Value, and thumbprint."
             },

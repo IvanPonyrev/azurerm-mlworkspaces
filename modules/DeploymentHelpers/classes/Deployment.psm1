@@ -112,10 +112,11 @@ class Deployment {
                         $this.OptionalParameters[$_] = (Get-Date).ToUniversalTime().AddHours(1).ToString("MM/dd/yyyy HH:mm:ss")
                     }
                     "modules" {
+                        $modulesLocationSasToken = $this.Secrets.secrets | ? Name -eq modulesLocationSasToken
                         Get-ChildItem "$PWD\modules\*.zip" -File | ForEach-Object {
                             $this.Modules += @{
                                 Name = $_.BaseName.ToString() 
-                                Uri = "$($this.StorageAccount.Context.BlobEndpoint)modules/$($_.BaseName)" 
+                                Uri = "$($this.StorageAccount.Context.BlobEndpoint)modules/$($_.BaseName)$($modulesLocationSasToken.value)" 
                             }
                         }
                         $this.OptionalParameters[$_] = $this.Modules
