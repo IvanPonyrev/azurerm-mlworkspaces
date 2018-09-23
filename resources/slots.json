@@ -2,10 +2,16 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "name": {
+    "slotName": {
       "type": "string",
       "metadata": {
-        "description": "The name to be given to this web."
+        "description": "The name to be given to this slot."
+      }
+    },
+    "siteName": {
+      "type": "string",
+      "metadata": {
+        "description": "The site to which this slot belongs."
       }
     },
     "apiVersion": {
@@ -14,6 +20,13 @@
         "description": "The apiVersion of this resource. "
       },
       "defaultValue": "[providers('Microsoft.Web', 'sites').apiVersions[0]]"
+    },
+    "kind": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource location."
+      },
+      "defaultValue": "app"
     },
     "location": {
       "type": "string",
@@ -27,47 +40,25 @@
       "metadata": {
         "description": "The id of this sites serverfarm."
       }
-    },
-    "netFrameworkVersion": {
-      "type": "string", 
-      "metadata": {
-        "description": "The id of this sites serverfarm."
-      },
-      "defaultValue": "v4.7"
-    },
-    "pythonVersion": {
-      "type": "string", 
-      "metadata": {
-        "description": "The id of this sites serverfarm."
-      }
-    },
-    "connectionStrings": {
-      "type": "array", 
-      "metadata": {
-        "description": "The id of this sites serverfarm."
-      },
-      "defaultValue": [ ]
     }
   },
   "variables": {},
   "resources": [
     {
-      "type": "Microsoft.Web/sites",
+      "type": "Microsoft.Web/sites/slots",
       "apiVersion": "[parameters('apiVersion')]",
-      "name": "[parameters('name')]",
+      "name": "[concat(parameters('siteName'), '/', parameters('slotName'))]",
       "location": "[parameters('location')]",
+      "kind": "[parameters('kind')]",
       "properties": {
-        "serverFarmId": "[parameters('serverFarmId')]",
-        "netFrameworkVersion": "[parameters('netFrameworkVersion')]",
-        "pythonVersion": "[parameters('pythonVersion')]",
-        "connectionStrings": "[parameters('connectionStrings')]"
+        "serverFarmId": "[parameters('serverFarmId')]"
       }
     }
   ],
   "outputs": {
     "name": {
       "type": "string",
-      "value": "[parameters('name')]"
+      "value": "[parameters('slotName')]"
     },
     "apiVersion": {
       "type": "string",
@@ -75,7 +66,7 @@
     },
     "resourceId": {
       "type": "string",
-      "value": "[resourceId('Microsoft.Web/sites', parameters('name'))]"
+      "value": "[resourceId('Microsoft.Web/sites/slots', parameters('siteName'), parameters('slotName'))]"
     }
   }
 }

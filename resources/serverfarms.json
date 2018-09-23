@@ -27,7 +27,7 @@
       "metadata": {
         "description": "The name of the SKU."
       },
-      "defaultValue": "F1"
+      "defaultValue": "D1"
     },
     "capacity": {
       "type": "int", 
