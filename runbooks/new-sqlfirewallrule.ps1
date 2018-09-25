@@ -28,7 +28,7 @@ workflow New-SqlFirewallRule {
         -CertificateThumbprint $Connection.CertificateThumbprint
 
     # Get storage context and resources container token for read permission.
-    $context = (Get-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName | Select -First 1).Context
+    $context = (Get-AzureRmStorageAccount -ResourceGroupName management | Select -First 1).Context
     $resourcesLocationSasToken = New-AzureStorageContainerSASToken -Context $Context `
             -Container resources `
             -Permission r `
