@@ -86,7 +86,7 @@
                     "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/runbooks.json', parameters('resourcesLocationSasToken'))]"
                 },
                 "parameters": {
-                    "name": {
+                    "runbooksName": {
                         "value": "[parameters('name')]"
                     },
                     "automationAccountName": {
