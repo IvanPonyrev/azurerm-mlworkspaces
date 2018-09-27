@@ -2,7 +2,7 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "name": {
+    "sqlServerName": {
       "type": "string",
       "metadata": {
         "description": "The name to be given to this web."
@@ -40,7 +40,7 @@
     {
       "type": "Microsoft.Sql/servers",
       "apiVersion": "[parameters('apiVersion')]",
-      "name": "[parameters('name')]",
+      "name": "[parameters('sqlServerName')]",
       "location": "[parameters('location')]",
       "properties": {
         "administratorLogin": "[parameters('administratorLogin')]",
@@ -51,7 +51,7 @@
   "outputs": {
     "name": {
       "type": "string",
-      "value": "[parameters('name')]"
+      "value": "[parameters('sqlServerName')]"
     },
     "apiVersion": {
       "type": "string",
@@ -59,11 +59,11 @@
     },
     "resourceId": {
       "type": "string",
-      "value": "[resourceId('Microsoft.Sql/servers', parameters('name'))]"
+      "value": "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]"
     },
     "fullyQualifiedDomainName": {
       "type": "string",
-      "value": "[reference(resourceId('Microsoft.Sql/servers', parameters('name')), parameters('apiVersion')).fullyQualifiedDomainName]"
+      "value": "[reference(resourceId('Microsoft.Sql/servers', parameters('sqlServerName')), parameters('apiVersion')).fullyQualifiedDomainName]"
     }
   }
 }

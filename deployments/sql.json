@@ -84,7 +84,7 @@
                     "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/servers.json', parameters('resourcesLocationSasToken'))]"
                 },
                 "parameters": {
-                    "name": {
+                    "sqlServerName": {
                         "value": "[parameters('name')]"
                     },
                     "administratorLogin": {
@@ -169,6 +169,10 @@
         "fullyQualifiedDomainName": {
             "type": "string",
             "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'server'), parameters('apiVersion')).outputs.fullyQualifiedDomainName.value]"
+        },
+        "connectionString": {
+          "type": "string",
+          "value": "[concat('Server=tcp:', parameters('name'), ',1433;Initial Catalog=', concat(parameters('name'), '-database'), ';Persist Security Info=False; User ID=', parameters('administratorLogin') ,';Password=', parameters('administratorLoginPassword'), ';MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30')]"
         }
     }
 }
