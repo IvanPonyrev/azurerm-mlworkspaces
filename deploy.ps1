@@ -46,7 +46,7 @@ Get-ChildItem modules -Directory | ForEach-Object {
 	Compress-Archive -Path "$($_.FullName)\*" -DestinationPath "$($_.FullName).zip" -Update
 }
 
-$Deployment = New-TemplateDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $TemplateFile -TemplateParametersFile $TemplateParametersFile
+$Deployment = New-TemplateDeployment -ResourceGroupName management -TemplateFile $TemplateFile -TemplateParametersFile $TemplateParametersFile
 if ($UploadArtifacts) {
 	$Deployment.UploadArtifacts()
 }

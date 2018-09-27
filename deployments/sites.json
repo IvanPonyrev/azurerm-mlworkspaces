@@ -96,7 +96,7 @@
                     "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/sites.json', parameters('resourcesLocationSasToken'))]"
                 },
                 "parameters": {
-                    "name": {
+                    "siteName": {
                         "value": "[concat(parameters('name'))]"
                     },
                     "serverFarmId": {

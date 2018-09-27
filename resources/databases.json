@@ -84,10 +84,6 @@
     "reference": {
       "type": "object",
       "value": "[reference(resourceId('Microsoft.Sql/servers/databases', parameters('sqlServerName'), parameters('databaseName')), parameters('apiVersion'))]"
-    },
-    "connectionString": {
-      "type": "string",
-      "value": "[concat('Server=tcp:', parameters('sqlServerName'), ',1433;Initial Catalog=', parameters('databaseName'), ';Persist Security Info=False; User ID={your_username};Password={your_password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30')]"
     }
   }
 }
