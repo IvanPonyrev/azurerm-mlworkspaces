@@ -1,0 +1,90 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "siteName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name to be given to this web."
+      }
+    },
+    "apiVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "The apiVersion of this resource. "
+      },
+      "defaultValue": "2016-08-01"
+    },
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource location."
+      },
+      "defaultValue": "[resourceGroup().location]"
+    },
+    "defaultDocuments": {
+      "type": "array",
+      "metadata": {
+        "description": ".NET Framework version."
+      },
+      "defaultValue": [
+        "index.htm",
+        "index.html"
+      ]
+    },
+    "netFrameworkVersion": {
+      "type": "string",
+      "metadata": {
+        "description": ".NET Framework version."
+      },
+      "defaultValue": "v4.7"
+    },
+    "pythonVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "Python version."
+      },
+      "defaultValue": "3.4"
+    },
+    "use32BitWorkerProcess": {
+      "type": "bool",
+      "metadata": {
+        "description": "<code>true</code> to use 32-bit worker process; otherwise, <code>false</code>."
+      },
+      "defaultValue": true
+    },
+    "webSocketsEnabled": {
+      "type": "bool",
+      "metadata": {
+        "description": "<code>true</code> if WebSocket is enabled; otherwise, <code>false</code>."
+      },
+      "defaultValue": false
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "type": "Microsoft.Web/sites/config",
+      "apiVersion": "[parameters('apiVersion')]",
+      "name": "[concat(parameters('siteName'), '/web')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "netFrameworkVersion": "[parameters('netFrameworkVersion')]",
+        "pythonVersion": "[parameters('pythonVersion')]",
+        "defaultDocuments": "[parameters('defaultDocuments')]",
+        "use32BitWorkerProcess": "[parameters('use32BitWorkerProcess')]",
+        "webSocketsEnabled": "[parameters('webSocketsEnabled')]"
+      }
+    }
+  ],
+  "outputs": {
+    "apiVersion": {
+      "type": "string",
+      "value": "[parameters('apiVersion')]"
+    },
+    "resourceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Web/sites/config', parameters('siteName'), 'web')]"
+    }
+  }
+}

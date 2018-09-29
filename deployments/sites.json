@@ -51,6 +51,13 @@
           },
           "allowedValues": [ 0, 1, 2 ],
           "defaultValue": 0
+        },
+        "connectionStrings": {
+          "type": "array", 
+          "metadata": {
+            "description": "The id of this sites serverfarm."
+          },
+          "defaultValue": [ ]
         }
     },
     "variables": {
@@ -97,10 +104,33 @@
                 },
                 "parameters": {
                     "siteName": {
-                        "value": "[concat(parameters('name'))]"
+                        "value": "[parameters('name')]"
                     },
                     "serverFarmId": {
                         "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'serverfarm'), parameters('apiVersion')).outputs.resourceId.value]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[concat(parameters('name'), '-config')]",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "dependsOn": [
+                "[resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'site')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/config.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "siteName": {
+                        "value": "[parameters('name')]"
                     }
                 },
                 "debugSetting": {

@@ -27,27 +27,6 @@
       "metadata": {
         "description": "The id of this sites serverfarm."
       }
-    },
-    "netFrameworkVersion": {
-      "type": "string", 
-      "metadata": {
-        "description": "The id of this sites serverfarm."
-      },
-      "defaultValue": "v4.7"
-    },
-    "pythonVersion": {
-      "type": "string", 
-      "metadata": {
-        "description": "The id of this sites serverfarm."
-      },
-      "defaultValue": ""
-    },
-    "connectionStrings": {
-      "type": "array", 
-      "metadata": {
-        "description": "The id of this sites serverfarm."
-      },
-      "defaultValue": [ ]
     }
   },
   "variables": {},
@@ -58,9 +37,7 @@
       "name": "[parameters('siteName')]",
       "location": "[parameters('location')]",
       "properties": {
-        "serverFarmId": "[parameters('serverFarmId')]",
-        "netFrameworkVersion": "[parameters('netFrameworkVersion')]",
-        "connectionStrings": "[parameters('connectionStrings')]"
+        "serverFarmId": "[parameters('serverFarmId')]"
       }
     }
   ],

@@ -156,6 +156,14 @@
                     },
                     "capacity": {
                         "value": "[parameters('capacity')]"
+                    },
+                    "connectionStrings": {
+                        "value": [
+                            {
+                                "name": "sqlConnection",
+                                "value": "[reference(resourceId('Microsoft.Resources/deployments', 'sql'), parameters('apiVersion')).outputs.connectionString.value]"
+                            }
+                        ]
                     }
                 },
                 "debugSetting": {

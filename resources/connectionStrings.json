@@ -1,0 +1,76 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "siteName": {
+      "type": "string",
+      "metadata": {
+        "description": "The site to which this slot belongs."
+      }
+    },
+    "apiVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "The apiVersion of this resource."
+      },
+      "defaultValue": "2016-08-01"
+    },
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource location."
+      },
+      "defaultValue": "[resourceGroup().location]"
+    },
+    "type": {
+      "type": "string",
+      "metadata": {
+        "description": "The type of connection string."
+      },
+      "allowedValues": [
+        "MySql",
+        "SQLServer",
+        "SQLAzure",
+        "Custom",
+        "NotificationHub",
+        "ServiceBus",
+        "EventHub",
+        "ApiHub",
+        "DocDb",
+        "RedisCache"
+      ],
+      "defaultValue": "SQLAzure"
+    },
+    "value": {
+      "type": "string",
+      "metadata": {
+        "description": "The value of this connection string. "
+      }
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "type": "Microsoft.Web/sites/config",
+      "apiVersion": "[parameters('apiVersion')]",
+      "name": "[concat(parameters('siteName'), '/connectionstrings')]",
+      "location": "[parameters('location')]",
+      "properties": [
+        {
+          "value": "[parameters('value')]",
+          "type": "[parameters('type')]"
+        }
+      ]
+    }
+  ],
+  "outputs": {
+    "apiVersion": {
+      "type": "string",
+      "value": "[parameters('apiVersion')]"
+    },
+    "resourceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Web/sites/config', parameters('siteName'), 'connectionstrings')]"
+    }
+  }
+}
