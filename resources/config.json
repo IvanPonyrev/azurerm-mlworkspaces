@@ -46,6 +46,13 @@
       },
       "defaultValue": "3.4"
     },
+    "phpVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "PHP version."
+      },
+      "defaultValue": "7.2"
+    },
     "use32BitWorkerProcess": {
       "type": "bool",
       "metadata": {
@@ -71,6 +78,7 @@
       "properties": {
         "netFrameworkVersion": "[parameters('netFrameworkVersion')]",
         "pythonVersion": "[parameters('pythonVersion')]",
+        "phpVersion": "[parameters('phpVersion')]",
         "defaultDocuments": "[parameters('defaultDocuments')]",
         "use32BitWorkerProcess": "[parameters('use32BitWorkerProcess')]",
         "webSocketsEnabled": "[parameters('webSocketsEnabled')]"

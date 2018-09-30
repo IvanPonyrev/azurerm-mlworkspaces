@@ -2,6 +2,13 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "connectionStringName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the connection string."
+      },
+      "defaultValue": "connection"
+    },
     "siteName": {
       "type": "string",
       "metadata": {
@@ -42,7 +49,7 @@
       "defaultValue": "SQLAzure"
     },
     "value": {
-      "type": "string",
+      "type": "securestring",
       "metadata": {
         "description": "The value of this connection string. "
       }
@@ -55,12 +62,12 @@
       "apiVersion": "[parameters('apiVersion')]",
       "name": "[concat(parameters('siteName'), '/connectionstrings')]",
       "location": "[parameters('location')]",
-      "properties": [
-        {
+      "properties": {
+        "[parameters('connectionStringName')]": {
           "value": "[parameters('value')]",
           "type": "[parameters('type')]"
         }
-      ]
+      }
     }
   ],
   "outputs": {

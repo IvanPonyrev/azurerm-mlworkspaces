@@ -118,7 +118,7 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[parameters('apiVersion')]",
-            "name": "[concat(parameters('name'), '-config')]",
+            "name": "site-config",
             "resourceGroup": "[parameters('resourceGroup')]",
             "dependsOn": [
                 "[resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'site')]"
@@ -136,6 +136,43 @@
                 "debugSetting": {
                     "detailLevel": "requestContent, responseContent"
                 }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[concat(parameters('connectionStrings')[copyIndex()].name, '-connectionstring')]",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "dependsOn": [
+                "[resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'site')]",
+                "[resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'site-config')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/connectionStrings.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "connectionStringName": {
+                        "value": "[parameters('connectionStrings')[copyIndex()].name]"
+                    },
+                    "siteName": {
+                        "value": "[parameters('name')]"
+                    },
+                    "type": {
+                        "value": "[parameters('connectionStrings')[copyIndex()].type]"
+                    },
+                    "value": {
+                        "value": "[parameters('connectionStrings')[copyIndex()].value]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            },
+            "copy": {
+                "name": "connectionStrings",
+                "count": "[length(parameters('connectionStrings'))]"
             }
         }
     ],
