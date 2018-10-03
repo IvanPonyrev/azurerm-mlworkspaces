@@ -63,6 +63,13 @@
             },
             "defaultValue": []
         },
+        "appSettings": {
+            "type": "array",
+            "metadata": {
+                "description": "An array of NameValuePairs."
+            },
+            "defaultValue": []
+        },
         "extensions": {
             "type": "array",
             "metadata": {
@@ -75,7 +82,14 @@
         "defaultExtensions": [
             "azureappservice-python364x86"
         ],
-        "extensions": "[concat(variables('defaultExtensions'), parameters('extensions'))]"
+        "defaultAppSettings": [
+            {
+                "name": "WEBSITE_TIME_ZONE",
+                "value": "Eastern Standard Time"
+            }
+        ],
+        "extensions": "[concat(variables('defaultExtensions'), parameters('extensions'))]",
+        "appSettings": "[concat(variables('defaultAppSettings'), parameters('appSettings'))]"
     },
     "resources": [
         {
@@ -218,6 +232,39 @@
             "copy": {
                 "name": "extensions",
                 "count": "[length(variables('extensions'))]"
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[variables('appSettings')[copyIndex()].name]",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "dependsOn": [
+                "[resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'site')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/appsettings.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "appSettingName": {
+                        "value": "[variables('appSettings')[copyIndex()].name]"
+                    },
+                    "siteName": {
+                        "value": "[parameters('name')]"
+                    },
+                    "value": {
+                        "value": "[variables('appSettings')[copyIndex()].value]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            },
+            "copy": {
+                "name": "appsettings",
+                "count": "[length(variables('appSettings'))]"
             }
         }
     ],
