@@ -63,8 +63,8 @@
         "defaultRunbooks": [
             {
                 "name": "refresh-tokens",
-                "frequency": "Hour",
-                "interval": 8,
+                "frequency": "Day",
+                "interval": 1,
                 "timeZone": "UTC",
                 "jobParameters": {
                     "ConnectionName": "automationConnection",
