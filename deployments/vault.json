@@ -9,6 +9,20 @@
             },
             "defaultValue": null
         },
+        "apiVersion": {
+            "type": "string",
+            "metadata": {
+                "description": "The Mirosoft.Resources deployments apiVersion."
+            },
+            "defaultValue": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
+        },
+        "vaultName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the vault."
+            },
+            "defaultValue": "[concat('vault', uniqueString(subscription().subscriptionId))]"
+        },
         "secrets": {
             "type": "secureObject",
             "metadata": {
@@ -33,27 +47,21 @@
         }
     },
     "variables": {
-        "deployments": {
-            "apiVersion": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
-        },
-        "vaults": {
-            "name": "[concat('vault', uniqueString(subscription().subscriptionId))]"
-        }
     },
     "resources": [
         {
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('deployments').apiVersion]",
-            "name": "[variables('vaults').name]",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[parameters('vaultName')]",
             "resourceGroup": "[parameters('resourceGroup')]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/vaults.json', parameters('resourcesLocationSasToken'))]"
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/vaults.json', parameters('resourcesLocationSasToken'))]"
                 },
                 "parameters": {
                     "name": {
-                        "value": "[variables('vaults').name]"
+                        "value": "[parameters('vaultName')]"
                     },
                     "accessPolicies": {
                         "value": [
@@ -85,20 +93,20 @@
         },
         {
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('deployments').apiVersion]",
+            "apiVersion": "[parameters('apiVersion')]",
             "name": "[parameters('secrets').secrets[copyIndex()].name]",
             "resourceGroup": "[parameters('resourceGroup')]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/secrets.json', parameters('resourcesLocationSasToken'))]"
+                    "uri": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/secrets.json', parameters('resourcesLocationSasToken'))]"
                 },
                 "parameters": {
                     "secretName": {
                         "value": "[parameters('secrets').secrets[copyIndex()].name]"
                     },
                     "vaultName": {
-                        "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('vaults').name), variables('deployments').apiVersion).outputs.name.value]"
+                        "value": "[reference(resourceId('Microsoft.Resources/deployments', parameters('vaultName')), parameters('apiVersion')).outputs.name.value]"
                     },
                     "value": {
                         "value": "[parameters('secrets').secrets[copyIndex()].value]"
@@ -117,19 +125,19 @@
     "outputs": {
         "name": {
             "type": "string",
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('vaults').name), variables('deployments').apiVersion).outputs.name.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', parameters('vaultName')), parameters('apiVersion')).outputs.name.value]"
         },
         "apiVersion": {
             "type": "string",
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('vaults').name), variables('deployments').apiVersion).outputs.apiVersion.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', parameters('vaultName')), parameters('apiVersion')).outputs.apiVersion.value]"
         },
         "resourceId": {
             "type": "string",
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('vaults').name), variables('deployments').apiVersion).outputs.resourceId.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', parameters('vaultName')), parameters('apiVersion')).outputs.resourceId.value]"
         },
         "vaultUri": {
             "type": "securestring",
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('vaults').name), variables('deployments').apiVersion).outputs.resourceId.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', parameters('vaultName')), parameters('apiVersion')).outputs.resourceId.value]"
         }
     }
 }

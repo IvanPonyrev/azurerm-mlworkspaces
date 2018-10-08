@@ -102,6 +102,43 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[parameters('apiVersion')]",
+            "name": "auditingSettings",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'server')]"
+            ],
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/auditingSettings.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "settingName": {
+                        "value": "[concat(parameters('name'), '-audit')]"
+                    },
+                    "sqlServerName": {
+                        "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'server'), parameters('apiVersion')).outputs.name.value]"
+                    },
+                    "storageAccountAccessKey": {
+                        "reference": {
+                            "keyVault": {
+                                "id": "[reference(resourceId('management', 'Microsoft.Resources/deployments', 'vaults'), parameters('apiVersion')).outputs.resourceId.value]"
+                            },
+                            "secretName": "storagePrimaryKey"
+                        }
+                    },
+                    "storageEndpoint": {
+                        "value": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'audit-logs')]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
             "name": "database",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', 'server')]"

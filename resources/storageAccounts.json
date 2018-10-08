@@ -154,19 +154,18 @@
         "type": "string",
         "value": "[reference(parameters('name'), parameters('apiVersion')).primaryEndpoints.table]"
       },
-      "key1": {
-        "type": "secureObject",
-        "value": {
-          "name": "storagePrimaryKey",
-          "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('name')), parameters('apiVersion')).keys[0].value]"
-        }
-      },
-      "key2": {
-        "type": "secureObject",
-        "value": {
-          "name": "storageSecondaryKey",
-          "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('name')), parameters('apiVersion')).keys[1].value]"
-        }
+      "keys": {
+        "type": "array",
+        "value": [
+          {
+            "name": "storagePrimaryKey",
+            "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('name')), parameters('apiVersion')).keys[0].value]"
+          },
+          {
+            "name": "storageSecondaryKey",
+            "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('name')), parameters('apiVersion')).keys[1].value]"
+          }
+        ]
       }
     }
 }
