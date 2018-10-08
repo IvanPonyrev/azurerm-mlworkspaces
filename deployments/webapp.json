@@ -162,7 +162,7 @@
                             {
                                 "name": "sqlConnection",
                                 "type": "SQLAzure",
-                                "value": "[reference(resourceId('Microsoft.Resources/deployments', 'sql'), parameters('apiVersion')).outputs.connectionString.value]"
+                                "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'sql'), parameters('apiVersion')).outputs.connectionString.value]"
                             }
                         ]
                     }

@@ -2,10 +2,10 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-      "name": {
+      "workspaceName": {
         "type": "string",
         "metadata": {
-          "description": "Secret name."
+          "description": "Workspace name."
         }
       },
       "apiVersion": {
@@ -13,7 +13,7 @@
         "metadata": {
           "description": "The apiVersion of this resource."
         },
-        "defaultValue": "latest"
+        "defaultValue": "[providers('Microsoft.MachineLearning', 'workspaces').apiVersions[0]]"
       },
       "location": {
           "type": "string",
@@ -37,15 +37,12 @@
       }
     },
     "variables": {
-      "workspaces": {
-        "apiVersion": "[if(equals(parameters('apiVersion'), 'latest'), providers('Microsoft.MachineLearning', 'workspaces').apiVersions[0], parameters('apiVersion'))]"
-      }
     },
     "resources": [
       {
         "type": "Microsoft.MachineLearning/workspaces",
-        "apiVersion": "[variables('workspaces').apiVersion]",
-        "name": "[parameters('name')]",
+        "apiVersion": "[parameters('apiVersion')]",
+        "name": "[parameters('workspaceName')]",
         "location": "[parameters('location')]",
         "properties": {
           "keyVaultIdentifierId": "[if(empty(parameters('vaultId')), json('null'), parameters('vaultId'))]",
@@ -56,19 +53,19 @@
     "outputs": {
       "name": {
         "type": "string",
-        "value": "[parameters('name')]"
+        "value": "[parameters('workspaceName')]"
       },
       "apiVersion": {
         "type": "string",
-        "value": "[variables('workspaces').apiVersion]"
+        "value": "[parameters('apiVersion')]"
       },
       "resourceId": {
         "type": "string",
-        "value": "[resourceId('Microsoft.MachineLearning/workspaces', parameters('name'))]"
+        "value": "[resourceId('Microsoft.MachineLearning/workspaces', parameters('workspaceName'))]"
       },
       "reference": {
         "type": "object",
-        "value": "[reference(resourceId('Microsoft.MachineLearning/workspaces', parameters('name')), variables('workspaces').apiVersion)]"
+        "value": "[reference(resourceId('Microsoft.MachineLearning/workspaces', parameters('workspaceName')), parameters('apiVersion'))]"
       }
     }
 }

@@ -128,7 +128,7 @@
                         }
                     },
                     "storageEndpoint": {
-                        "value": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'audit-logs')]"
+                        "value": "[reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value]"
                     }
                 },
                 "debugSetting": {
