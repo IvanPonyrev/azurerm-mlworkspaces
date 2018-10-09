@@ -2,7 +2,7 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-      "workspaceName": {
+      "registryName": {
         "type": "string",
         "metadata": {
           "description": "Workspace name."
@@ -13,21 +13,34 @@
         "metadata": {
           "description": "The apiVersion of this resource."
         },
-        "defaultValue": "[providers('Microsoft.MachineLearningServices', 'workspaces').apiVersions[0]]"
+        "defaultValue": "[providers('Microsoft.ContainerRegistry', 'registries').apiVersions[0]]"
       },
       "location": {
           "type": "string",
           "metadata": {
               "description": "Resource location."
           },
-          "defaultValue": "southcentralus"
+          "defaultValue": "[resourceGroup().location]"
       },
-      "vaultId": {
+      "sku": {
         "type": "string",
         "metadata": {
           "description": "Parent vault name."
         },
-        "defaultValue": ""
+        "allowedValues": [
+          "Classic",
+          "Basic",
+          "Standard",
+          "Premium"
+        ],
+        "defaultValue": "Classic"
+      },
+      "adminUserEnabled": {
+        "type": "bool",
+        "metadata": {
+          "description": "The value that indicates whether the admin user is enabled."
+        },
+        "defaultValue": true
       },
       "storageAccountId": {
         "type": "securestring",
@@ -40,20 +53,22 @@
     },
     "resources": [
       {
-        "type": "Microsoft.MachineLearningServices/workspaces",
+        "type": "Microsoft.ContainerRegistry/registries",
         "apiVersion": "[parameters('apiVersion')]",
-        "name": "[parameters('workspaceName')]",
+        "name": "[parameters('registryName')]",
         "location": "[parameters('location')]",
         "properties": {
-          "keyVault": "[parameters('vaultId')]",
-          "storageAccount": "[parameters('storageAccountId')]"
+          "adminUserEnabled": "[parameters('adminUserEnabled')]",
+          "storageAccount": {
+            "id": "[parameters('storageAccountId')]"
+          }
         }
       }
     ],
     "outputs": {
       "name": {
         "type": "string",
-        "value": "[parameters('workspaceName')]"
+        "value": "[parameters('registryName')]"
       },
       "apiVersion": {
         "type": "string",
@@ -61,11 +76,11 @@
       },
       "resourceId": {
         "type": "string",
-        "value": "[resourceId('Microsoft.MachineLearning/workspaces', parameters('workspaceName'))]"
+        "value": "[resourceId('Microsoft.ContainerRegistry/registries', parameters('registryName'))]"
       },
       "reference": {
         "type": "object",
-        "value": "[reference(resourceId('Microsoft.MachineLearning/workspaces', parameters('workspaceName')), parameters('apiVersion'))]"
+        "value": "[reference(resourceId('Microsoft.ContainerRegistry/registries', parameters('registryName')), parameters('apiVersion'))]"
       }
     }
 }
