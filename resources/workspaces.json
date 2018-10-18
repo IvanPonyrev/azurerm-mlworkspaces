@@ -13,40 +13,48 @@
         "metadata": {
           "description": "The apiVersion of this resource."
         },
-        "defaultValue": "[providers('Microsoft.MachineLearningServices', 'workspaces').apiVersions[0]]"
+        "defaultValue": "[providers('Microsoft.MachineLearning', 'workspaces').apiVersions[0]]"
       },
       "location": {
-          "type": "string",
-          "metadata": {
-              "description": "Resource location."
-          },
-          "defaultValue": "southcentralus"
+        "type": "string",
+        "metadata": {
+          "description": "The location of this resource."
+        },
+        "defaultValue": "southcentralus"
       },
       "vaultId": {
         "type": "string",
         "metadata": {
-          "description": "Parent vault name."
+          "description": "Optional. Key Vault Identifier URI to create encrypted workspace"
         },
         "defaultValue": ""
       },
       "storageAccountId": {
-        "type": "securestring",
+        "type": "string",
         "metadata": {
-          "description": "The value of the secret. NOTE: 'value' will never be returned from the service, as APIs using this model are is intended for internal use in ARM deployments. Users should use the data-plane REST service for interaction with vault secrets."
+          "description": "Arm Id for user storage account to be used by workspace."
         }
+      },
+      "ownerEmail": {
+        "type": "string",
+        "metadata": {
+          "description": "Optional. OwnerEmail for the workspace."
+        },
+        "defaultValue": ""
       }
     },
     "variables": {
     },
     "resources": [
       {
-        "type": "Microsoft.MachineLearningServices/workspaces",
+        "type": "Microsoft.MachineLearning/workspaces",
         "apiVersion": "[parameters('apiVersion')]",
         "name": "[parameters('workspaceName')]",
         "location": "[parameters('location')]",
         "properties": {
-          "keyVault": "[parameters('vaultId')]",
-          "storageAccount": "[parameters('storageAccountId')]"
+          "userStorageAccountId": "[parameters('storageAccountId')]",
+          "keyVaultIdentifierId": "[parameters('vaultId')]",
+          "ownerEmail": "[parameters('ownerEmail')]"
         }
       }
     ],

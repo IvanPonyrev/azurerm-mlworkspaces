@@ -9,12 +9,19 @@
             },
             "defaultValue": null
         },
+        "apiVersion": {
+            "type": "string",
+            "metadata": {
+                "description": "The apiVersion of this resource."
+            },
+            "defaultValue": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
+        },
         "resourceGroup": {
             "type": "string",
             "metadata": {
                 "description": "The name of the resource group to which resources will be provisioned."
             },
-            "defaultValue": "workspaces"
+            "defaultValue": "ml"
         },
         "managementResourceGroup": {
             "type": "string",
@@ -39,24 +46,21 @@
         }
     },
     "variables": {
-        "deployments": {
-            "apiVersion": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
-        }
     },
     "resources": [
         {
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('deployments').apiVersion]",
+            "apiVersion": "[parameters('apiVersion')]",
             "name": "workspaceStorage",
             "resourceGroup": "[parameters('resourceGroup')]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(reference(resourceId(parameters('managementResourceGroup'), 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/storageAccounts.json', parameters('resourcesLocationSasToken'))]"
+                    "uri": "[concat(reference(resourceId(parameters('managementResourceGroup'), 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/storageAccounts.json', parameters('resourcesLocationSasToken'))]"
                 },
                 "parameters": {
                     "name": {
-                        "value": "[parameters('workspaceName')]"
+                        "value": "[concat(parameters('workspaceName'), uniqueString(subscription().subscriptionId, parameters('workspaceName')))]"
                     },
                     "location": {
                         "value": "[parameters('workspaceLocation')]"
@@ -69,26 +73,23 @@
         },
         {
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('deployments').apiVersion]",
-            "name": "workspaces",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[parameters('workspaceName')]",
             "resourceGroup": "[parameters('resourceGroup')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', 'workspaceStorage')]"
+                "[resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'workspaceStorage')]"
             ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(reference(resourceId(parameters('managementResourceGroup'), 'Microsoft.Resources/deployments', 'storageAccounts'), variables('deployments').apiVersion).outputs.blobEndpoint.value, 'resources/workspaces.json', parameters('resourcesLocationSasToken'))]"
+                    "uri": "[concat(reference(resourceId(parameters('managementResourceGroup'), 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/workspaces.json', parameters('resourcesLocationSasToken'))]"
                 },
                 "parameters": {
-                    "name": {
+                    "workspaceName": {
                         "value": "[parameters('workspaceName')]"
                     },
-                    "vaultId": {
-                        "value": "[reference(resourceId(parameters('managementResourceGroup'), 'Microsoft.Resources/deployments', 'vaults'), variables('deployments').apiVersion).outputs.vault.value.resourceId]"
-                    },
                     "storageAccountId": {
-                        "value": "[reference(resourceId('Microsoft.Resources/deployments', 'workspaceStorage'), variables('deployments').apiVersion).outputs.resourceId.value]"
+                        "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'workspaceStorage'), parameters('apiVersion')).outputs.resourceId.value]"
                     },
                     "location": {
                         "value": "[parameters('workspaceLocation')]"
@@ -101,9 +102,17 @@
         }
     ],
     "outputs": {
+        "name": {
+            "type": "string",
+            "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', parameters('workspaceName')), parameters('apiVersion')).outputs.name.value]"
+        },
         "apiVersion": {
             "type": "string",
-            "value": "[variables('deployments').apiVersion]"
+            "value": "[parameters('apiVersion')]"
+        },
+        "resourceId": {
+            "type": "string",
+            "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', parameters('workspaceName')), parameters('apiVersion')).outputs.resourceId.value]"
         }
     }
 }
