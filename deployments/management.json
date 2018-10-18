@@ -81,9 +81,7 @@
                 "value": "[guid(subscription().subscriptionId)]"
             }
         ],
-        "secrets": {
-            "secrets": "[concat(parameters('secrets').secrets, variables('defaultSecrets'))]"
-        }
+        "secrets": "[concat(parameters('secrets').secrets, variables('defaultSecrets'))]"
     },
     "resources": [
         {
@@ -98,7 +96,9 @@
                 },
                 "parameters": {
                     "secrets": {
-                        "value": "[variables('secrets')]"
+                        "value": {
+                            "secrets": "[concat(variables('secrets'), reference(resourceId(resourceGroup().name, 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.keys.value)]"
+                        }
                     },
                     "resourcesLocationSasToken": {
                         "value": "[parameters('resourcesLocationSasToken')]"

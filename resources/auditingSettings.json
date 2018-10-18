@@ -1,0 +1,114 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "settingName": {
+      "type": "string",
+      "metadata": {
+        "description": "The setting name."
+      }
+    },
+    "sqlServerName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of sql server."
+      }
+    },
+    "apiVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "The apiVersion of this resource. "
+      },
+      "defaultValue": "2017-03-01-preview"
+    },
+    "auditActionsAndGroups": {
+      "type": "array",
+      "metadata": {
+        "description": "Specifies the Actions-Groups and Actions to audit.\r\n\r\nThe recommended set of action groups to use is the following combination - this will audit all the queries and stored procedures executed against the database, as well as successful and failed logins:\r\n\r\nBATCH_COMPLETED_GROUP,\r\nSUCCESSFUL_DATABASE_AUTHENTICATION_GROUP,\r\nFAILED_DATABASE_AUTHENTICATION_GROUP.\r\n\r\nThis above combination is also the set that is configured by default when enabling auditing from the Azure portal.\r\n\r\nThe supported action groups to audit are (note: choose only specific groups that cover your auditing needs. Using unnecessary groups could lead to very large quantities of audit records):\r\n\r\nAPPLICATION_ROLE_CHANGE_PASSWORD_GROUP\r\nBACKUP_RESTORE_GROUP\r\nDATABASE_LOGOUT_GROUP\r\nDATABASE_OBJECT_CHANGE_GROUP\r\nDATABASE_OBJECT_OWNERSHIP_CHANGE_GROUP\r\nDATABASE_OBJECT_PERMISSION_CHANGE_GROUP\r\nDATABASE_OPERATION_GROUP\r\nDATABASE_PERMISSION_CHANGE_GROUP\r\nDATABASE_PRINCIPAL_CHANGE_GROUP\r\nDATABASE_PRINCIPAL_IMPERSONATION_GROUP\r\nDATABASE_ROLE_MEMBER_CHANGE_GROUP\r\nFAILED_DATABASE_AUTHENTICATION_GROUP\r\nSCHEMA_OBJECT_ACCESS_GROUP\r\nSCHEMA_OBJECT_CHANGE_GROUP\r\nSCHEMA_OBJECT_OWNERSHIP_CHANGE_GROUP\r\nSCHEMA_OBJECT_PERMISSION_CHANGE_GROUP\r\nSUCCESSFUL_DATABASE_AUTHENTICATION_GROUP\r\nUSER_CHANGE_PASSWORD_GROUP\r\nBATCH_STARTED_GROUP\r\nBATCH_COMPLETED_GROUP\r\n\r\nThese are groups that cover all sql statements and stored procedures executed against the database, and should not be used in combination with other groups as this will result in duplicate audit logs.\r\n\r\nFor more information, see [Database-Level Audit Action Groups](https://docs.microsoft.com/en-us/sql/relational-databases/security/auditing/sql-server-audit-action-groups-and-actions#database-level-audit-action-groups).\r\n\r\nFor Database auditing policy, specific Actions can also be specified (note that Actions cannot be specified for Server auditing policy). The supported actions to audit are:\r\nSELECT\r\nUPDATE\r\nINSERT\r\nDELETE\r\nEXECUTE\r\nRECEIVE\r\nREFERENCES\r\n\r\nThe general form for defining an action to be audited is:\r\n<action> ON <object> BY <principal>\r\n\r\nNote that <object> in the above format can refer to an object like a table, view, or stored procedure, or an entire database or schema. For the latter cases, the forms DATABASE::<db_name> and SCHEMA::<schema_name> are used, respectively.\r\n\r\nFor example:\r\nSELECT on dbo.myTable by public\r\nSELECT on DATABASE::myDatabase by public\r\nSELECT on SCHEMA::mySchema by public\r\n\r\nFor more information, see [Database-Level Audit Actions](https://docs.microsoft.com/en-us/sql/relational-databases/security/auditing/sql-server-audit-action-groups-and-actions#database-level-audit-actions)"
+      },
+      "defaultValue": [
+        "BATCH_COMPLETED_GROUP", 
+        "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP", 
+        "FAILED_DATABASE_AUTHENTICATION_GROUP"
+      ]
+    },
+    "isStorageSecondaryKeyInUse": {
+      "type": "bool",
+      "metadata": {
+        "description": "Specifies whether storageAccountAccessKey value is the storage's secondary key."
+      },
+      "defaultValue": false
+    },
+    "retentionDays": {
+      "type": "int",
+      "metadata": {
+        "description": "Specifies the number of days to keep in the audit logs."
+      },
+      "defaultValue": 90
+    },
+    "state": {
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the state of the policy. If state is Enabled, storageEndpoint and storageAccountAccessKey are required."
+      },
+      "allowedValues": [
+        "Enabled", "Disabled"
+      ],
+      "defaultValue": "Enabled"
+    },
+    "storageAccountAccessKey": {
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the identifier key of the auditing storage account. If state is Enabled, storageAccountAccessKey is required."
+      }
+    },
+    "storageAccountSubscriptionId": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the configured service level objective of the database."
+      },
+      "defaultValue": "[subscription().subscriptionId]"
+    },
+    "storageEndpoint": {
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the blob storage endpoint (e.g. https://MyAccount.blob.core.windows.net). If state is Enabled, storageEndpoint is required."
+      }
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "type": "Microsoft.Sql/servers/auditingSettings",
+      "apiVersion": "[parameters('apiVersion')]",
+      "name": "[concat(parameters('sqlServerName'), '/', parameters('settingName'))]",
+      "properties": {
+        "auditActionsAndGroups": "[parameters('auditActionsAndGroups')]",
+        "isStorageSecondaryKeyInUse": "[parameters('isStorageSecondaryKeyInUse')]",
+        "retentionDays": "[parameters('retentionDays')]",
+        "state": "[parameters('state')]",
+        "storageAccountAccessKey": "[parameters('storageAccountAccessKey')]",
+        "storageAccountSubscriptionId": "[parameters('storageAccountSubscriptionId')]",
+        "storageEndpoint": "[parameters('storageEndpoint')]"
+      }
+    }
+  ],
+  "outputs": {
+    "name": {
+      "type": "string",
+      "value": "[parameters('settingName')]"
+    },
+    "apiVersion": {
+      "type": "string",
+      "value": "[parameters('apiVersion')]"
+    },
+    "resourceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Sql/servers/databases', parameters('sqlServerName'), parameters('settingName'))]"
+    },
+    "reference": {
+      "type": "object",
+      "value": "[reference(resourceId('Microsoft.Sql/servers/auditingSettings', parameters('sqlServerName'), parameters('settingName')), parameters('apiVersion'))]"
+    }
+  }
+}

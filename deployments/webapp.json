@@ -156,6 +156,15 @@
                     },
                     "capacity": {
                         "value": "[parameters('capacity')]"
+                    },
+                    "connectionStrings": {
+                        "value": [
+                            {
+                                "name": "sqlConnection",
+                                "type": "SQLAzure",
+                                "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'sql'), parameters('apiVersion')).outputs.connectionString.value]"
+                            }
+                        ]
                     }
                 },
                 "debugSetting": {

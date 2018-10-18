@@ -17,11 +17,11 @@
             "defaultValue": null
         },
         "apiVersion": {
-          "type": "string",
-          "metadata": {
-            "description": "The apiVersion of this resource."
-          },
-          "defaultValue": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
+            "type": "string",
+            "metadata": {
+                "description": "The apiVersion of this resource."
+            },
+            "defaultValue": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
         },
         "resourceGroup": {
             "type": "string",
@@ -31,29 +31,65 @@
             "defaultValue": "[resourceGroup().name]"
         },
         "name": {
-          "type": "string",
-          "metadata": {
-            "description": "The name of this web site."
-          },
-          "defaultValue": "[concat('site', uniqueString(resourceGroup().id))]"
+            "type": "string",
+            "metadata": {
+                "description": "The name of this web site."
+            },
+            "defaultValue": "[concat('site', uniqueString(resourceGroup().id))]"
         },
         "sku": {
-          "type": "string",
-          "metadata": {
-            "description": "The site sku."
-          },
-          "defaultValue": "F1"
+            "type": "string",
+            "metadata": {
+                "description": "The site sku."
+            },
+            "defaultValue": "F1"
         },
         "capacity": {
-          "type": "int",
-          "metadata": {
-            "description": "Worker capacity."
-          },
-          "allowedValues": [ 0, 1, 2 ],
-          "defaultValue": 0
+            "type": "int",
+            "metadata": {
+                "description": "Worker capacity."
+            },
+            "allowedValues": [
+                0,
+                1,
+                2
+            ],
+            "defaultValue": 0
+        },
+        "connectionStrings": {
+            "type": "array",
+            "metadata": {
+                "description": "An array of connectionstrings."
+            },
+            "defaultValue": []
+        },
+        "appSettings": {
+            "type": "array",
+            "metadata": {
+                "description": "An array of NameValuePairs."
+            },
+            "defaultValue": []
+        },
+        "extensions": {
+            "type": "array",
+            "metadata": {
+                "description": "An array of extension names."
+            },
+            "defaultValue": []
         }
     },
     "variables": {
+        "defaultExtensions": [
+            "azureappservice-python364x86"
+        ],
+        "defaultAppSettings": [
+            {
+                "name": "WEBSITE_TIME_ZONE",
+                "value": "Eastern Standard Time"
+            }
+        ],
+        "extensions": "[concat(variables('defaultExtensions'), parameters('extensions'))]",
+        "appSettings": "[concat(variables('defaultAppSettings'), parameters('appSettings'))]"
     },
     "resources": [
         {
@@ -97,7 +133,7 @@
                 },
                 "parameters": {
                     "siteName": {
-                        "value": "[concat(parameters('name'))]"
+                        "value": "[parameters('name')]"
                     },
                     "serverFarmId": {
                         "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'serverfarm'), parameters('apiVersion')).outputs.resourceId.value]"
@@ -106,6 +142,129 @@
                 "debugSetting": {
                     "detailLevel": "requestContent, responseContent"
                 }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "site-config",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "dependsOn": [
+                "[resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'site')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/config.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "siteName": {
+                        "value": "[parameters('name')]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[concat(parameters('connectionStrings')[copyIndex()].name, '-connectionstring')]",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "dependsOn": [
+                "[resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'site')]",
+                "[resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'site-config')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/connectionstrings.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "connectionStringName": {
+                        "value": "[parameters('connectionStrings')[copyIndex()].name]"
+                    },
+                    "siteName": {
+                        "value": "[parameters('name')]"
+                    },
+                    "type": {
+                        "value": "[parameters('connectionStrings')[copyIndex()].type]"
+                    },
+                    "value": {
+                        "value": "[parameters('connectionStrings')[copyIndex()].value]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            },
+            "copy": {
+                "name": "connectionStrings",
+                "count": "[length(parameters('connectionStrings'))]"
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[variables('extensions')[copyIndex()]]",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "dependsOn": [
+                "[resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'site')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/siteextensions.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "extensionName": {
+                        "value": "[variables('extensions')[copyIndex()]]"
+                    },
+                    "siteName": {
+                        "value": "[parameters('name')]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            },
+            "copy": {
+                "name": "extensions",
+                "count": "[length(variables('extensions'))]"
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[variables('appSettings')[copyIndex()].name]",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "dependsOn": [
+                "[resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'site')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/appsettings.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "appSettingName": {
+                        "value": "[variables('appSettings')[copyIndex()].name]"
+                    },
+                    "siteName": {
+                        "value": "[parameters('name')]"
+                    },
+                    "value": {
+                        "value": "[variables('appSettings')[copyIndex()].value]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            },
+            "copy": {
+                "name": "appsettings",
+                "count": "[length(variables('appSettings'))]"
             }
         }
     ],

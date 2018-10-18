@@ -1,0 +1,87 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "registryName": {
+        "type": "string",
+        "metadata": {
+          "description": "Workspace name."
+        }
+      },
+      "apiVersion": {
+        "type": "string",
+        "metadata": {
+          "description": "The apiVersion of this resource."
+        },
+        "defaultValue": "[providers('Microsoft.ContainerRegistry', 'registries').apiVersions[0]]"
+      },
+      "location": {
+          "type": "string",
+          "metadata": {
+              "description": "Resource location."
+          },
+          "defaultValue": "[resourceGroup().location]"
+      },
+      "sku": {
+        "type": "string",
+        "metadata": {
+          "description": "Parent vault name."
+        },
+        "allowedValues": [
+          "Classic",
+          "Basic",
+          "Standard",
+          "Premium"
+        ],
+        "defaultValue": "Classic"
+      },
+      "adminUserEnabled": {
+        "type": "bool",
+        "metadata": {
+          "description": "The value that indicates whether the admin user is enabled."
+        },
+        "defaultValue": true
+      },
+      "storageAccountId": {
+        "type": "securestring",
+        "metadata": {
+          "description": "The value of the secret. NOTE: 'value' will never be returned from the service, as APIs using this model are is intended for internal use in ARM deployments. Users should use the data-plane REST service for interaction with vault secrets."
+        }
+      }
+    },
+    "variables": {
+    },
+    "resources": [
+      {
+        "type": "Microsoft.ContainerRegistry/registries",
+        "apiVersion": "[parameters('apiVersion')]",
+        "name": "[parameters('registryName')]",
+        "location": "[parameters('location')]",
+        "properties": {
+          "adminUserEnabled": "[parameters('adminUserEnabled')]",
+          "storageAccount": {
+            "id": "[parameters('storageAccountId')]"
+          }
+        }
+      }
+    ],
+    "outputs": {
+      "name": {
+        "type": "string",
+        "value": "[parameters('registryName')]"
+      },
+      "apiVersion": {
+        "type": "string",
+        "value": "[parameters('apiVersion')]"
+      },
+      "resourceId": {
+        "type": "string",
+        "value": "[resourceId('Microsoft.ContainerRegistry/registries', parameters('registryName'))]"
+      },
+      "reference": {
+        "type": "object",
+        "value": "[reference(resourceId('Microsoft.ContainerRegistry/registries', parameters('registryName')), parameters('apiVersion'))]"
+      }
+    }
+}
+  
