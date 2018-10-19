@@ -269,13 +269,17 @@
         }
     ],
     "outputs": {
+        "name": {
+            "type": "string",
+            "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'site'), parameters('apiVersion')).outputs.name.value]"
+        },
+        "resourceId": {
+            "type": "string",
+            "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'site'), parameters('apiVersion')).outputs.resourceId.value]"
+        },
         "serverFarmId": {
             "type": "string",
             "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'serverfarm'), parameters('apiVersion')).outputs.resourceId.value]"
-        },
-        "siteId": {
-            "type": "string",
-            "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'site'), parameters('apiVersion')).outputs.resourceId.value]"
         }
     }
 }
