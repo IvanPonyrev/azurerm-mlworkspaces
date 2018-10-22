@@ -125,7 +125,7 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[parameters('apiVersion')]",
             "name": "appResources",
-            "resourceGroup": "app",
+            "resourceGroup": "webapp",
             "dependsOn": [
                 "[resourceId('management', 'Microsoft.Resources/deployments', 'managementResources')]"
             ],
