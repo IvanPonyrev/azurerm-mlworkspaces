@@ -96,6 +96,28 @@
         },
         "allowedValues": [ "Microsoft.Storage", "Microsoft.KeyVault" ],
         "defaultValue": "Microsoft.Storage"
+      },
+      "bypass": {
+        "type": "string",
+        "metadata": {
+          "description": "Specifies whether traffic is bypassed for Logging/Metrics/AzureServices."
+        },
+        "defaultValue": "AzureServices"
+      },
+      "ipRules": {
+        "type": "array",
+        "metadata": {
+          "description": "Network acl ip rule objects containing name and action."
+        },
+        "defaultValue": []
+      },
+      "defaultAction": {
+        "type": "string",
+        "metadata": {
+          "description": "Default action of rule."
+        },
+        "allowedValues": [ "Allow", "Deny" ],
+        "defaultValue": "Allow"
       }
     },
     "variables": {
@@ -116,6 +138,12 @@
         },
         "kind": "[parameters('kind')]",
         "properties": {
+          "networkAcls": {
+            "bypass": "[parameters('bypass')]",
+            "virtualNetworkRules": [],
+            "ipRules": "[parameters('ipRules')]",
+            "defaultAction": "[parameters('defaultAction')]"
+          },
           "encryption": {
             "services": {
               "blob": {

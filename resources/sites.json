@@ -27,6 +27,16 @@
       "metadata": {
         "description": "The id of this sites serverfarm."
       }
+    },
+    "kind": {
+      "type": "string", 
+      "metadata": {
+        "description": "The kind of site."
+      },
+      "allowedValues": [
+        "functionapp", "app"
+      ],
+      "defaultValue": "app"
     }
   },
   "variables": {},
@@ -36,6 +46,7 @@
       "apiVersion": "[parameters('apiVersion')]",
       "name": "[parameters('siteName')]",
       "location": "[parameters('location')]",
+      "kind": "[parameters('kind')]",
       "properties": {
         "serverFarmId": "[parameters('serverFarmId')]"
       }
