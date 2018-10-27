@@ -59,7 +59,7 @@
                     "uri": "[concat(reference(resourceId(parameters('managementResourceGroup'), 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/storageAccounts.json', parameters('resourcesLocationSasToken'))]"
                 },
                 "parameters": {
-                    "name": {
+                    "storageAccountName": {
                         "value": "[concat(parameters('workspaceName'), uniqueString(subscription().subscriptionId, parameters('workspaceName')))]"
                     },
                     "location": {

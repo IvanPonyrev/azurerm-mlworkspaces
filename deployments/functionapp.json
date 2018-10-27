@@ -14,7 +14,7 @@
             "metadata": {
                 "description": "The resourceGroup to which resources will be deployed."
             },
-            "defaultValue": "[resourceGroup().name]"
+            "defaultValue": "functionapp"
         },
         "apiVersion": {
             "type": "string",
@@ -79,14 +79,28 @@
         }
     },
     "variables": {
-        "defaultAppSettings": [
-            {
-                "name": "WEBSITE_TIME_ZONE",
-                "value": "Eastern Standard Time"
-            }
-        ]
     },
     "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "functionapp-storage",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/storageAccounts.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "storageAccountName": {
+                        "value": "[parameters('name')]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        },
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[parameters('apiVersion')]",
@@ -144,6 +158,57 @@
                     "detailLevel": "requestContent, responseContent"
                 }
             }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "functionapp-config",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "dependsOn": [
+                "[resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'functionsite')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/config.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "siteName": {
+                        "value": "[parameters('name')]"
+                    },
+                    "appSettings": {
+                        "value": [
+                            {
+                                "name": "AzureWebJobsStorage",
+                                "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'functionapp-storage'), parameters('apiVersion')).outputs.connectionString.value]"
+                            },
+                            {
+                                "name": "AzureWebJobsDashboard",
+                                "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'functionapp-storage'), parameters('apiVersion')).outputs.connectionString.value]"
+                            },
+                            {
+                                "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+                                "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'functionapp-storage'), parameters('apiVersion')).outputs.connectionString.value]"
+                            },
+                            {
+                                "name": "WEBSITE_CONTENTSHARE",
+                                "value": "[parameters('name')]"
+                            },
+                            {
+                                "name": "FUNCTIONS_EXTENSION_VERSION",
+                                "value": "~1"
+                            },
+                            {
+                                "name": "WEBSITE_NODE_DEFAULT_VERSION",
+                                "value": "8.11.1"
+                            }
+                        ]
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
         }
     ],
     "outputs": {
@@ -158,6 +223,10 @@
         "serverFarmId": {
             "type": "string",
             "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'function-serverfarm'), parameters('apiVersion')).outputs.resourceId.value]"
+        },
+        "storageAccountName": {
+            "type": "string",
+            "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'functionapp-storage'), parameters('apiVersion')).outputs.name.value]"
         }
     }
 }
