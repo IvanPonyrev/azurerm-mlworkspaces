@@ -66,6 +66,13 @@
         "description": "<code>true</code> if WebSocket is enabled; otherwise, <code>false</code>."
       },
       "defaultValue": false
+    },
+    "appSettings": {
+      "type": "array",
+      "metadata": {
+        "description": "Array of objects containing name and value."
+      },
+      "defaultValue": []
     }
   },
   "variables": {},
@@ -81,7 +88,8 @@
         "phpVersion": "[parameters('phpVersion')]",
         "defaultDocuments": "[parameters('defaultDocuments')]",
         "use32BitWorkerProcess": "[parameters('use32BitWorkerProcess')]",
-        "webSocketsEnabled": "[parameters('webSocketsEnabled')]"
+        "webSocketsEnabled": "[parameters('webSocketsEnabled')]",
+        "appSettings": "[parameters('appSettings')]"
       }
     }
   ],

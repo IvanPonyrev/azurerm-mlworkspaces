@@ -86,6 +86,14 @@
             {
                 "name": "WEBSITE_TIME_ZONE",
                 "value": "Eastern Standard Time"
+            },
+            {
+                "name": "ASPNETCORE_ENVIRONMENT",
+                "value": "Production"
+            },
+            {
+                "name": "WEBSITE_HTTPLOGGING_RETENTION_DAYS",
+                "value": "5"
             }
         ],
         "extensions": "[concat(variables('defaultExtensions'), parameters('extensions'))]",
@@ -103,7 +111,7 @@
                     "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/serverfarms.json', parameters('resourcesLocationSasToken'))]"
                 },
                 "parameters": {
-                    "name": {
+                    "serverfarmName": {
                         "value": "[concat(parameters('name'), '-serverfarm')]"
                     },
                     "sku": {
@@ -269,13 +277,17 @@
         }
     ],
     "outputs": {
+        "name": {
+            "type": "string",
+            "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'site'), parameters('apiVersion')).outputs.name.value]"
+        },
+        "resourceId": {
+            "type": "string",
+            "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'site'), parameters('apiVersion')).outputs.resourceId.value]"
+        },
         "serverFarmId": {
             "type": "string",
             "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'serverfarm'), parameters('apiVersion')).outputs.resourceId.value]"
-        },
-        "siteId": {
-            "type": "string",
-            "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'site'), parameters('apiVersion')).outputs.resourceId.value]"
         }
     }
 }

@@ -4,7 +4,7 @@
 Param(
     [string] [Parameter(Mandatory=$false)] $ResourceGroupLocation = 'eastus',
     [string] $ResourceGroupName = 'management',
-	[array] $LinkedResourceGroups = @('ml', 'app'),
+	[array] $LinkedResourceGroups = @('ml', 'webapp', 'functionapp'),
     [switch] $UploadArtifacts,
     [switch] $DeployStorage,
 	[string] [ValidateSet("Complete", "Incremental")] $Mode = 'Incremental',

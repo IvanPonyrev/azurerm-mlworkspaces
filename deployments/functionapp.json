@@ -1,0 +1,232 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "resourcesLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Sas token to resources container."
+            },
+            "defaultValue": null
+        },
+        "resourceGroup": {
+            "type": "string",
+            "metadata": {
+                "description": "The resourceGroup to which resources will be deployed."
+            },
+            "defaultValue": "functionapp"
+        },
+        "apiVersion": {
+            "type": "string",
+            "metadata": {
+                "description": "The apiVersion of this resource."
+            },
+            "defaultValue": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]"
+        },
+        "name": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of this web site."
+            },
+            "defaultValue": "[concat('function', uniqueString(resourceGroup().id))]"
+        },
+        "sku": {
+            "type": "string",
+            "metadata": {
+                "description": "The site sku."
+            },
+            "defaultValue": "Y1"
+        },
+        "kind": {
+            "type": "string",
+            "metadata": {
+                "description": "Kind."
+            },
+            "defaultValue": "functionapp"
+        },
+        "tier": {
+            "type": "string",
+            "metadata": {
+                "description": "The sku tier of the plan."
+            },
+            "defaultValue": "Dynamic"
+        },
+        "capacity": {
+            "type": "int",
+            "metadata": {
+                "description": "Worker capacity."
+            },
+            "allowedValues": [
+                0,
+                1,
+                2
+            ],
+            "defaultValue": 0
+        },
+        "appSettings": {
+            "type": "array",
+            "metadata": {
+                "description": "The sku tier of the plan."
+            },
+            "defaultValue": []
+        },
+        "administratorLogin": {
+            "type": "string",
+            "metadata": {
+                "description": "The sql admin login name."
+            },
+            "defaultValue": "sqlAdmin"
+        }
+    },
+    "variables": {
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "functionapp-storage",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/storageAccounts.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "storageAccountName": {
+                        "value": "[parameters('name')]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "function-serverfarm",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/serverfarms.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "serverfarmName": {
+                        "value": "[concat(parameters('name'), '-serverfarm')]"
+                    },
+                    "sku": {
+                        "value": "[parameters('sku')]"
+                    },
+                    "kind": {
+                        "value": "[parameters('kind')]"
+                    },
+                    "capacity": {
+                        "value": "[parameters('capacity')]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "functionsite",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "dependsOn": [
+                "[resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'function-serverfarm')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/sites.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "siteName": {
+                        "value": "[parameters('name')]"
+                    },
+                    "serverFarmId": {
+                        "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'function-serverfarm'), parameters('apiVersion')).outputs.name.value]"
+                    },
+                    "kind": {
+                        "value": "[parameters('kind')]"
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "functionapp-config",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "dependsOn": [
+                "[resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'functionsite')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(reference(resourceId('management', 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/config.json', parameters('resourcesLocationSasToken'))]"
+                },
+                "parameters": {
+                    "siteName": {
+                        "value": "[parameters('name')]"
+                    },
+                    "appSettings": {
+                        "value": [
+                            {
+                                "name": "AzureWebJobsStorage",
+                                "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'functionapp-storage'), parameters('apiVersion')).outputs.connectionString.value]"
+                            },
+                            {
+                                "name": "AzureWebJobsDashboard",
+                                "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'functionapp-storage'), parameters('apiVersion')).outputs.connectionString.value]"
+                            },
+                            {
+                                "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+                                "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'functionapp-storage'), parameters('apiVersion')).outputs.connectionString.value]"
+                            },
+                            {
+                                "name": "WEBSITE_CONTENTSHARE",
+                                "value": "[parameters('name')]"
+                            },
+                            {
+                                "name": "FUNCTIONS_EXTENSION_VERSION",
+                                "value": "~1"
+                            },
+                            {
+                                "name": "WEBSITE_NODE_DEFAULT_VERSION",
+                                "value": "8.11.1"
+                            }
+                        ]
+                    }
+                },
+                "debugSetting": {
+                    "detailLevel": "requestContent, responseContent"
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "name": {
+            "type": "string",
+            "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'functionsite'), parameters('apiVersion')).outputs.name.value]"
+        },
+        "resourceId": {
+            "type": "string",
+            "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'functionsite'), parameters('apiVersion')).outputs.resourceId.value]"
+        },
+        "serverFarmId": {
+            "type": "string",
+            "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'function-serverfarm'), parameters('apiVersion')).outputs.resourceId.value]"
+        },
+        "storageAccountName": {
+            "type": "string",
+            "value": "[reference(resourceId(parameters('resourceGroup'), 'Microsoft.Resources/deployments', 'functionapp-storage'), parameters('apiVersion')).outputs.name.value]"
+        }
+    }
+}

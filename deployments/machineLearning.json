@@ -21,7 +21,7 @@
             "metadata": {
                 "description": "The name of the resource group to which resources will be provisioned."
             },
-            "defaultValue": "ml"
+            "defaultValue": "[resourceGroup().name]"
         },
         "managementResourceGroup": {
             "type": "string",
@@ -59,7 +59,7 @@
                     "uri": "[concat(reference(resourceId(parameters('managementResourceGroup'), 'Microsoft.Resources/deployments', 'storageAccounts'), parameters('apiVersion')).outputs.blobEndpoint.value, 'resources/storageAccounts.json', parameters('resourcesLocationSasToken'))]"
                 },
                 "parameters": {
-                    "name": {
+                    "storageAccountName": {
                         "value": "[concat(parameters('workspaceName'), uniqueString(subscription().subscriptionId, parameters('workspaceName')))]"
                     },
                     "location": {
