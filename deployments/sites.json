@@ -86,6 +86,14 @@
             {
                 "name": "WEBSITE_TIME_ZONE",
                 "value": "Eastern Standard Time"
+            },
+            {
+                "name": "ASPNETCORE_ENVIRONMENT",
+                "value": "Production"
+            },
+            {
+                "name": "WEBSITE_HTTPLOGGING_RETENTION_DAYS",
+                "value": "5"
             }
         ],
         "extensions": "[concat(variables('defaultExtensions'), parameters('extensions'))]",
